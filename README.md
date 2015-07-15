@@ -1,17 +1,21 @@
 EDA FPGate Server
 =================
 EDA FPGate Server is application service which provide unified access to fiscal printers.
-It is restful web service application which provide services with unified protocol for applications to work with various fiscal devices (mostly fiscal printers).
+It is restful web service application which provide unified protocol for access to various fiscal devices (fiscal printers and cash registers).
 The main goal of FPGate is to separate common programming logic for work with fiscal devices from complexity to manage variety of fiscal devices.  
 
 FPGate server is application which provide web API for access to unlimited number of predefined set of fiscal printers.
 The server contains two main components:
-1. Administration (HTML) interface for defining printers and users http://localhost:8182/admin/.
-2. Application JSON protocol API interface for using printers http://localhost:8182/print/.
+
+1.Administration (HTML) interface for defining printers and users http://localhost:8182/admin/
+2.Application JSON protocol API interface for using printers http://localhost:8182/print/
 
 Current version of FPGate supports following fiscal printers:
+
 DATECS FP3530,FP550,FP55,FP1000,FP300,FP60KL,FP2000KL, FP1000KL,FP700KL
+
 Current version of FPGate supports following cash registers:
+
 DATECS DP-05KL, DP-15KL,DP-25KL,DP-35KL,DP-45KL,DP-50KL,DP-50CKL,DP-55KL,MP-55 KL,DP-500PLUS KL
 
 
@@ -56,7 +60,7 @@ Web Appication Javascript Library
 For simplifying implementation in web applications there is Javascript Library *fpg-client.js* which encapsulate protocol in useful objects.
 Here is example request:
 
-.. code-block:: javascript
+```javascript
 
     var fpg = new FPGate({
         URL: 'https//localhost:8183/print/'
@@ -108,6 +112,7 @@ Here is example request:
             }	
         }
     }));
+```
 
 Implemented Commands
 ====================
