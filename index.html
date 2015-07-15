@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Edafpgate : EDA Fiscal Printer Gateway">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Edafpgate</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/mitkola/edafpgate">View on GitHub</a>
+
+          <h1 id="project_title">Edafpgate</h1>
+          <h2 id="project_tagline">EDA Fiscal Printer Gateway</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/mitkola/edafpgate/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/mitkola/edafpgate/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="eda-fpgate-server" class="anchor" href="#eda-fpgate-server" aria-hidden="true"><span class="octicon octicon-link"></span></a>EDA FPGate Server</h1>
+
+<p>EDA FPGate Server is application service which provide unified access to fiscal printers.
+It is restful web service application which provide unified protocol for access to various fiscal devices (fiscal printers and cash registers).
+The main goal of FPGate is to separate common programming logic for work with fiscal devices from complexity to manage variety of fiscal devices.  </p>
+
+<p>FPGate server is application which provide web API for access to unlimited number of predefined set of fiscal printers.
+The server contains two main components:</p>
+
+<p>1.Administration (HTML) interface for defining printers and users http://localhost:8182/admin/
+2.Application JSON protocol API interface for using printers http://localhost:8182/print/</p>
+
+<p>Current version of FPGate supports following fiscal printers:</p>
+
+<p>DATECS FP3530,FP550,FP55,FP1000,FP300,FP60KL,FP2000KL, FP1000KL,FP700KL</p>
+
+<p>Current version of FPGate supports following cash registers:</p>
+
+<p>DATECS DP-05KL, DP-15KL,DP-25KL,DP-35KL,DP-45KL,DP-50KL,DP-50CKL,DP-55KL,MP-55 KL,DP-500PLUS KL</p>
+
+<h1>
+<a id="web-api" class="anchor" href="#web-api" aria-hidden="true"><span class="octicon octicon-link"></span></a>Web API</h1>
+
+<p>API for access to printers is based on simple JSON application protocol over HTTP/HTTPS.
+All API calls to services are in form of posting JSON Request object and receiving Response object as result of execution of request.</p>
+
+<h2>
+<a id="request-object" class="anchor" href="#request-object" aria-hidden="true"><span class="octicon octicon-link"></span></a>Request Object</h2>
+
+<p>Request Object contains following attributes:</p>
+
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Printer</td>
+<td>Object</td>
+<td>with following attributes</td>
+</tr>
+<tr>
+<td>.ID</td>
+<td>String</td>
+<td>Unique ID of printer</td>
+</tr>
+<tr>
+<td>.Model</td>
+<td>String</td>
+<td>Optional name of Printer Model Class (in case of using printer not defined on server)</td>
+</tr>
+<tr>
+<td>.Params</td>
+<td>Object</td>
+<td>Optional Hash map with printer parameters in form of pairs parameter_name = value</td>
+</tr>
+<tr>
+<td>Command</td>
+<td>String</td>
+<td>Name of Printer Command</td>
+</tr>
+<tr>
+<td>Arguments</td>
+<td>Array</td>
+<td>Array of strings with arguments of command</td>
+</tr>
+</tbody>
+</table>
+
+<h2>
+<a id="response-object" class="anchor" href="#response-object" aria-hidden="true"><span class="octicon octicon-link"></span></a>Response Object</h2>
+
+<p>Response Object contains following attributes:</p>
+
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ResultTable</td>
+<td>Object</td>
+<td>Hash map result in form Key = Value</td>
+</tr>
+<tr>
+<td>ErrorCode</td>
+<td>Integer</td>
+<td>Error code of last executed command (Depend of Command and specific printer implementation)</td>
+</tr>
+<tr>
+<td>Messages</td>
+<td>Array</td>
+<td>List of messages in process of executing command</td>
+</tr>
+<tr>
+<td>Errors</td>
+<td>Array</td>
+<td>List of errors and waring during execution of command</td>
+</tr>
+<tr>
+<td>Log</td>
+<td>Array</td>
+<td>Detailed log of execution of command</td>
+</tr>
+</tbody>
+</table>
+
+<p>The main considerations about successful execution of particular command will be places as result in ResultTable and depends of commend implementation.
+For example if you request PrintFiscalCheck command (which contains subcommands), some of subcommand can return error. 
+Printing fiscal check is atom command and always on success must complete with successful closing of fiscal check.
+In that case you can check 'CloseStatus' field.</p>
+
+<h1>
+<a id="web-appication-javascript-library" class="anchor" href="#web-appication-javascript-library" aria-hidden="true"><span class="octicon octicon-link"></span></a>Web Appication Javascript Library</h1>
+
+<p>For simplifying implementation in web applications there is Javascript Library <em>fpg-client.js</em> which encapsulate protocol in useful objects.
+Here is example request:</p>
+
+<div class="highlight highlight-javascript"><pre>
+    <span class="pl-k">var</span> fpg <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">FPGate</span>({
+        URL<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>https//localhost:8183/print/<span class="pl-pds">'</span></span>
+        , Printer<span class="pl-k">:</span> <span class="pl-k">new</span> <span class="pl-en">FPGPrinter</span>({
+            ID<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">'</span>MyPrinter<span class="pl-pds">'</span></span>
+        })
+    });
+    <span class="pl-k">var</span> args <span class="pl-k">=</span> 
+        <span class="pl-s"><span class="pl-pds">'</span>SON,Operator Name<span class="pl-cce">\n</span><span class="pl-pds">'</span></span> <span class="pl-k">+</span>
+        <span class="pl-s"><span class="pl-pds">'</span>STG,Product of tax group B,B,0.12,0<span class="pl-cce">\n</span><span class="pl-pds">'</span></span> <span class="pl-k">+</span>
+        <span class="pl-s"><span class="pl-pds">'</span>STG,Product of tax group A,A,0.25,0<span class="pl-cce">\n</span><span class="pl-pds">'</span></span> <span class="pl-k">+</span>
+        <span class="pl-s"><span class="pl-pds">'</span>PFT,Sample fiscal text<span class="pl-cce">\n</span><span class="pl-pds">'</span></span> <span class="pl-k">+</span>
+        <span class="pl-s"><span class="pl-pds">'</span>STL<span class="pl-cce">\n</span><span class="pl-pds">'</span></span> <span class="pl-k">+</span>
+        <span class="pl-s"><span class="pl-pds">'</span>TTL,Total:,CASH,2.00<span class="pl-cce">\n</span><span class="pl-pds">'</span></span> <span class="pl-k">+</span>
+        <span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>;
+
+    fpg.sendRequest(<span class="pl-k">new</span> <span class="pl-en">FPGRequest</span>({
+        Command<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>PrintFiscalCheck<span class="pl-pds">'</span></span>
+        , Arguments <span class="pl-k">:</span> args.<span class="pl-c1">split</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\\</span>n<span class="pl-pds">'</span></span>)
+        , <span class="pl-en">onRequestComplete</span><span class="pl-k">:</span> <span class="pl-k">function</span>(<span class="pl-smi">data</span>, <span class="pl-smi">textStatus</span>) {
+            <span class="pl-k">try</span> {
+                <span class="pl-k">try</span> {
+                    <span class="pl-k">if</span> (<span class="pl-s"><span class="pl-pds">'</span>errors<span class="pl-pds">'</span></span> <span class="pl-k">in</span> data) {
+                        <span class="pl-k">for</span> (<span class="pl-k">var</span> i <span class="pl-k">in</span> data.errors) 
+                            <span class="pl-c1">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>Error:<span class="pl-pds">'</span></span><span class="pl-k">+</span>data.errors[i]);
+                    }   
+                } <span class="pl-k">catch</span> (err) {
+                    <span class="pl-c1">alert</span>(err);
+                }   
+                <span class="pl-k">if</span> (<span class="pl-s"><span class="pl-pds">'</span>resultTable<span class="pl-pds">'</span></span> <span class="pl-k">in</span> data) {
+                    <span class="pl-k">if</span> (<span class="pl-s"><span class="pl-pds">'</span>CloseStatus<span class="pl-pds">'</span></span> <span class="pl-k">in</span> data.resultTable <span class="pl-k">&amp;&amp;</span> (data.resultTable.CloseStatus <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">'</span>1<span class="pl-pds">'</span></span>)) {
+                        <span class="pl-c">// LastPrintDocNum</span>
+                        f[<span class="pl-s"><span class="pl-pds">'</span>FPData[FPDocNum]<span class="pl-pds">'</span></span>].<span class="pl-c1">value</span> <span class="pl-k">=</span> (<span class="pl-s"><span class="pl-pds">'</span>LastPrintDocNum<span class="pl-pds">'</span></span> <span class="pl-k">in</span> data.resultTable)<span class="pl-k">?</span>data.resultTable.LastPrintDocNum<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">'</span>N/A<span class="pl-pds">'</span></span>;
+                        f[<span class="pl-s"><span class="pl-pds">'</span>FPData[SerialNum]<span class="pl-pds">'</span></span>].<span class="pl-c1">value</span> <span class="pl-k">=</span> (<span class="pl-s"><span class="pl-pds">'</span>LFRI_DocNum<span class="pl-pds">'</span></span> <span class="pl-k">in</span> data.resultTable)<span class="pl-k">?</span>data.resultTable.LFRI_DocNum<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">'</span>N/A<span class="pl-pds">'</span></span>;
+                        <span class="pl-c">// LFRI_DateTime</span>
+                        f[<span class="pl-s"><span class="pl-pds">'</span>FPData[FPDocDate]<span class="pl-pds">'</span></span>].<span class="pl-c1">value</span> <span class="pl-k">=</span> (<span class="pl-s"><span class="pl-pds">'</span>LFRI_DateTime<span class="pl-pds">'</span></span> <span class="pl-k">in</span> data.resultTable)<span class="pl-k">?</span>data.resultTable.LFRI_DateTime<span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">'</span><span class="pl-pds">'</span></span>;
+                        <span class="pl-c1">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>SerialNum:<span class="pl-pds">'</span></span><span class="pl-k">+</span>f[<span class="pl-s"><span class="pl-pds">'</span>FPData[SerialNum]<span class="pl-pds">'</span></span>].<span class="pl-c1">value</span>);
+                        <span class="pl-c1">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>FPDocNum:<span class="pl-pds">'</span></span><span class="pl-k">+</span>f[<span class="pl-s"><span class="pl-pds">'</span>FPData[FPDocNum]<span class="pl-pds">'</span></span>].<span class="pl-c1">value</span>);
+                        <span class="pl-c1">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>FPDocDate:<span class="pl-pds">'</span></span><span class="pl-k">+</span>f[<span class="pl-s"><span class="pl-pds">'</span>FPData[FPDocDate]<span class="pl-pds">'</span></span>].<span class="pl-c1">value</span>);
+                        f.<span class="pl-c1">submit</span>();
+                    } <span class="pl-k">else</span> {
+                        <span class="pl-c1">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>Operation completed successfully!<span class="pl-pds">'</span></span>);
+                    }   
+                } <span class="pl-k">else</span> {
+                    <span class="pl-c1">alert</span>(<span class="pl-s"><span class="pl-pds">'</span>Missing Result!<span class="pl-pds">'</span></span>);
+                }
+            } <span class="pl-k">catch</span> (err) {
+                    <span class="pl-c1">alert</span>(err);
+            }   
+        }
+    }));</pre></div>
+
+<h1>
+<a id="implemented-commands" class="anchor" href="#implemented-commands" aria-hidden="true"><span class="octicon octicon-link"></span></a>Implemented Commands</h1>
+
+<p>FPGate Server supports following list of commands.</p>
+
+<h2>
+<a id="printfiscalcheck-and-printnonfiscalcheck" class="anchor" href="#printfiscalcheck-and-printnonfiscalcheck" aria-hidden="true"><span class="octicon octicon-link"></span></a>PrintFiscalCheck and PrintNonFiscalCheck</h2>
+
+<p>This command requesting printing of fiscal/non-fiscal check and accept as Arguments list of subcommands which generate content of fiscal check.
+Every subcommand is string in the following format:
+<em>subcommand</em>[\tParam...]
+Where subcommand can be:</p>
+
+<table>
+<thead>
+<tr>
+<th>Subcommand</th>
+<th>Parameters</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SON</td>
+<td>OperatorName</td>
+<td>Set operator name</td>
+</tr>
+<tr>
+<td>PFT</td>
+<td>Text</td>
+<td>Print Fiscal Text</td>
+</tr>
+<tr>
+<td>PNT</td>
+<td>Text</td>
+<td>Print Nonfiscal Text</td>
+</tr>
+<tr>
+<td>PLF</td>
+<td>RowCount</td>
+<td>Paper Line Feed</td>
+</tr>
+<tr>
+<td>STG</td>
+<td>Text,TaxCode,Price,Percent,Quantity</td>
+<td>Register Sell by Tax Group. Percent and Quantity are optional. Tax Code is Tax Group Abbreviation A,B,C...</td>
+</tr>
+<tr>
+<td>SDP</td>
+<td>Text,DepCode,Price,Percent,Quantity</td>
+<td>Register Sell by Department. Percent and Quantity are optional. Department Code is programmed code of department.</td>
+</tr>
+<tr>
+<td>STL</td>
+<td>ToPrint,ToDisplay,Percent</td>
+<td>Calculate subtotal. Parameters are optional.</td>
+</tr>
+<tr>
+<td>TTL</td>
+<td>Text,PaymentTypeAbbr,Amount</td>
+<td>Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4. Amount is Sum paid by customer.</td>
+</tr>
+<tr>
+<td>CMD</td>
+<td>Command,Params...</td>
+<td>Call custom printer command, depending on printer model behavior will be different.</td>
+</tr>
+</tbody>
+</table>
+
+<p>PFT and PNT supports some simple formatting syntax in the following from.
+<a href="https://github.com/padl" class="user-mention">@padl</a>\tText[\tPaddingSymbol] - Align text to the left and pad to the whole width with padding symbol (by default is space)
+<a href="https://github.com/padr" class="user-mention">@padr</a>\tText[\tPaddingSymbol] - Align text to the right and pad to the whole width with padding symbol (by default is space)
+<a href="https://github.com/padc" class="user-mention">@padc</a>\tText[\tPaddingSymbol] - Align text to the center and pad to the whole width with padding symbol (by default is space)
+<a href="https://github.com/lval" class="user-mention">@lval</a>\tLabel\tValue - Align Label And Value.</p>
+
+<h2>
+<a id="printduplicatecheck" class="anchor" href="#printduplicatecheck" aria-hidden="true"><span class="octicon octicon-link"></span></a>PrintDuplicateCheck</h2>
+
+<p>Prints duplicate of last printed fiscal check. Can be executed only once.
+Only one duplicate check can be printed.</p>
+
+<h2>
+<a id="lastfiscalrecordinfo" class="anchor" href="#lastfiscalrecordinfo" aria-hidden="true"><span class="octicon octicon-link"></span></a>LastFiscalRecordInfo</h2>
+
+<p>Requests last fiscal record info.</p>
+
+<h2>
+<a id="reportdaily" class="anchor" href="#reportdaily" aria-hidden="true"><span class="octicon octicon-link"></span></a>ReportDaily</h2>
+
+<p>Request daily report. The commend accepts <code>ReportType</code> argument that selects desired report.
+<code>ReportType=X</code> Requests X Report
+<code>ReportType=Z</code> Requests Z Report</p>
+
+<h2>
+<a id="reportbydates" class="anchor" href="#reportbydates" aria-hidden="true"><span class="octicon octicon-link"></span></a>ReportByDates</h2>
+
+<p>Prints report by dates. The command accepts following arguments:
+<code>ReportType=DETAIL</code> Detailed report
+<code>ReportType=SHORT</code> Short report
+<code>FromDate=2015-07-01</code> From date in format yyyy-mm-dd
+<code>ToDate=2015-07-03</code> To date in format yyyy-mm-dd</p>
+
+<h2>
+<a id="getdatetime" class="anchor" href="#getdatetime" aria-hidden="true"><span class="octicon octicon-link"></span></a>GetDateTime</h2>
+
+<p>Get printer date and time.</p>
+
+<h2>
+<a id="setdatetime" class="anchor" href="#setdatetime" aria-hidden="true"><span class="octicon octicon-link"></span></a>SetDateTime</h2>
+
+<p>Set printer date and time. The command accepts optional argument <code>DateTime</code> where date and time is in following format 'yyyy-mm-dd HH:nn:ss'.
+If <code>DateTime</code> argument is omitted the current date and time of system will be used.</p>
+
+<h2>
+<a id="printerstatus" class="anchor" href="#printerstatus" aria-hidden="true"><span class="octicon octicon-link"></span></a>PrinterStatus</h2>
+
+<p>Get printer status information. The result is dependent of printer model.</p>
+
+<h2>
+<a id="getdiagnosticinfo" class="anchor" href="#getdiagnosticinfo" aria-hidden="true"><span class="octicon octicon-link"></span></a>GetDiagnosticInfo</h2>
+
+<p>Get printer diagnostic information. The result is dependent of printer model.</p>
+
+<h2>
+<a id="getjournalinfo" class="anchor" href="#getjournalinfo" aria-hidden="true"><span class="octicon octicon-link"></span></a>GetJournalInfo</h2>
+
+<p>Request journal information and return it. Available only if printer support it.</p>
+
+<h2>
+<a id="getjournal" class="anchor" href="#getjournal" aria-hidden="true"><span class="octicon octicon-link"></span></a>GetJournal</h2>
+
+<p>Request printer journal return it. Available only if printer support it.</p>
+
+<h2>
+<a id="customcommand" class="anchor" href="#customcommand" aria-hidden="true"><span class="octicon octicon-link"></span></a>CustomCommand</h2>
+
+<p>Sends raw command to printer. The command accepts following arguments.
+<code>Cmd=CmdCode</code> and <code>Args=arguments</code>.</p>
+
+<h2>
+<a id="abnormalcomplete" class="anchor" href="#abnormalcomplete" aria-hidden="true"><span class="octicon octicon-link"></span></a>AbnormalComplete</h2>
+
+<p>Request printer to cancel all pending operations and returns it in ready state.</p>
+
+<h2>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test</h2>
+
+<p>Request testoperation on printer and returns result.
+Result depends on Printer Support class implementation. Mostly get diagnostic information is used.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Edafpgate maintained by <a href="https://github.com/mitkola">mitkola</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
