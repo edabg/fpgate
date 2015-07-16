@@ -1,0 +1,53 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 17, 2015, Jun 17, 2015 5:46:09 PM
+    Author     : valyo
+
+*/
+
+/*  [*] Framework customization */
+
+nav {
+    background-color: #8bc34a;
+    color: #fff;
+}
+
+nav .side-nav > li:first-child {
+    background-color: #aed581;
+}
+
+main h1 {
+    color: #558b2f;
+}
+/* Form colors 
+.input-field label {
+    color: #4caf50;
+}
+.input-field input[type=text]:focus + label
+, .input-field textarea.materialize-textarea:focus + label {
+    color: #f57c00;
+}
+.input-field input[type=text]:focus
+, .input-field textarea.materialize-textarea:focus {
+    border-bottom: 1px solid #f57c00;
+    box-shadow: 0 1px 0 0 #f57c00;
+}
+.input-field .prefix.active {
+    color: #000;
+}
+
+.switch label input[type="checkbox"]:checked + .lever::after {
+    background-color: #4caf50;
+}
+.switch label input[type="checkbox"]:checked + .lever
+, .switch label input[type="checkbox"] + .lever {
+    background-color: #aed581;
+}
+.switch label {
+    color: #444;
+}
+*/

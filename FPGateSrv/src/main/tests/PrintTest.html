@@ -1,0 +1,129 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<title>FP Test Page</title>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>                
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-json/2.5.1/jquery.json.min.js"></script>                
+                <script src="../../../public_html/js/fpg-client.js"></script>                
+<script type="text/javascript">
+
+function sendCommand() {
+    var f = document.getElementById('fcmd');
+    fpg = new FPGate({
+        URL: 'http://localhost:8182/print/'
+        , Printer: new FPGPrinter({
+            ID:f.elements['Printer.ID'].value
+            , Model:f.elements['Printer.Model'].value
+        })
+    });
+    fpg.sendRequest(new FPGRequest({
+        Command: f.elements['Command'].value
+        , Arguments : f.elements['Arguments'].value.split('\n')
+        , onRequestComplete: function(data, textStatus) {
+            try {
+                f.elements['Result'].value = '';
+                for (var i in data.resultTable) {
+                        f.elements['Result'].value += i+'='+data.resultTable[i]+'\n';
+                }
+            } catch (err) {
+            }	
+            try {
+                f.elements['Errors'].value = '';
+                for (var i in data.errors) {
+                        f.elements['Errors'].value += data.errors[i]+'\n';
+                }
+            } catch (err) {
+            }	
+            try {
+                f.elements['Log'].value = '';
+                for (var i in data.log) {
+                        f.elements['Log'].value += data.log[i]+'\n';
+                }
+            } catch (err) {
+            }	
+        }
+    }));
+}
+
+</script>
+		
+	</head>
+<body>
+<h1>FP Test Page</h1>
+<form id="fcmd" action="http://localhost:8182/print/xx" method="post" target="_blank">
+<table border="0" cellspacing="0" cellpadding="0">
+	<tr>
+		<td>Printer ID</td>
+		<td><input type="text" name="Printer.ID" value="FP2000KL"></td>
+	</tr> 
+	<tr>
+		<td>Printer Model</td>
+		<td>
+<!--		<input type="text" name="Printer.Model" value="FPCFP3530"> -->
+			<select name="Printer.Model">
+	      	<option value="FPCFP2000KL">FPCFP2000KL</option>
+	      	<option value="FPCFP3530">FPCFP3530</option> 
+	      </select>
+		</td>
+	</tr> 
+	<tr>
+		<td>Command</td>
+		<td>
+			<select name="Command">
+	      	<option value="PrintFiscalCheck">PrintFiscalCheck</option> 
+	      	<option value="PrintNonFiscalCheck">PrintNonFiscalCheck</option>
+	      	<option value="PrintDuplicateCheck">PrintDuplicateCheck</option>
+	      	<option value="LastFiscalRecordInfo">LastFiscalRecordInfo</option>
+	      	<option value="PrinterStatus">PrinterStatus</option>
+	      	<option value="GetDiagnosticInfo">GetDiagnosticInfo</option>
+	      	<option value="ReportDaily">ReportDaily</option> 
+	      	<option value="ReportByDates">ReportByDates</option> 
+	      	<option value="AbnormalComplete">AbnormalComplete</option> 
+	      	<option value="GetDateTime">GetDateTime</option> 
+	      	<option value="SetDateTime">SetDateTime</option> 
+	      	<option value="CustomCommand">CustomCommand</option>
+	      	<option value="GetJournalInfo">GetJournalInfo</option>
+	      	<option value="GetJournal">GetJournal</option>
+	      	<option value="test">test</option> 
+	      </select>
+			&nbsp;<input type="text" name="CustomCommand" value="">
+		</td>
+	</tr> 
+	<tr>
+		<td>Command</td>
+		<td>
+<textarea name="Arguments" spellcheck="false" cols=100 rows=20>
+STG	New expensive	B	0.12	0
+STG	Стара митническа	A	10	0
+PNT	12345678901234567890123456789012345678901234567890Ала бала портокала Ала бала портокала Ала бала портокала Ала бала портокала Ала бала портокала
+STL
+TTL	Ха сега де!	CASH	30
+</textarea>
+		</td>
+	</tr> 
+	<tr>
+		<td colspan=2>
+			<button type="button" name="bExecute" onClick="sendCommand(); return false;">Execute</button>
+			<button type="submit">Submit</button>
+		</td>
+	</tr>	
+	<tr>
+		<td>Result:</td>
+		<td><textarea name="Result" spellcheck="false" cols=100 rows=10></textarea></td>
+	</tr> 
+	<tr>
+		<td>Errors:</td>
+		<td><textarea name="Errors" spellcheck="false" cols=100 rows=10></textarea></td>
+	</tr> 
+	<tr>
+		<td>Log:</td>
+		<td><textarea name="Log" spellcheck="false" cols=100 rows=10></textarea></td>
+	</tr> 
+</table>
+ 
+</button>
+</form>
+
+</body>
+</html>

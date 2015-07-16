@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.eda</groupId>
+    <artifactId>FPGateSrv</artifactId>
+    <version>1.0.0-pre</version>
+    <packaging>jar</packaging>
+    <repositories>
+        <repository>
+            <id>maven-restlet</id>
+            <name>Restlet repository</name>
+            <url>http://maven.restlet.com</url>
+        </repository>
+        <repository>
+            <id>project-repo</id>
+            <url>file://${project.basedir}/src/main/resources/repo</url>
+        </repository>
+        <repository>
+            <id>maven-java-net-snapshots</id>
+            <name>Maven Java net snapshot repository</name>
+            <url>https://maven.java.net/content/repositories/snapshots/</url>    
+        </repository>
+    </repositories>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <restlet-version>2.3.2</restlet-version>
+        <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
+        <buildNumber>v.${project.version} build ${maven.build.timestamp}</buildNumber>        
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet</artifactId>
+            <version>${restlet-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet.ext.jackson</artifactId>
+            <version>${restlet-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet.ext.jetty</artifactId>
+            <version>${restlet-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet.ext.crypto</artifactId>
+            <version>${restlet-version}</version>
+        </dependency>
+<!--        
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.22</version>
+        </dependency>        
+-->        
+<!--        
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.187</version>
+        </dependency>
+-->        
+        <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>2.5.3</version>
+        </dependency>
+<!--        
+        <dependency>
+            <groupId>com.hp.gagawa</groupId>
+            <artifactId>gagawa</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+-->        
+        <dependency>
+            <groupId>com.jacob</groupId>
+            <artifactId>jacob</artifactId>
+            <version>1.18-M2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections-maven</artifactId>
+            <version>0.9.9-RC2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.j256.ormlite</groupId>
+            <artifactId>ormlite-core</artifactId>
+            <version>4.48</version>
+        </dependency>
+        <dependency>
+               <groupId>com.j256.ormlite</groupId>
+               <artifactId>ormlite-jdbc</artifactId>
+               <version>4.48</version>
+       </dependency>
+        <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>3.8.9.1</version>
+        </dependency>
+       
+<!--        
+    <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.2.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>4.2.0-SNAPSHOT</version>
+    </dependency>
+-->
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+            <version>2.3.23</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <resources>
+            <resource>
+<!--                <targetPath>/</targetPath>-->
+                <filtering>false</filtering>
+                <directory>${basedir}/src/main/resources/repo/com/jacob/jacob/1.18-M2</directory>
+                <includes>
+                    <include>jacob-1.18-M2-x64.dll</include>
+                    <include>jacob-1.18-M2-x86.dll</include>
+                </includes>
+            </resource>
+            <resource>
+                <targetPath>/images</targetPath> 
+                <filtering>false</filtering>
+                <directory>${basedir}/src/main/resources/images</directory>
+               
+                <includes>
+                    <include>**/*.*</include>
+                </includes>
+               
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-jar-plugin</artifactId>
+              <version>2.4</version>
+              <configuration>
+                  <archive>
+                      <manifest>
+<!--                          <addClasspath>true</addClasspath> -->
+<!--                          <classpathPrefix>lib/</classpathPrefix> -->
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <mainClass>org.eda.fpsrv.FPServer</mainClass>
+                      </manifest>
+                      <manifestEntries>
+                          <Implementation-Build>${buildNumber}</Implementation-Build>
+                          <Implementation-Build-TimeStamp>${maven.build.timestamp}</Implementation-Build-TimeStamp>
+<!--                          <Bundle-NativeCode>jacob-1.18-M2-x86.dll ; processor=x86 ; osName=Win32, jacob-1.18-M2-x64.dll ; processor=x86_64 ; osName=Win32</Bundle-NativeCode> -->
+                      </manifestEntries>                            
+                  </archive>
+              </configuration>
+            </plugin>
+<!--            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+-->            
+<!--            
+<plugin>
+                <groupId>org.jvnet.com4j</groupId>
+                <artifactId>maven-com4j-plugin</artifactId>
+                <version>2.1</version>
+                <executions>
+                    <execution>
+                        <id>genFP3530</id>
+                        <goals>
+                            <goal>gen</goal>
+                        </goals>
+                        <configuration>
+                          <file>${basedir}/lib/FP3530.tlb</file>
+                          <package>org.eda.com4j.fpcom</package>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+-->            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+<!--                    <finalName>${project.artifactId}-${project.version}-WL</finalName>-->
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                    <shadedClassifierName>WL</shadedClassifierName> <!-- Can be any name that makes sense -->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jarsigner-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>sign</id>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>verify</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <archiveDirectory>${basedir}/target</archiveDirectory>
+                    <includes>
+                        <include>*.jar</include>
+                    </includes>
+                    <excludes>
+                        <exclude>*.war</exclude>
+                    </excludes>
+                    <keystore>${basedir}/signing/sign-cert.jks</keystore>
+                    <alias>edasoftware</alias>
+                    <storepass>qwepoi</storepass> 
+<!--                    <keypass>qwepoi</keypass> -->
+                    <tsa>http://tsa.starfieldtech.com</tsa>
+                    <verbose>true</verbose>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <name>FPGateSrv</name>
+</project>
+
+<!--
+Create a repository folder under your project. Let's take
+
+${project.basedir}/src/main/resources/repo
+
+Then, install your custom jar to this repo:
+
+mvn install:install-file -Dfile=[FILE_PATH] \
+-DgroupId=[GROUP] -DartifactId=[ARTIFACT] -Dversion=[VERS] \ 
+-Dpackaging=jar -DlocalRepositoryPath=[REPO_DIR]
+
+Lastly, add the following repo and dependency definitions to the projects pom.xml:
+
+<repositories>
+    <repository>
+        <id>project-repo</id>
+        <url>file://${project.basedir}/src/main/resources/repo</url>
+    </repository>
+</repositories>
+
+<dependencies>    
+    <dependency>
+        <groupId>[GROUP]</groupId>
+        <artifactId>[ARTIFACT]</artifactId>
+        <version>[VERS]</version>
+    </dependency>
+</dependencies>
+
+
+DLL:
+Did you try something like this:
+
+<dependency>
+    <groupId>com.foo</groupId>
+    <artifactId>footron</artifactId>
+    <version>4.2</version>
+    <scope>runtime</scope>
+    <type>dll</type>
+</dependency>
+
+You can add them to maven's repository with something like this:
+mvn install:install-file -Dfile=footron.dll -DgroupId=com.foo -DartifactId=footron  -Dversion=4.2 -Dpackaging=dll -DgeneratePom=true
+
+
+cd C:\Program Files\NetBeans 8.0.2\java\maven\bin
+cd w:\W:\www - CO.edabg.com\Apps\fp3530\FPGateSrv\FPGateSrv\src\main\resources\repo
+set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_45
+c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2\jacob.jar -DgroupId=com.jacob -DartifactId=jacob -Dversion=1.18-M2 -Dpackaging=jar -DlocalRepositoryPath=.
+?c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2_src.zip -DgroupId=com.jacob -DartifactId=jacob -Dversion=1.18-M2 -Dpackaging=zip -Dclassifier=sources -DlocalRepositoryPath=.
+c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2\jacob-1.18-M2-x64.dll -DgroupId=com.jacob -DartifactId=jacob -Dversion=1.18-M2 -Dpackaging=dll -DlocalRepositoryPath=. -Dclassifier=x64
+c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2\jacob-1.18-M2-x86.dll -DgroupId=com.jacob -DartifactId=jacob -Dversion=1.18-M2 -Dpackaging=dll -DlocalRepositoryPath=. -Dclassifier=x86
+JNA TypeLibImport
+W:>java -cp jna-platform-4.1.0.jar;jna-4.1.0.jar com.sun.jna.platform.win32.COM.tlb.TlbImp -tlb.file FP3530.tlb -output.dir fpcom
+java -cp jna-platform-4.2.0.jar;jna-4.2.0.jar com.sun.jna.platform.win32.COM.tlb.TlbImp -tlb.file FP3530.tlb -output.dir fpcom
+-->        

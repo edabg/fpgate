@@ -1,0 +1,74 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 17, 2015, Jun 17, 2015 5:45:28 PM
+    Author     : valyo
+*/
+
+/* Import fonts */
+/*
+@import url('../fonts/OpenSans.css');
+@import url('../fonts/Roboto.css');
+*/
+
+/* [*] Framework customization */
+@import url('fonts/MaterialIcons.css');
+
+.material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;  /* Preferred icon size */
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+
+    /* Support for all WebKit browsers. */
+    -webkit-font-smoothing: antialiased;
+    /* Support for Safari and Chrome. */
+    text-rendering: optimizeLegibility;
+
+    /* Support for Firefox. */
+    -moz-osx-font-smoothing: grayscale;
+
+    /* Support for IE. */
+    font-feature-settings: 'liga';
+}
+
+html, button, input, select, textarea, * {
+    /* Set your content font stack here: */
+    font-family: "Segoe UI", "Open Sans", "Roboto", Arial, sans-serif;
+}
+
+main h1 {
+    font-size: 2em;
+}
+main h2 {
+    font-size: 1.6em;
+    margin: 0 0 0.7375em;
+    padding-bottom: 0.2em;
+}
+
+main h3 {
+    font-size: 1.4em;
+    margin: 0 0 0.5em;
+}
+
+.side-nav a i.material-icons {
+    line-height: inherit;
+}
+
+/* custom helpers/modifiers */
+.mono {
+    font-family: monospace;
+}
+.underline {
+    border-bottom: 1px solid #eee;
+}

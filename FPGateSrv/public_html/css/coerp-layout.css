@@ -1,0 +1,72 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 17, 2015, Jun 17, 2015 5:45:47 PM
+    Author     : valyo
+*/
+
+/* Fixed side nav */
+
+header, main, footer {
+    padding-left: 240px;
+}
+@media only screen and (max-width : 992px) {
+    header, main, footer {
+        padding-left: 0; } 
+}
+/* .container */
+.container {
+    width: 90%; }
+
+@media only screen and (min-width : 601px) {
+    .container {
+        width: 85%; } }
+
+@media only screen and (min-width : 993px) {
+    .container {
+        width: 85%; } }
+
+.fixed-footer footer.page-footer {
+    position: fixed;
+    bottom: -1px;
+    width: 100%;
+    z-index: 2; 
+}
+
+.fixed-header header {
+    position: fixed;
+    top: -1px;
+    width: 100%;
+    z-index: 1; 
+}
+
+.fixed-header main {
+    margin-top: 6em;
+/*    z-index: 1; */
+}
+.fixed-footer main {
+    margin-bottom: 9em;
+}
+
+.input-field {
+    /*    border: 1px solid red; */
+    /*    margin-top: 0.5rem; */
+}
+
+sub, sup {
+    position: inherit;
+}
+header sub, header sup {
+    position: static;
+}
+sub { 
+    vertical-align: sub; }
+sup { 
+    vertical-align: super; }
+
+.btn, .btn-large, .btn-flat {
+    text-align: left;
+}

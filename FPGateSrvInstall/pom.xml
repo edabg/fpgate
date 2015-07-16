@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.eda</groupId>
+    <artifactId>FPGateSrvInstall</artifactId>
+    <version>1.0.0-pre</version>
+    <packaging>pom</packaging>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <izpack.version>5.0.0-rc5</izpack.version>
+        <izpack.staging>${project.build.directory}/staging</izpack.staging>
+        <project.fpgatesrv.version>1.0.0-pre</project.fpgatesrv.version>
+        <project.fpgatesrv.target>${basedir}/../FPGateSrv/target</project.fpgatesrv.target>
+    </properties>
+<!-- https://izpack.atlassian.net/wiki/display/IZPACK/Compiling+Using+Maven -->    
+    <dependencies>
+        <dependency>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+        </dependency>
+        <dependency>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.10</version>
+        </dependency>
+        <dependency>
+                <groupId>org.codehaus.izpack</groupId>
+                <artifactId>izpack-maven-plugin</artifactId>
+                <version>${izpack.version}</version>
+        </dependency>
+<!--        
+        <dependency>
+            <groupId>org.eda</groupId>
+            <artifactId>FPGateSrv</artifactId>
+            <version>1.0.0</version>
+        </dependency>        
+-->
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                   <execution>
+                      <id>create-staging-area</id>
+                      <phase>process-resources</phase>
+                      <goals>
+                         <goal>run</goal>
+                      </goals>
+                      <configuration>
+                         <tasks>
+                            <copy todir="${izpack.staging}">
+                               <fileset dir="${basedir}/src/izpack"/>
+                            </copy>
+                         </tasks>
+                      </configuration>
+                   </execution>
+                </executions>
+             </plugin>            
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <configuration>
+                    <excludeTransitive>false</excludeTransitive>
+                        <!-- reference our custom panels jar in our installer descriptor without its version -->
+                    <stripVersion>true</stripVersion>
+                    <overWriteReleases>true</overWriteReleases>
+                    <overWriteSnapshots>true</overWriteSnapshots>
+                    <overWriteIfNewer>true</overWriteIfNewer>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- copy *application* jars to izpack staging lib -->
+                        <id>copy-product-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${izpack.staging}/lib</outputDirectory>
+                            <excludeScope>system</excludeScope>
+                            <!-- this excludes tools.jar, e.g. -->
+<!--                            <excludeArtifactIds>mycustompanels</excludeArtifactIds> -->
+                            <!-- IMPORTANT: don't copy custom panels where our application jars live -->
+                            <excludeGroupIds>org.codehaus.izpack</excludeGroupIds>
+                            <!-- IMPORTANT: we don't want to copy the IzPack dependency where our application jars live -->
+                        </configuration>
+                    </execution>
+<!--                    
+                    <execution>
+                        <!- copy izpack custom (custom panels, etc.) jars to izpack staging custom ->
+                        <id>copy-izpack-dependencies</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${izpack.staging}/custom</outputDirectory>
+                            <includeArtifactIds>mycustompanels</includeArtifactIds>
+                            <!- IMPORTANT: this causes *only* our custom panels to be copied ->
+                        </configuration>
+                    </execution>
+-->                    
+                </executions>
+            </plugin>             
+            <plugin>
+                <groupId>org.codehaus.izpack</groupId>
+                <artifactId>izpack-maven-plugin</artifactId>
+                <version>${izpack.version}</version>
+                <executions>
+                    <execution>
+                       <phase>package</phase>
+                       <goals><goal>izpack</goal></goals>
+                       <configuration>
+                          <!-- base for relative paths in izpack descriptor -->
+                          <baseDir>${izpack.staging}</baseDir>
+                          <installFile>${basedir}/src/izpack/install.xml</installFile>
+                       </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                   <dependency>
+                      <groupId>org.codehaus.izpack</groupId>
+                      <artifactId>izpack-panel</artifactId>
+                      <version>${izpack.version}</version>
+                   </dependency>
+                </dependencies>
+             </plugin>
+        </plugins>
+    </build>
+</project>

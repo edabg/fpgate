@@ -1,0 +1,7 @@
+target/
+ssl/
+signing/
+logs/
+lib/
+fprinters.db
+FPGateSrv.properties

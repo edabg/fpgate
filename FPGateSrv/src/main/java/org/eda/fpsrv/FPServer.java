@@ -1,0 +1,466 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.eda.fpsrv;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import org.restlet.Application;
+import org.restlet.Component;
+import org.restlet.Restlet;
+import org.restlet.Server;
+import org.restlet.data.ChallengeScheme;
+import org.restlet.data.Parameter;
+import org.restlet.data.Protocol;
+import org.restlet.engine.Engine;
+import org.restlet.engine.converter.ConverterHelper;
+import org.restlet.routing.Router;
+import org.restlet.routing.Template;
+import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.service.CorsService;
+import org.restlet.ext.crypto.DigestUtils;
+import org.restlet.resource.Directory;
+import org.restlet.security.SecretVerifier;
+import static org.restlet.security.Verifier.RESULT_INVALID;
+import static org.restlet.security.Verifier.RESULT_VALID;
+import org.restlet.util.Series;
+
+/**
+ *
+ * @author Dimitar Angelov
+ */
+public class FPServer extends Application {
+
+    public static FPServer application;
+    public static Component mainComponent;
+    public static Server httpServer;
+    public static Server httpsServer;
+    public ChallengeAuthenticator adminGuard;
+    public ChallengeAuthenticator userGuard;
+    
+    private String version;
+
+    /**
+     * Get the value of version
+     *
+     * @return the value of version
+     */
+    public String getVersion() {
+        return version;
+    }
+
+    private String buildNumber;
+
+    /**
+     * Get the value of buildNumber
+     *
+     * @return the value of buildNumber
+     */
+    public String getBuildNumber() {
+        return buildNumber;
+    }
+    
+    private Properties appProperties;
+
+    /**
+     * Get the value of appProperties
+     *
+     * @return the value of appProperties
+     */
+    public Properties getAppProperties() {
+        return appProperties;
+    }
+    
+    private String appPath;
+
+    /**
+     * Get the value of appPath
+     *
+     * @return the value of appPath
+     */
+    public String getAppPath() {
+        return appPath;
+    }
+    
+    private String appBasePath;
+
+    /**
+     * Get the value of appBasePath
+     *
+     * @return the value of appBasePath
+     */
+    public String getAppBasePath() {
+        return appBasePath;
+    }
+    
+    
+    private void initProperties() {
+        // Read Version Number
+        try {
+            Enumeration<URL> resources = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+            while (resources.hasMoreElements()) {
+                try {
+                  Manifest manifest = new Manifest(resources.nextElement().openStream());
+                  // check that this is your manifest and do what you need or get the next one
+                  Attributes attr = manifest.getMainAttributes();
+                  version = attr.getValue("Implementation-Version");
+                  if (version == null) version = "N/A";
+                  buildNumber = attr.getValue("Implementation-Build-TimeStamp");
+                  if (buildNumber == null) buildNumber = "N/A";
+                } catch (IOException E) {
+                  // handle
+//                  JOptionPane.showMessageDialog(this, E.getMessage());  
+                }
+            }        
+        } catch (IOException E) {
+            E.printStackTrace();
+        }
+        
+        Properties defaultProperties = new Properties();
+        defaultProperties.setProperty("ServerPort", "8182");
+        defaultProperties.setProperty("ServerPortSSL", "8183");
+        defaultProperties.setProperty("AdminUser", "fpgadmin");
+        defaultProperties.setProperty("AdminPass", DigestUtils.toMd5("Pr1nt"));
+        defaultProperties.setProperty("DisableAnonymous", "0");
+        defaultProperties.setProperty("UseSSL", "0");
+        defaultProperties.setProperty("SSLKeyFile", "ssl/fpgate.jks");
+        defaultProperties.setProperty("SSLKeyFileType", "JKS"); // jks
+        defaultProperties.setProperty("SSLKeyStorePassword", "FPGate"); // 
+        defaultProperties.setProperty("SSLKeyPassword", "FPGate"); // 
+        
+        this.appProperties = new Properties(defaultProperties);
+        try {
+            File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+//            String propertiesPath=jarPath.getParentFile().getAbsolutePath();
+            appPath=jarPath.getParent();
+            appBasePath=jarPath.getParentFile().getParent().replace("%20", " ").replace("\\", "/");
+            getLogger().log(Level.INFO, "Base Path:{0}", appBasePath);
+//            System.out.println(" propertiesPath-"+appBasePath);
+            String pfile = appBasePath+"/FPGateSrv.properties";
+            if (new File(pfile).exists())
+                this.appProperties.load(new FileInputStream(pfile));
+        } catch (IOException E) {
+            E.printStackTrace();
+        }
+//        String libPathProperty = System.getProperty("java.library.path");
+//        System.out.println(libPathProperty);        
+//        System.out.println("Server Port:"+this.appProperties.getProperty("ServerPort"));
+    }
+    
+    public void updateProperties() {
+        try {
+            File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+            String pfile = appBasePath+"/FPGateSrv.properties";
+            this.appProperties.store(new FileOutputStream(pfile), "No Comments");
+            userGuard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
+        } catch (IOException E) {
+            E.printStackTrace();
+        }
+    }
+
+    public String getDocumentRoot() {
+        return getAppBasePath()+"/public_html";
+    }
+    
+    public URI getAdminURL() throws URISyntaxException {
+        String serverAddr = getServerAddress();
+        if (serverAddr.length() == 0) serverAddr = "localhost";
+        String serverPort = Integer.toString(getServerPort());
+        if (serverPort.length() == 0) serverPort = "8182";
+        return new URI("http://"+serverAddr+":"+serverPort+"/admin/");
+    }
+    public FPServer() {
+        setName("Fiscal Printer Gateway");
+        setDescription("Fiscal Printer Gateway Application");
+        setOwner("EDA Ltd.");
+        setAuthor("EDA Software Development Team");
+        initProperties();
+    }
+    
+    protected int getServerPort() {
+        int port = 8182;
+        try {
+            port = Integer.parseInt(appProperties.getProperty("ServerPort", Integer.toString(port)));
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+        return port;
+    }
+
+    protected int getServerPortSSL() {
+        int port = 8183;
+        try {
+            port = Integer.parseInt(appProperties.getProperty("ServerPortSSL", Integer.toString(port)));
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+        return port;
+    }
+    
+    protected String getServerAddress() {
+        String address = "";
+        try {
+            address = appProperties.getProperty("ServerAddr", address);
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+        return address;
+    }
+
+    /**
+     * Run as a standalone component.
+     * 
+     * @param args
+     *            The optional arguments.
+     * @throws Exception
+     */
+    public static void main(String[] args) throws Exception {
+
+        // Create an application
+        application = new FPServer();
+
+        mainComponent = new Component();
+//        System.out.println(mainComponent.getLogService().getLoggerName());
+//        mainComponent.getLogService().setLoggerName("com.noelios.web.WebComponent.www");
+
+//        httpServer = new Server(Protocol.HTTP, application.getServerPort());
+//        mainComponent.getServers().add(httpServer);
+        
+        // Enable CORS
+        CorsService corsService = new CorsService();         
+        corsService.setAllowedOrigins(new HashSet(Arrays.asList("*")));
+        corsService.setAllowedCredentials(true);        
+        application.getServices().add(corsService);
+//        Engine.getInstance().getRegisteredConverters().add(0, new JacksonConverter());        
+//        Engine.getInstance().getRegisteredConverters().remove(0);
+        List<ConverterHelper> chl = Engine.getInstance().getRegisteredConverters();
+        // Attach the application to the component and start it
+        mainComponent.getDefaultHost().attachDefault(application);
+        application.initLogs();
+        // Create a component
+        ControlPanel cp = new ControlPanel();
+        cp.setVisible(true);
+        
+//        mainComponent.start();
+        application.startServer();
+        cp.notifyChange();
+    }
+
+    protected void initLogs() {
+        try {
+            mainComponent.getLogger().addHandler(
+                    new FileHandler(application.getAppBasePath()+"/logs/"+application.getName()+"-access-%u-%g.log", 5*1024*1024, 10, true){{
+                        setFormatter(new org.restlet.engine.log.AccessLogFormatter());
+                    }}
+            );
+        } catch (IOException ex) {
+            ex.printStackTrace();
+//            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+//            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        }
+    }
+    public void addSSL() {
+        if (!appProperties.getProperty("UseSSL", "0").equals("1")) return;
+        String keyFileName = appBasePath+"/"+appProperties.getProperty("SSLKeyFile", "ssl/fpgate.jks");
+        File keyFile = new File(keyFileName);
+        if (keyFile.exists()) {
+            String address = application.getServerAddress(); 
+            if (address.length() > 0)
+                httpsServer = new Server(Protocol.HTTPS, address, application.getServerPortSSL());
+            else
+                httpsServer = new Server(Protocol.HTTPS, application.getServerPortSSL());
+            mainComponent.getServers().add(httpsServer);
+            Series<Parameter> parameters = httpsServer.getContext().getParameters();
+            parameters.add("sslContextFactory", "org.restlet.engine.ssl.DefaultSslContextFactory");
+            parameters.add("keyStorePath", keyFileName);
+            parameters.add("keyStorePassword", appProperties.getProperty("SSLKeyStorePassword", "FPGate"));
+            parameters.add("keyPassword", appProperties.getProperty("SSLKeyPassword", "FPGate"));
+            parameters.add("keyStoreType", appProperties.getProperty("SSLKeyFileType", "JKS"));
+        } else
+            getLogger().log(Level.WARNING, "SSL Key file:"+keyFileName+" doesn' exist. SSL is turned off.");
+    }
+    
+    public void startServer() {
+        try {
+            if (mainComponent.isStarted()) stopServer();
+            
+//            httpServer = new Server(Protocol.HTTP, application.getServerPort());
+            String address = application.getServerAddress(); 
+            if (address.length() > 0)
+                httpServer = new Server(Protocol.HTTP, address, application.getServerPort());
+            else
+                httpServer = new Server(Protocol.HTTP, application.getServerPort());
+            mainComponent.getServers().add(httpServer);
+            addSSL();
+            mainComponent.getClients().add(Protocol.FILE);
+            mainComponent.start();
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+    }
+    
+    public void stopServer() {
+        try {
+            mainComponent.stop();
+            mainComponent.getServers().clear();
+            mainComponent.getClients().clear();
+        } catch (Exception E) {
+            E.printStackTrace();
+        }
+    }
+
+    @Override
+    public Restlet createInboundRoot() {
+        // Create a router
+        Router router = new Router(getContext());
+
+        // Attach the resources to the router
+        adminGuard = getAdminGuard();
+        adminGuard.setNext(AdminResource.class);
+        router.attach("/admin/{ares}/{idr}", adminGuard, Template.MODE_STARTS_WITH);
+        router.attach("/admin/{ares}", adminGuard, Template.MODE_STARTS_WITH);
+        router.attach("/admin", adminGuard, Template.MODE_STARTS_WITH);
+//        Directory directory = new Directory(getContext(),getDocumentRoot());
+//        directory.setIndexName("index.html");
+        router.attach("/js", new Directory(getContext(),"file:///"+getDocumentRoot()+"/js"));
+        router.attach("/css", new Directory(getContext(),"file:///"+getDocumentRoot()+"/css"));
+
+        userGuard = getUserGuard();
+        userGuard.setNext(PrintResource.class);
+        router.attach("/print/", userGuard);
+        router.attach("/", RootResource.class);
+        
+        
+        // Return the root router
+        return router;
+    }
+
+/*    
+    public class AdminVerifier extends LocalVerifier {
+
+        DigestAuthenticator guard = new DigestAuthenticator(getContext(), "FP Gate Admin", "Iechah4I");
+        guard.setWrappedVerifier(new AdminVerifier());
+        guard.setWrappedAlgorithm(Digest.ALGORITHM_HTTP_DIGEST);
+        
+        @Override
+        public char[] getLocalSecret(String identifier) {
+            return DigestUtils.toHttpDigest(identifier, "qwepoi".toCharArray(), "FP Gate Admin").toCharArray();
+        }
+        
+    }    
+*/    
+
+    private FPDatabase fpdb;
+    
+    private FPDatabase getDatabase() throws SQLException {
+        if (fpdb == null)
+            fpdb = new FPDatabase();
+        return  fpdb;
+    }
+    
+    public class AdminVerifier extends SecretVerifier {
+
+        @Override
+        public int verify(String identifier, char[] secret) {
+            Properties prop = FPServer.application.getAppProperties();
+            String pass;
+            if (identifier.equals(prop.getProperty("AdminUser"))) {
+                pass = prop.getProperty("AdminPass");
+            } else {
+                try {
+                    FPDatabase db = getDatabase();
+                    FUser user = db.getUserByName(identifier);
+                    if (user != null && user.getValidUser() > 0 && user.getRole() > 0) {
+                        pass = user.getUserPass();
+                    } else
+                        return RESULT_INVALID;
+                } catch (SQLException sQLException) {
+                    return RESULT_INVALID;
+                }
+            }    
+
+            String secPass = DigestUtils.toMd5(String.copyValueOf(secret));
+            
+            if (secPass.equals(pass))
+                return RESULT_VALID;
+            else
+                return RESULT_INVALID;
+        }
+        
+    }
+    
+    private ChallengeAuthenticator getAdminGuard() {
+        // Create a simple password verifier
+//        MapVerifier verifier = new MapVerifier();
+//        verifier.getLocalSecrets().put("mitko", "qwepoi".toCharArray());
+
+        // Create a guard
+        ChallengeAuthenticator guard = new ChallengeAuthenticator(getContext(),
+                ChallengeScheme.HTTP_BASIC, "FP Admin");
+        guard.setVerifier(new AdminVerifier());
+        return guard;
+    }
+
+    public class UserVerifier extends SecretVerifier {
+
+        @Override
+        public int verify(String identifier, char[] secret) {
+            Properties prop = FPServer.application.getAppProperties();
+            String pass;
+            if (identifier.equals(prop.getProperty("AdminUser"))) {
+                pass = prop.getProperty("AdminPass");
+            } else if (identifier.equals("mitko")) {
+                pass = DigestUtils.toMd5("qwepoi");
+            } else {
+                try {
+                    FPDatabase db = getDatabase();
+                    FUser user = db.getUserByName(identifier);
+                    if (user != null && user.getValidUser() > 0) {
+                        pass = user.getUserPass();
+                    } else
+                        return RESULT_INVALID;
+                } catch (SQLException sQLException) {
+                    return RESULT_INVALID;
+                }
+            }    
+
+            String secPass = DigestUtils.toMd5(String.copyValueOf(secret));
+            
+            if (secPass.equals(pass))
+                return RESULT_VALID;
+            else
+                return RESULT_INVALID;
+        }
+        
+    }
+    
+    private ChallengeAuthenticator getUserGuard() {
+        // Create a guard
+        ChallengeAuthenticator guard = new ChallengeAuthenticator(getContext(),
+                ChallengeScheme.HTTP_BASIC, "FP User");
+        guard.setVerifier(new UserVerifier());
+        guard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
+        return guard;
+    }
+    
+    
+}

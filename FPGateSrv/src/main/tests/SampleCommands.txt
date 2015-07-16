@@ -1,0 +1,55 @@
+[PrintFiscalCheck]
+SON,Operator Name
+STG,Product of tax group B,B,0.12,0
+STG,Product of tax group A,A,0.25,0
+PFT,Sample fiscal text
+STL
+TTL,Total:,CASH,2.00
+
+[PrintNonFiscalCheck]
+SON,Good Operator
+PNT,@padl,,#
+PNT,@padc,DOCUMENT
+PNT,@padl,,#
+PNT,Sample text
+PNT,@padl,Left aligned,.
+PNT,@padr,Right aligned,.
+PNT,Next is label and value label is left aligned and value to the right
+PNT,@lval,Label,Value
+PNT,@padl,,#
+
+[PrintDuplicateCheck]
+
+[LastFiscalRecordInfo]
+
+[PrinterStatus]
+
+[GetDiagnosticInfo]
+
+[AbnormalComplete]
+
+[GetDateTime]
+
+[SetDateTime]
+#DateTime=2015-07-08 10:01:02
+
+[ReportDaily]
+ReportType=X
+#ReportType=Z
+
+[ReportByDates]
+ReportType=X
+FromDate=2015-07-01
+ToDate=2015-07-03
+
+[GetJournalInfo]
+
+[CustomCommand]
+Cmd=65
+Args=0
+
+[Test]
+
+
+
+

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2015 EDA Ltd.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<izpack:installation version="5.0"
+                     xmlns:izpack="http://izpack.org/schema/installation"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xsi:schemaLocation="http://izpack.org/schema/installation http://izpack.org/schema/5.0/izpack-installation-5.0.xsd">
+
+    <info>
+        <appname>FPGateSrv</appname>
+        <appversion>@{project.fpgatesrv.version}</appversion>
+<!--    <appsubpath>myapp</appsubpath> -->
+        <javaversion>1.6</javaversion>
+        <uninstaller write="yes" />
+        <singleinstance>yes</singleinstance>
+        <url>http://www.edabg.com</url>
+        <authors>
+            <author name="EDA Ltd." email="support@edabg.com"/>
+        </authors>
+    </info>
+ 
+    <guiprefs resizable="no" width="480" height="360">
+        <laf name="looks">
+            <param name="variant" value="windows" />
+            <os family="windows" />
+        </laf>
+    </guiprefs>
+
+    <locale>
+        <langpack iso3="eng"/>
+    </locale>
+
+    <variables>
+        <variable name="TargetPanel.dir.windows" value="c:\FPGateSrv" />
+    </variables>
+
+    <panels>
+        <panel classname="HelloPanel" />
+<!--        <panel classname="DefaultTargetPanel" />-->
+        <panel classname="TargetPanel"/>
+        <panel classname="InstallPanel"/>
+        <panel classname="ShortcutPanel"/>
+        <panel classname="SimpleFinishPanel" />
+    </panels>
+    <resources>
+        <res src="@{izpack.staging}/Win_shortcutSpec.xml" id="Win_shortcutSpec.xml"/>
+<!--      
+        <res src="@{izpack.staging}/common_resources/img/install-sidebar.png" id="Installer.image"/>
+        <res src="hello.html" id="HTMLHelloPanel.info"/>
+        <res src="license.html" id="HTMLLicencePanel.licence"/>
+-->    
+    </resources>
+    <natives>
+        <native type="izpack" name="ShellLink.dll">
+            <os family="windows" />
+        </native>    
+        <native type="izpack" name="ShellLink_x64.dll">
+            <os family="windows" />
+        </native>    
+    </natives>    
+    <packs>
+        <pack name="fpgatesrv" required="yes">
+            <description>FPGateSrv Installation</description>
+            <singlefile src="@{project.fpgatesrv.target}/FPGateSrv-@{project.fpgatesrv.version}-WL.jar" target="$INSTALL_PATH/bin/FPGateSrv.jar" />
+            <singlefile src="@{izpack.staging}/FPGateSrv.cmd" target="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
+            <parsable targetfile="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
+            <fileset dir="@{project.fpgatesrv.target}/classes" includes="*.dll"  targetdir="$INSTALL_PATH/bin" override="true" />
+            <fileset dir="@{project.fpgatesrv.target}/../public_html" includes="**"  targetdir="$INSTALL_PATH/public_html" override="true" />
+            <fileset dir="@{project.fpgatesrv.target}/../" includes="logs"  targetdir="$INSTALL_PATH/" override="true" />
+            <fileset dir="@{project.fpgatesrv.target}/../ssl" includes="*.jks"  targetdir="$INSTALL_PATH/ssl" override="true" />
+        </pack>
+    </packs>
+ 
+</izpack:installation>
