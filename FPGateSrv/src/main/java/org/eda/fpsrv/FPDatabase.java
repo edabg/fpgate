@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Nikola Bintev
+ * Copyright (C) 2015 EDA Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
