@@ -19,6 +19,23 @@ Current version of FPGate supports following cash registers:
 DATECS DP-05KL, DP-15KL,DP-25KL,DP-35KL,DP-45KL,DP-50KL,DP-50CKL,DP-55KL,MP-55 KL,DP-500PLUS KL
 
 
+Requirements
+============
+- Java Runtime Environment 8.0+
+- Drivers for implemented fiscal printers. 
+For DATECS models [FP3530 COM Server](http://www.datecs.bg/en/support/Downloads/4) v2.0.0/822 or newer is required.
+
+Installation
+============
+1. Download latest release of FPGateSrvInstall.jar from [Github](https://github.com/edabg/fpgate/releases).
+2. Start FPGateSrvInstall.jar and complete the process.
+3. Install printer drivers/libraries.
+4. Start FPGate Server with $INSTALL_PATH\bin\FPGateSrv.cmd 
+5. Configure server from Control panel and setup user administrator.
+6. Launch browser and go to FPGate server administration (for example: http://localhost:8182/admin/)
+7. Define printers and users.
+8. Defined printers are ready to be used from applications (see examples bellow).
+
 Web API
 =======
 API for access to printers is based on simple JSON application protocol over HTTP/HTTPS.
@@ -69,12 +86,12 @@ Here is example request:
         })
     });
     var args = 
-        'SON,Operator Name\n' +
-        'STG,Product of tax group B,B,0.12,0\n' +
-        'STG,Product of tax group A,A,0.25,0\n' +
-        'PFT,Sample fiscal text\n' +
+        'SON\tOperator Name\n' +
+        'STG\tProduct of tax group B\tB\t0.12\t0\n' +
+        'STG\tProduct of tax group A\tA\t0.25\t0\n' +
+        'PFT\tSample fiscal text\n' +
         'STL\n' +
-        'TTL,Total:,CASH,2.00\n' +
+        'TTL\tTotal:\tCASH\t2.00\n' +
         '';
 
     fpg.sendRequest(new FPGRequest({
