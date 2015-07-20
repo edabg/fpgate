@@ -51,6 +51,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     <panels>
         <panel classname="HelloPanel" />
 <!--        <panel classname="DefaultTargetPanel" />-->
+        <panel classname="LicencePanel"/>
         <panel classname="TargetPanel"/>
         <panel classname="InstallPanel"/>
         <panel classname="ShortcutPanel"/>
@@ -58,6 +59,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </panels>
     <resources>
         <res src="@{izpack.staging}/Win_shortcutSpec.xml" id="Win_shortcutSpec.xml"/>
+        <res id="LicencePanel.licence" src="@{izpack.staging}/license.txt"/>
 <!--      
         <res src="@{izpack.staging}/common_resources/img/install-sidebar.png" id="Installer.image"/>
         <res src="hello.html" id="HTMLHelloPanel.info"/>
@@ -82,6 +84,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <fileset dir="@{project.fpgatesrv.target}/../public_html" includes="**"  targetdir="$INSTALL_PATH/public_html" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../" includes="logs"  targetdir="$INSTALL_PATH/" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../ssl" includes="*.jks"  targetdir="$INSTALL_PATH/ssl" override="true" />
+            <singlefile src="@{izpack.staging}/license.txt" target="$INSTALL_PATH/license.txt" />
         </pack>
     </packs>
  
