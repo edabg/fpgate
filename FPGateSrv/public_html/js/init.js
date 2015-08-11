@@ -151,21 +151,27 @@ function cmdExecute(el) {
                 if ('' != f.elements[element].value)
                     f.elements[element].value += '------------------\n';
             });
+            var resultData = null;
+            if ('result' in data && data.result) {
+                resultData = data.result;
+            } else if ('error' in data && typeof data.error == 'object' && 'data' in data.error) {
+                resultData = data.error.data;
+            }
             try {
-                for (var i in data.resultTable) {
-                    f.elements['Result'].value += i + '=' + data.resultTable[i] + '\n';
+                for (var i in resultData.resultTable) {
+                    f.elements['Result'].value += i + '=' + resultData.resultTable[i] + '\n';
                 }
             } catch (err) {
             }
             try {
-                for (var i in data.errors) {
-                    f.elements['Errors'].value += data.errors[i] + '\n';
+                for (var i in resultData.errors) {
+                    f.elements['Errors'].value += resultData.errors[i] + '\n';
                 }
             } catch (err) {
             }
             try {
-                for (var i in data.log) {
-                    f.elements['Log'].value += data.log[i] + '\n';
+                for (var i in resultData.log) {
+                    f.elements['Log'].value += resultData.log[i] + '\n';
                 }
             } catch (err) {
             }

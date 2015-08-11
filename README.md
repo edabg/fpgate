@@ -1,13 +1,16 @@
 EDA FPGate Server
 =================
-EDA FPGate Server is application service which provide unified access to fiscal printers.
+EDA FPGate Server is application service which provide unified access to fiscal printers. 
+The server is not complied to UnifiedPOS specification, but is made to be simple of use. 
 It is restful web service application which provide unified protocol for access to various fiscal devices (fiscal printers and cash registers).
 The main goal of FPGate is to separate common programming logic for work with fiscal devices from complexity to manage variety of fiscal devices.  
+
 
 FPGate server is application which provide web API for access to unlimited number of predefined set of fiscal printers.
 The server contains two main components:
 
 1.Administration (HTML) interface for defining printers and users http://localhost:8182/admin/
+
 2.Application JSON protocol API interface for using printers http://localhost:8182/print/
 
 Current version of FPGate supports following fiscal printers:
@@ -38,12 +41,22 @@ Installation
 
 Web API
 =======
-API for access to printers is based on simple JSON application protocol over HTTP/HTTPS.
+API for access to printers is based on simple JSON-RPC (http://www.jsonrpc.org/specification) application protocol over HTTP/HTTPS.
 All API calls to services are in form of posting JSON Request object and receiving Response object as result of execution of request.
 
 Request Object
 ---------------------------
 Request Object contains following attributes:
+
+Attribute  |Type   |Description
+-----------|-------|-------------------------
+jsonrpc    |String |A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
+method     |String |A String containing the name of the method/printer command to be invoked. Method names that begin with the word rpc followed by a period character (U+002E or ASCII 46) are reserved for rpc-internal methods and extensions and MUST NOT be used for anything else.
+params     |Object |A Structured value that holds the parameter values to be used during the invocation of the method. 
+.Params    |Object |Optional Hash map with printer parameters in form of pairs parameter_name = value 
+id         |String |An identifier established by the Client that MUST contain a String, Number, or NULL value if included.
+
+'params' object in request contain following attributes:
 
 Attribute  |Type   |Description
 -----------|-------|-------------------------
@@ -57,7 +70,19 @@ Arguments  |Array  |Array of strings with arguments of command
 
 Response Object
 ---------------
+
 Response Object contains following attributes:
+
+ Attribute  |Type       |Description
+------------|-----------|------------------------------------
+jsonrpc     |String     |A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
+result      |Object     |This member exists and is object in case of success. This member doesn't exists in case of error.
+error       |Object     |This member exists in case of error. When error exists 'result' doesn't exist.
+Errors      |Array      |List of errors and waring during execution of command
+id          |String     |It contains the same as the value of the id member in the Request Object.
+
+
+In case of success 'result' object contains following attributes:
 
  Attribute  |Type       |Description
 ------------|-----------|------------------------------------
@@ -67,10 +92,14 @@ Messages    |Array      |List of messages in process of executing command
 Errors      |Array      |List of errors and waring during execution of command
 Log         |Array      |Detailed log of execution of command
 
-The main considerations about successful execution of particular command will be places as result in ResultTable and depends of commend implementation.
-For example if you request PrintFiscalCheck command (which contains subcommands), some of subcommand can return error. 
-Printing fiscal check is atom command and always on success must complete with successful closing of fiscal check.
-In that case you can check 'CloseStatus' field.
+In case of error 'error' object contains following attributes:
+
+ Attribute  |Type       |Description
+------------|-----------|------------------------------------
+code        |Number     |A Number that indicates the error type that occurred.
+message     |String     |A String providing a short description of the error.
+data        |Object     |An object with same structure as 'result'. This contains particular information to the the point of error is occurred.
+
 
 Web Appication Javascript Library
 =================================
@@ -99,28 +128,27 @@ Here is example request:
         , Arguments : args.split('\\n')
         , onRequestComplete: function(data, textStatus) {
             try {
-                try {
-                    if ('errors' in data) {
-                        for (var i in data.errors) 
-                            alert('Error:'+data.errors[i]);
-                    }	
-                } catch (err) {
-                    alert(err);
-                }	
-                if ('resultTable' in data) {
-                    if ('CloseStatus' in data.resultTable && (data.resultTable.CloseStatus == '1')) {
-                        // LastPrintDocNum
-                        f['FPData[FPDocNum]'].value = ('LastPrintDocNum' in data.resultTable)?data.resultTable.LastPrintDocNum:'N/A';
-                        f['FPData[SerialNum]'].value = ('LFRI_DocNum' in data.resultTable)?data.resultTable.LFRI_DocNum:'N/A';
-                        // LFRI_DateTime
-                        f['FPData[FPDocDate]'].value = ('LFRI_DateTime' in data.resultTable)?data.resultTable.LFRI_DateTime:'';
-                        alert('SerialNum:'+f['FPData[SerialNum]'].value);
-                        alert('FPDocNum:'+f['FPData[FPDocNum]'].value);
-                        alert('FPDocDate:'+f['FPData[FPDocDate]'].value);
-                        f.submit();
-                    } else {
-                        alert('Operation completed successfully!');
-                    }	
+                var resultData = null;
+                if ('result' in data && data.result) {
+                    resultData = data.result;
+                } else if ('error' in data && typeof data.error == 'object' && 'data' in data.error) {
+                    resultData = data.error.data;
+                }
+                if ('result' in data && data.result) {
+                    var resultData = data.result.resultTable;
+                    // LastPrintDocNum
+                    f['FPData[FPDocNum]'].value = ('LastPrintDocNum' in resultData)?resultData.LastPrintDocNum:'N/A';
+                    f['FPData[SerialNum]'].value = ('LFRI_DocNum' in resultData)?resultData.LFRI_DocNum:'N/A';
+                    // LFRI_DateTime
+                    f['FPData[FPDocDate]'].value = ('LFRI_DateTime' in resultData)?resultData.LFRI_DateTime:'';
+                    alert('SerialNum:'+f['FPData[SerialNum]'].value);
+                    alert('FPDocNum:'+f['FPData[FPDocNum]'].value);
+                    alert('FPDocDate:'+f['FPData[FPDocDate]'].value);
+                    f.submit();
+                } else if ('error' in data && data.error) {
+                    for (var i in data.error.data.errors) {
+                            f.elements['Errors'].value += data.error.data.errors[i]+'\n';
+                    }
                 } else {
                     alert('Missing Result!');
                 }
@@ -131,7 +159,7 @@ Here is example request:
     }));
 ```
 
-Implemented Commands
+Implemented Methods
 ====================
 FPGate Server supports following list of commands.
 

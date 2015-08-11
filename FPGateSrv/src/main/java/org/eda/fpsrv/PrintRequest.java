@@ -17,25 +17,28 @@
 package org.eda.fpsrv;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.List;
 
 /**
- *
+ * JSON-RPC compatible request object
  * @author Dimitar Angelov
  */
-@JsonAutoDetect
+//@JsonAutoDetect
 public class PrintRequest {
     
-    @JsonAutoDetect
+//    @JsonAutoDetect
     public class PrinterDescription {
 
-        @JsonProperty
+        @JsonProperty("ID")
         private String ID;
-        @JsonProperty
+        
+        @JsonProperty("Model")
         private String Model;
-        @JsonProperty
+        
+        @JsonProperty("Params")
         private HashMap<String, String> Params;
 
         /**
@@ -43,6 +46,7 @@ public class PrintRequest {
          *
          * @return the value of ID
          */
+        @JsonProperty("ID")
         public String getID() {
             return ID;
         }
@@ -52,6 +56,7 @@ public class PrintRequest {
          *
          * @param ID new value of ID
          */
+        @JsonProperty("ID")
         public void setID(String ID) {
             this.ID = ID;
         }
@@ -61,6 +66,7 @@ public class PrintRequest {
          *
          * @return the value of Model
          */
+        @JsonProperty("Model")
         public String getModel() {
             return Model;
         }
@@ -70,6 +76,7 @@ public class PrintRequest {
          *
          * @param Model new value of Model
          */
+        @JsonProperty("Model")
         public void setModel(String Model) {
             this.Model = Model;
         }
@@ -78,6 +85,7 @@ public class PrintRequest {
          *
          * @return the value of Params
          */
+        @JsonProperty("Params")
         public HashMap<String, String> getParams() {
             return Params;
         }
@@ -87,36 +95,116 @@ public class PrintRequest {
          *
          * @param Params new value of Params
          */
+        @JsonProperty("Params")
         public void setParams(HashMap<String, String> Params) {
             this.Params = Params;
         }
     }
 
-    @JsonProperty
-    private PrinterDescription Printer;
+//    @JsonAutoDetect
+    public class MethodParams {
+        public class PrinterDescription  extends PrintRequest.PrinterDescription {      
+        }
+        
+        @JsonProperty("arguments")
+        private List<String> Arguments;
 
-    @JsonProperty
-    private String Command;
+        @JsonProperty("printer")
+        private PrinterDescription Printer;
 
-    @JsonProperty
-    private List<String> Arguments;
+
+        /**
+         * Get the value of Printer
+         *
+         * @return the value of Printer
+         */
+        @JsonProperty("printer")
+        public PrinterDescription getPrinter() {
+            return Printer;
+        }
+
+        /**
+         * Set the value of Printer
+         *
+         * @param printer new value of Printer
+         */
+        @JsonProperty("printer")
+        public void setPrinter(PrinterDescription printer) {
+            this.Printer = printer;
+        }
+
+        /**
+         * Get the value of Arguments
+         *
+         * @return the value of Arguments
+         */
+        @JsonProperty("arguments")
+        public List<String> getArguments() {
+            return Arguments;
+        }
+
+        /**
+         * Set the value of Arguments
+         *
+         * @param arguments new value of Arguments
+         */
+        @JsonProperty("arguments")
+        public void setArguments(List<String> arguments) {
+            this.Arguments = arguments;
+        }
+
+        @JsonIgnore
+        public StrTable getNamedArguments() {
+            StrTable res = new StrTable();
+            String[] argParams;
+            for(String arg : Arguments) {
+                argParams = arg.split("=");
+                if (argParams.length > 1) 
+                    res.put(argParams[0], argParams[1]);
+            }
+            return res;
+        }
+
+    }
+
+    @JsonProperty("jsonrpc")
+    private String jsonrpc;
+
+    @JsonProperty("method")
+    private String Method;
     
+    @JsonProperty("params")
+    private MethodParams Params;
+
+    @JsonProperty("id")
+    private String Id;
+
+    /**
+     * Get the value of jsonrpc
+     *
+     * @return the value of jsonrpc
+     */
+    public String getJsonrpc() {
+        return jsonrpc;
+    }
+
+    /**
+     * Set the value of jsonrpc
+     *
+     * @param jsonrpc new value of jsonrpc
+     */
+    public void setJsonrpc(String jsonrpc) {
+        this.jsonrpc = jsonrpc;
+    }
+
     /**
      * Get the value of Printer
      *
      * @return the value of Printer
      */
+    @JsonIgnore
     public PrinterDescription getPrinter() {
-        return Printer;
-    }
-
-    /**
-     * Set the value of Printer
-     *
-     * @param Printer new value of Printer
-     */
-    public void setPrinter(PrinterDescription Printer) {
-        this.Printer = Printer;
+        return this.Params.getPrinter();
     }
     
     /**
@@ -124,47 +212,84 @@ public class PrintRequest {
      *
      * @return the value of Command
      */
+    @JsonIgnore
     public String getCommand() {
-        return Command;
+        return Method;
     }
 
     /**
-     * Set the value of Command
+     * Get the value of Params
      *
-     * @param Command new value of Command
+     * @return the value of Params
      */
-    public void setCommand(String Command) {
-        this.Command = Command;
+    @JsonProperty("params")
+    public MethodParams getParams() {
+        return Params;
     }
 
+    /**
+     * Set the value of Params
+     *
+     * @param params new value of Params
+     */
+    @JsonProperty("params")
+    public void setParams(MethodParams params) {
+        this.Params = params;
+    }
+
+    /**
+     * Get the value of Method
+     *
+     * @return the value of Method
+     */
+    @JsonProperty("method")
+    public String getMethod() {
+        return Method;
+    }
+
+    /**
+     * Set the value of Method
+     *
+     * @param method new value of Method
+     */
+    @JsonProperty("method")
+    public void setMethod(String method) {
+        this.Method = method;
+    }
+
+    /**
+     * Get the value of Id
+     *
+     * @return the value of Id
+     */
+    @JsonProperty("id")
+    public String getId() {
+        return Id;
+    }
+
+    /**
+     * Set the value of Id
+     *
+     * @param id new value of Id
+     */
+    @JsonProperty("id")
+    public void setId(String id) {
+        this.Id = id;
+    }
 
     /**
      * Get the value of Arguments
      *
      * @return the value of Arguments
      */
+    @JsonIgnore
     public List<String> getArguments() {
-        return Arguments;
-    }
-    
-    public StrTable getNamedArguments() {
-        StrTable res = new StrTable();
-        String[] argParams;
-        for(String arg : Arguments) {
-            argParams = arg.split("=");
-            if (argParams.length > 1) 
-                res.put(argParams[0], argParams[1]);
-        }
-        return res;
+        return Params.getArguments();
     }
 
-    /**
-     * Set the value of Arguments
-     *
-     * @param Arguments new value of Arguments
-     */
-    public void setArguments(List<String> Arguments) {
-        this.Arguments = Arguments;
+    @JsonIgnore
+    public StrTable getNamedArguments() {
+        return Params.getNamedArguments();
     }
 
 }

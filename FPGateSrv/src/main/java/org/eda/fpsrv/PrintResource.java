@@ -20,6 +20,7 @@ import com.google.common.util.concurrent.Striped;
 import java.io.IOException;
 import static java.lang.System.currentTimeMillis;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -115,8 +116,8 @@ public class PrintResource extends ServerResource {
             } catch (SQLException E) {
                 execLog.msg("SQL Exception:"+E.getMessage());
                 E.printStackTrace();
+                throw new FPException((long)-1, E.getMessage());
             }
-            
         } else {
             execLog.msg("Requesting Printer by Model:"+pRequest.getPrinter().getModel());
             FP = FPCBase.getFPCObject(pRequest.getPrinter().getModel());
@@ -326,106 +327,70 @@ public class PrintResource extends ServerResource {
         response.getResultTable().putAll(FP.getCurrentCheckInfo());
     }
 
-    public void printDuplicateCheck() {
-        execLog.msg("Print duplicate of last check");
-        try {
-            execLog.msg("Calling printLastCheckDuplicate");
-            FP.printLastCheckDuplicate();
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
-        }    
+    public void printDuplicateCheck() throws FPException {
+        execLog.msg("Entering printDuplicateCheck");
+        FP.printLastCheckDuplicate();
     }
 
-    public void lastFiscalRecordInfo() {
+    public void lastFiscalRecordInfo() throws FPException {
         execLog.msg("Entering lastFiscalRecordInfo");
-        try {
-            StrTable res;
-            execLog.msg("Calling daily getLastFiscalRecordInfo");
-            res = FP.getLastFiscalRecordInfo();
-            if (res == null) {
-                execLog.msg("getLastFiscalRecordInfo report returns no result!");
-            } else {
-                execLog.msg("getLastFiscalRecordInfo report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        execLog.msg("Calling daily getLastFiscalRecordInfo");
+        res = FP.getLastFiscalRecordInfo();
+        if (res == null) {
+            execLog.msg("getLastFiscalRecordInfo report returns no result!");
+        } else {
+            execLog.msg("getLastFiscalRecordInfo report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
 
-    public void printerStatus() {
+    public void printerStatus() throws FPException {
         execLog.msg("Entering printerStatus");
-        try {
-            StrTable res;
-            execLog.msg("Calling daily getLastFiscalRecordInfo");
-            res = FP.getPrinterStatus();
-            if (res == null) {
-                execLog.msg("getPrinterStatus report returns no result!");
-            } else {
-                execLog.msg("getPrinterStatus report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        execLog.msg("Calling daily getLastFiscalRecordInfo");
+        res = FP.getPrinterStatus();
+        if (res == null) {
+            execLog.msg("getPrinterStatus report returns no result!");
+        } else {
+            execLog.msg("getPrinterStatus report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
 
-    public void getDiagnosticInfo() {
+    public void getDiagnosticInfo() throws FPException {
         execLog.msg("Entering getDiagnosticInfo");
-        try {
-            StrTable res;
-            execLog.msg("Calling daily getDiagnosticInfo");
-            res = FP.getDiagnosticInfo();
-            if (res == null) {
-                execLog.msg("getDiagnosticInfo report returns no result!");
-            } else {
-                execLog.msg("getDiagnosticInfo report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        execLog.msg("Calling daily getDiagnosticInfo");
+        res = FP.getDiagnosticInfo();
+        if (res == null) {
+            execLog.msg("getDiagnosticInfo report returns no result!");
+        } else {
+            execLog.msg("getDiagnosticInfo report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
     
-    public void reportDaily() {
+    public void reportDaily() throws FPException {
         execLog.msg("Entering daily report");
         String reportTypeAbbr = "X";
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("ReportType"))
             reportTypeAbbr = namedArgs.get("ReportType");
         execLog.msg("Report type abbreviation:"+reportTypeAbbr);
-        try {
-            StrTable res;
-            execLog.msg("Calling daily report");
-            res = FP.reportDaily(FPCBase.dailyReportTypeAbbrToType(reportTypeAbbr));
-            if (res == null) {
-                execLog.msg("Daily report returns no result!");
-            } else {
-                execLog.msg("Daily report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        execLog.msg("Calling daily report");
+        res = FP.reportDaily(FPCBase.dailyReportTypeAbbrToType(reportTypeAbbr));
+        if (res == null) {
+            execLog.msg("Daily report returns no result!");
+        } else {
+            execLog.msg("Daily report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
     
-    public void reportByDates() {
-        execLog.msg("Entering report by dates");
+    public void reportByDates() throws ParseException, FPException {
+        execLog.msg("Entering reportByDates");
         String reportTypeAbbr = "DETAILED";
         String fromDateStr = "";
         String toDateStr = "";
@@ -443,159 +408,109 @@ public class PrintResource extends ServerResource {
         Date fromDate;
         Date toDate;
         
-        
-        try {
-            if (fromDateStr.length() > 0)
-                fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(fromDateStr);
-            else
-                fromDate = new Date();
-            if (toDateStr.length() > 0)
-                toDate = new SimpleDateFormat("yyyy-MM-dd").parse(toDateStr);
-            else
-                toDate = new Date();
-            
-            StrTable res;
-            execLog.msg("Calling report by dates");
-            res = FP.reportByDates(fromDate, toDate, FPCBase.datesReportTypeAbbrToType(reportTypeAbbr));
-            if (res == null) {
-                execLog.msg("Report by dates returns no result!");
-            } else {
-                execLog.msg("Report by dates returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        if (fromDateStr.length() > 0)
+            fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(fromDateStr);
+        else
+            fromDate = new Date();
+        if (toDateStr.length() > 0)
+            toDate = new SimpleDateFormat("yyyy-MM-dd").parse(toDateStr);
+        else
+            toDate = new Date();
+
+        StrTable res;
+        execLog.msg("Calling report by dates");
+        res = FP.reportByDates(fromDate, toDate, FPCBase.datesReportTypeAbbrToType(reportTypeAbbr));
+        if (res == null) {
+            execLog.msg("Report by dates returns no result!");
+        } else {
+            execLog.msg("Report by dates returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
 
-    public void getDateTime() {
-        execLog.msg("Request getDateTime");
-        try {
-            execLog.msg("Calling getDateTime");
-            Date dateTime;
-            dateTime = FP.getDateTime();
-            response.getResultTable().put("DateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime));
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
-        }    
+    public void getDateTime() throws FPException {
+        execLog.msg("Entering getDateTime");
+        execLog.msg("Calling getDateTime");
+        Date dateTime;
+        dateTime = FP.getDateTime();
+        response.getResultTable().put("DateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime));
     }
 
-    public void setDateTime() {
+    public void setDateTime() throws ParseException, FPException {
         execLog.msg("Request setDateTime");
-        try {
-            String dateTimeStr = "";
-            StrTable namedArgs = pRequest.getNamedArguments();
-            if (namedArgs.containsKey("DateTime"))
-                dateTimeStr = namedArgs.get("DateTime");
+        String dateTimeStr = "";
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("DateTime"))
+            dateTimeStr = namedArgs.get("DateTime");
 
-            execLog.msg("Date time requested:"+dateTimeStr);
-            Date dateTime;
-            if (dateTimeStr.length() > 0)
-                dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(dateTimeStr);
-            else
-                dateTime = new Date();
-            StrTable res;
-            execLog.msg("Calling setDateTime");
-            dateTime = FP.setDateTime(dateTime);
-            response.getResultTable().put("DateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime));
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
-        }    
+        execLog.msg("Date time requested:"+dateTimeStr);
+        Date dateTime;
+        if (dateTimeStr.length() > 0)
+            dateTime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(dateTimeStr);
+        else
+            dateTime = new Date();
+        StrTable res;
+        execLog.msg("Calling setDateTime");
+        dateTime = FP.setDateTime(dateTime);
+        response.getResultTable().put("DateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime));
     }
     
-    public void customCommand() {
+    public void customCommand() throws FPException {
         execLog.msg("Request custom command");
-        try {
-            String command = "";
-            String args = "";
-            StrTable namedArgs = pRequest.getNamedArguments();
-            if (namedArgs.containsKey("Cmd"))
-                command = namedArgs.get("Cmd");
-            if (namedArgs.containsKey("Args"))
-                args = namedArgs.get("Args");
+        String command = "";
+        String args = "";
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("Cmd"))
+            command = namedArgs.get("Cmd");
+        if (namedArgs.containsKey("Args"))
+            args = namedArgs.get("Args");
 
-            execLog.msg("Command:"+command+" Arguments:"+args);
-            String res = FP.customCmd(command, args);
-            response.getResultTable().put("Result:", res);
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
-        }    
+        execLog.msg("Command:"+command+" Arguments:"+args);
+        String res = FP.customCmd(command, args);
+        response.getResultTable().put("Result:", res);
     }
 
     
-    public void getJournalInfo() {
+    public void getJournalInfo() throws FPException {
         execLog.msg("Entering getJournalInfo");
-        try {
-            StrTable res;
-            execLog.msg("Calling daily getJournalInfo");
-            res = FP.getJournalInfo();
-            if (res == null) {
-                execLog.msg("getJournalInfo report returns no result!");
-            } else {
-                execLog.msg("getJournalInfo report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        execLog.msg("Calling daily getJournalInfo");
+        res = FP.getJournalInfo();
+        if (res == null) {
+            execLog.msg("getJournalInfo report returns no result!");
+        } else {
+            execLog.msg("getJournalInfo report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
 
-    public void getJournal() {
+    public void getJournal() throws FPException {
         execLog.msg("Entering getJournal");
-        try {
-            StrTable res;
-            String readAndEraseStr = "false";
-            StrTable namedArgs = pRequest.getNamedArguments();
-            if (namedArgs.containsKey("ReadAndErase"))
-                readAndEraseStr = namedArgs.get("ReadAndErase");
-            execLog.msg("Calling daily getJournal(readAndErase="+readAndEraseStr+")");
-            res = FP.getJournal(Boolean.parseBoolean(readAndEraseStr));
-            if (res == null) {
-                execLog.msg("getJournal report returns no result!");
-            } else {
-                execLog.msg("getJournal report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        String readAndEraseStr = "false";
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("ReadAndErase"))
+            readAndEraseStr = namedArgs.get("ReadAndErase");
+        execLog.msg("Calling daily getJournal(readAndErase="+readAndEraseStr+")");
+        res = FP.getJournal(Boolean.parseBoolean(readAndEraseStr));
+        if (res == null) {
+            execLog.msg("getJournal report returns no result!");
+        } else {
+            execLog.msg("getJournal report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
     
-    public void test() {
+    public void test() throws FPException {
         execLog.msg("Entering test");
-        try {
-            StrTable res;
-            execLog.msg("Calling daily getDiagnosticInfo");
-            res = FP.getDiagnosticInfo();
-            if (res == null) {
-                execLog.msg("getDiagnosticInfo report returns no result!");
-            } else {
-                execLog.msg("getDiagnosticInfo report returns result!");
-                response.getResultTable().putAll(res);
-            }    
-        } catch (FPException e) {
-            response.setErrorCode(e.getErrorCode());
-            execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
-        } catch (Exception e) {
-            execLog.error("Error:"+e.getMessage());
+        StrTable res;
+        execLog.msg("Calling daily getDiagnosticInfo");
+        res = FP.getDiagnosticInfo();
+        if (res == null) {
+            execLog.msg("getDiagnosticInfo report returns no result!");
+        } else {
+            execLog.msg("getDiagnosticInfo report returns result!");
+            response.getResultTable().putAll(res);
         }    
     }
           
@@ -606,6 +521,7 @@ public class PrintResource extends ServerResource {
 //        PrintRequest pReq = mapper.readValue(pRequest, PrintRequest.class);
         pRequest = request;
         response = new PrintResponse();
+        response.setId(request.getId());
         try {
             execLog.msg("Request command:"+pRequest.getCommand());
             initPrinter();
@@ -660,7 +576,7 @@ public class PrintResource extends ServerResource {
                         test();
                         break;
                     default :
-                        execLog.error("Unsupported command:"+pRequest.getCommand());
+                        throw new FPException((long)-1, "Unsupported command:"+pRequest.getCommand());
                         //response.getResultTable().put("ala", "bala");
                 }
             } catch (FPException e) {

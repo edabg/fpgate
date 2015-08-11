@@ -266,7 +266,11 @@ public class FPCFP3530 extends FPCBase{
                 // Try to close
                 if (!FP.closeFiscalCheck())
                     throw createException();
-            }
+            } else {
+                // close nonfiscal check
+                if (!FP.closeNonFiscalCheck(items))
+                    throw createException();
+            } 
         } else
             checkForError();
     }

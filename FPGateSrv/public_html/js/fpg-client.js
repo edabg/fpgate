@@ -72,6 +72,7 @@ function FPGRequest(options) {
     this.Printer = null;
     this.Command = '';
     this.Arguments = [];
+    this.RequestId = '';
     this.onRequestComplete = null;
     this.onRequestError = null;
 
@@ -111,12 +112,15 @@ function FPGRequest(options) {
 
     this.toJSON = function () {
       var req = {};
-      req.Printer = {};
-      req.Printer.ID = this.Printer.ID;
-      req.Printer.Model = this.Printer.Model;
-      req.Printer.Params = this.Printer.Params;
-      req.Command = this.Command;
-      req.Arguments = this.Arguments;
+      req.method = this.Command;
+      req.params = {};
+      req.params.arguments = this.Arguments;
+      req.params.printer = {};
+      req.params.printer.ID = this.Printer.ID;
+      req.params.printer.Model = this.Printer.Model;
+      req.params.printer.Params = this.Printer.Params;
+      req.id = this.RequestId;
+//      alert($.toJSON(req));
       return $.toJSON(req);
     };
 
@@ -129,6 +133,8 @@ function FPGRequest(options) {
             (typeof options.Arguments === 'object' || typeof options.Arguments === 'array')
            ) 
             this.addArguments(options.Arguments);
+        if ('RequestId' in options)
+            this.RequestId = options.RequestId;
         if ('onRequestComplete' in options)
             this.onRequestComplete = options.onRequestComplete;
         if ('onRequestError' in options)
@@ -198,6 +204,7 @@ function FPGate(options) {
 	this.Printer = new FPGPrinter();
 	this.URL = ''; 
 	this.Result = null;
+	this.Error = null;
         this.onRequestComplete = null;
 //	this.onRequestComplete = function(request, data, textStatus) {
 //		alert('Request complete with status:'+textStatus);
@@ -217,6 +224,7 @@ function FPGate(options) {
 	this.sendRequest = function (request) {
 		if (!request.Printer) request.Printer = this.Printer;
 		this.Result = null;
+		this.Error = null;
                 var thisgate = this;
 		$.ajax({
 			type: 'POST',
@@ -227,7 +235,12 @@ function FPGate(options) {
 			crossDomain : true,
 			success: function(data, textStatus, jqXHR){
 	//			alert(JSON.stringify(data));
-                            thisgate.Result = data;
+                            if ('result' in data && data.result) {
+                                thisgate.Result = data.result;
+                            } else if ('error' in data && typeof data.error == 'object' && 'data' in data.error) {
+                                thisgate.Result = data.error.data;
+                                thisgate.Error = data.error;
+                            }
                             if (thisgate.onRequestComplete)
                                 thisgate.onRequestComplete(request, data, textStatus);
                             if (request.onRequestComplete)

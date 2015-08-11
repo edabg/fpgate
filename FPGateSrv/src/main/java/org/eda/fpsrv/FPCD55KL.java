@@ -276,7 +276,13 @@ public class FPCD55KL  extends FPCBase {
                 lastCommand = "cMD_56_0_0";
                 lastErrorCode = FP.cMD_56_0_0(allReceipt, fiscReceipt);
                 checkForError();
-            }
+            } else {
+                // close nonfiscal check
+                String[] allReceipt = new String[]{""};
+                lastCommand = "cMD_39_0_0";
+                lastErrorCode = FP.cMD_39_0_0(allReceipt);
+                checkForError();
+            } 
         } else
             checkForError();
     }
