@@ -53,7 +53,6 @@ Attribute  |Type   |Description
 jsonrpc    |String |A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
 method     |String |A String containing the name of the method/printer command to be invoked. Method names that begin with the word rpc followed by a period character (U+002E or ASCII 46) are reserved for rpc-internal methods and extensions and MUST NOT be used for anything else.
 params     |Object |A Structured value that holds the parameter values to be used during the invocation of the method. 
-.Params    |Object |Optional Hash map with printer parameters in form of pairs parameter_name = value 
 id         |String |An identifier established by the Client that MUST contain a String, Number, or NULL value if included.
 
 'params' object in request contain following attributes:
