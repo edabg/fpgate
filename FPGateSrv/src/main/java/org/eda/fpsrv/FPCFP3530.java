@@ -455,8 +455,8 @@ public class FPCFP3530 extends FPCBase{
         FP.getLastPrintDoc(docNum);
         res.put("LastPrintDocNum", Integer.toString(docNum[0]));
         double[] total = new double[1];
-        java.util.Date[] dateTime = new java.util.Date[1];
-        dateTime[0] = new java.util.Date();
+        Date[] dateTime = new Date[1];
+        dateTime[0] = new Date();
         FP.getLastFiscalRecordInfo(docNum, total, tax.get('A'), tax.get('B'), tax.get('C'), tax.get('D'), dateTime);
         res.put("LFRI_DocNum", Integer.toString(docNum[0]));
         res.put("LFRI_DateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime[0]));
@@ -588,9 +588,9 @@ public class FPCFP3530 extends FPCBase{
 
     @Override
     public StrTable getDiagnosticInfo() throws FPException {
-        String[] Firmware = new String[1], CRC = new String[1]
-                , DateTime = new String[1], SerialNumber = new String[1]
-                , FiscalMemoryNumber = new String[1], Switches = new String[1];
+        String[] Firmware = new String[]{""}, CRC = new String[]{""}
+                , DateTime = new String[]{""}, SerialNumber = new String[]{""}
+                , FiscalMemoryNumber = new String[]{""}, Switches = new String[]{""};
         int[] Country = new int[1];
         if (!FP.getDiagnosticInfo(true, Firmware, CRC, Country, DateTime, SerialNumber, FiscalMemoryNumber, Switches))
             throw createException();
@@ -730,10 +730,8 @@ public class FPCFP3530 extends FPCBase{
 //    		System.out.println("Temp file : " + temp.getAbsolutePath());
             //Get tempropary file path
             String absolutePath = temp.getAbsolutePath();
-            String[] CRC32 = new String[1];
-            CRC32[0] = ""; 
-            String[] SHA1 = new String[1];
-            SHA1[0] = ""; 
+            String[] CRC32 = new String[]{""};
+            String[] SHA1 = new String[]{""};
 //            String tempFilePath = absolutePath.substring(0,absolutePath.lastIndexOf(File.separator));
 //            System.out.println("Temp file path : " + tempFilePath);
             boolean fpres;
