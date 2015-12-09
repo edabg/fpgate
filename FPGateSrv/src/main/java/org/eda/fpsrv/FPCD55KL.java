@@ -40,7 +40,7 @@ public class FPCD55KL  extends FPCBase {
     }
 
     public static String getClassDecription() {
-        return "This class supports followinf Datecs deices: DP-05 KL, DP-15 KL, DP-25 KL, DP-35 KL, DP-45 KL, DP-50 KL, DP-50C KL, DP-55 KL, MP-55 KL, DP-500 PLUS KL!";
+        return "This class supports following Datecs deices: DP-05 KL, DP-15 KL, DP-25 KL, DP-35 KL, DP-45 KL, DP-50 KL, DP-50C KL, DP-55 KL, MP-55 KL, DP-500 PLUS KL!";
     }
     
     public static FPParams getDefinedParams() throws Exception {

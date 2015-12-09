@@ -17,13 +17,16 @@
 package org.eda.fpsrv;
 
 import java.io.IOException;
+import static java.lang.System.currentTimeMillis;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Level;
 import org.reflections.Reflections;
+import org.restlet.Application;
 
 /**
  *
@@ -88,6 +91,28 @@ public class FPCBase {
     
     public FPCBase() throws Exception {
         this.params = getDefinedParams(this.getClass());
+    }
+    
+    protected static class localLogger {
+        public static void log(Level level, String msg) {
+            Application.getCurrent().getLogger().log(level, msg);
+        }
+        
+        public static void msg(String msg) {
+            log(Level.INFO, msg);
+        }
+        
+        public static  void error(String msg) {
+            log(Level.SEVERE, msg);
+        }
+        
+        public static  void warning(String msg) {
+            log(Level.WARNING, msg);
+        }
+
+        public static  void debug(String msg) {
+            log(Level.FINER, msg);
+        }
     }
     
     /**
