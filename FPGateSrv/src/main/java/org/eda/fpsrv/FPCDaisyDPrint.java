@@ -54,7 +54,7 @@ public class FPCDaisyDPrint extends FPCBase {
     }
     
     public static String getClassDecription() {
-        return "This class supports Daisy Fiscal Printers and cash registers using DPrint utility!";
+        return "(BETA Version!) This class supports Daisy Fiscal Printers and cash registers using DPrint utility!";
     }
 
     public static FPParams getDefinedParams() throws Exception {

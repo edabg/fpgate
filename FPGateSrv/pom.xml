@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eda</groupId>
     <artifactId>FPGateSrv</artifactId>
-    <version>1.0.1-rt</version>
+    <version>1.0.2-b</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -121,11 +121,30 @@
             <artifactId>freemarker</artifactId>
             <version>2.3.23</version>
         </dependency>
+        <dependency>
+            <groupId>com.taliter</groupId>
+            <artifactId>fiscal</artifactId>
+            <version>1.1.1</version>
+            <type>jar</type>
+        </dependency> 
+
+        <dependency>
+            <groupId>org.rxtx</groupId>
+            <artifactId>rxtx</artifactId>
+            <version>2.2-20081207</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>comm</artifactId>
+            <version>2.0</version>
+            <type>jar</type>
+        </dependency>
     </dependencies>
     <build>
         <resources>
             <resource>
-<!--                <targetPath>/</targetPath>-->
+                <targetPath>${project.build.outputDirectory}/lib</targetPath>
                 <filtering>false</filtering>
                 <directory>${basedir}/src/main/resources/repo/com/jacob/jacob/1.18-M2</directory>
                 <includes>
@@ -134,7 +153,15 @@
                 </includes>
             </resource>
             <resource>
-                <targetPath>/images</targetPath> 
+                <targetPath>${project.build.outputDirectory}/lib/x86</targetPath>
+                <directory>${basedir}/lib/x86</directory>
+            </resource>
+            <resource>
+                <targetPath>${project.build.outputDirectory}/lib/x64</targetPath>
+                <directory>${basedir}/lib/x64</directory>
+            </resource>
+            <resource>
+                <targetPath>${project.build.outputDirectory}/images</targetPath>
                 <filtering>false</filtering>
                 <directory>${basedir}/src/main/resources/images</directory>
                
@@ -309,7 +336,7 @@ mvn install:install-file -Dfile=footron.dll -DgroupId=com.foo -DartifactId=footr
 
 
 cd C:\Program Files\NetBeans 8.0.2\java\maven\bin
-cd w:\W:\www - CO.edabg.com\Apps\fp3530\FPGateSrv\FPGateSrv\src\main\resources\repo
+cd W:\www - CO.edabg.com\Apps\fp3530\FPGateSrv\FPGateSrv\src\main\resources\repo
 set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_45
 c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2\jacob.jar -DgroupId=com.jacob -DartifactId=jacob -Dversion=1.18-M2 -Dpackaging=jar -DlocalRepositoryPath=.
 ?c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2_src.zip -DgroupId=com.jacob -DartifactId=jacob -Dversion=1.18-M2 -Dpackaging=zip -Dclassifier=sources -DlocalRepositoryPath=.
@@ -318,4 +345,12 @@ c:mvn install:install-file -Dfile=..\..\..\..\lib\jacob-1.18-M2\jacob-1.18-M2-x8
 JNA TypeLibImport
 W:>java -cp jna-platform-4.1.0.jar;jna-4.1.0.jar com.sun.jna.platform.win32.COM.tlb.TlbImp -tlb.file FP3530.tlb -output.dir fpcom
 java -cp jna-platform-4.2.0.jar;jna-4.2.0.jar com.sun.jna.platform.win32.COM.tlb.TlbImp -tlb.file FP3530.tlb -output.dir fpcom
+
+// Java-Fiscal-Device-API
+set FPGateRoot=W:\www - CO.edabg.com\Apps\fp3530\FPGateSrv
+c:mvn install:install-file -Dfile="%FPGateRoot%\Java-Fiscal-Device-API\build\libs\fiscal-device-1.1.1.jar" -DgroupId=com.taliter -DartifactId=fiscal -Dversion=1.1.1 -Dpackaging=jar -DlocalRepositoryPath=.
+c:mvn install:install-file -Dfile="%FPGateRoot%\Java-Fiscal-Device-API\build\libs\fiscal-device-1.1.1-sources.jar" -DgroupId=com.taliter -DartifactId=fiscal -Dversion=1.1.1 -Dpackaging=jar -Dclassifier=sources -DlocalRepositoryPath=.
+c:mvn install:install-file -Dfile="%FPGateRoot%\Java-Fiscal-Device-API\build\libs\fiscal-device-1.1.1-doc.jar" -DgroupId=com.taliter -DartifactId=fiscal -Dversion=1.1.1 -Dpackaging=jar -Dclassifier=doc -DlocalRepositoryPath=.
+
+
 -->        

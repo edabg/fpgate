@@ -48,14 +48,17 @@ Freemaker template, http://freemarker.org/
                             <label for="printer_name">Name</label>
                         </div>
                         <div class="input-field col s6">
-                            <select name="ModelID" id="printer_model" onChange="this.form.submit();">
+                            <select name="ModelID" id="printer_model" onChange="this.form.submit();" title="Ala bala">
                                 <option value="">- Model -</option>
 <#list FPCList as model>
 <#if "${model}"=="${printer.ModelID}"><#assign selected='selected="selected"'><#else><#assign selected=''></#if>
-                                <option value="${model}" ${selected}>${model}</option>
+                                <option value="${model}" label="label" ${selected}>${model}</option>
 </#list>
                             </select>
                             <label for="printer_model" class="select">Model</label>
+<#if '' != printer.ModelDescription>
+                            <span>${printer.ModelDescription}<span>        
+</#if>
                         </div>
                         <div class="input-field col s6">
                             <input type="text" class="validate" name="Location" id="printer_place" value="${printer.Location}"/>

@@ -88,19 +88,30 @@ public class PrintResource extends ServerResource {
     protected Semaphore printerSemaphore;
     protected String printerRefID = ""; 
     
+    protected void acquirePrinterSemaphore(String printerRefID) throws Exception {
+        releasePrinterSemaphore(); // if already taken
+        execLog.msg("Requesting Printer by RefId:"+printerRefID);
+        printerSemaphore  = printerSemaphores.get(printerRefID);
+        if (!printerSemaphore.tryAcquire(10, TimeUnit.SECONDS)) {
+            printerSemaphore = null;
+            throw new FPException((long)-1, "Printer "+printerRefID+" is busy!");
+        }
+    }
+    
+    protected void releasePrinterSemaphore() {
+        if (printerSemaphore != null) {
+            printerSemaphore.release();
+            printerSemaphore = null;
+        }    
+    }
+    
+    
     protected void initPrinter() throws FPException, Exception {
         FP = null;
         printerRefID = pRequest.getPrinter().getID();
-        printerSemaphore = null;
         if (printerRefID.length() > 0) {
+            acquirePrinterSemaphore(printerRefID);
             try {
-                execLog.msg("Requesting Printer by RefId:"+printerRefID);
-                printerSemaphore  = printerSemaphores.get(printerRefID);
-                if (!printerSemaphore.tryAcquire(10, TimeUnit.SECONDS)) {
-                    printerSemaphore = null;
-                    throw new FPException((long)-1, "Printer "+printerRefID+" is busy!");
-                }
-                
                 if (FPDB == null) FPDB = new FPDatabase();
                 FPrinter fp_ = FPDB.getPrinterByRefId(printerRefID);
                 if (fp_ == null)
@@ -113,23 +124,32 @@ public class PrintResource extends ServerResource {
                 FP.setParams(fp_.getProperties());
                 execLog.msg("Initializing printer");
                 FP.init();
-            } catch (SQLException E) {
-                execLog.msg("SQL Exception:"+E.getMessage());
+            } catch (Exception E) {
+                releasePrinterSemaphore();
+                execLog.msg("Exception:"+E.getMessage());
                 E.printStackTrace();
                 throw new FPException((long)-1, E.getMessage());
             }
         } else {
-            execLog.msg("Requesting Printer by Model:"+pRequest.getPrinter().getModel());
-            FP = FPCBase.getFPCObject(pRequest.getPrinter().getModel());
-            execLog.msg("Setting printer parameters:");
-            for (HashMap.Entry<?, ?> pEntry : pRequest.getPrinter().getParams().entrySet()) {
-                String key = pEntry.getKey().toString();
-                String value = pEntry.getValue().toString();
-                execLog.msg(key+"="+value);
-            }    
-            FP.setParams(pRequest.getPrinter().getParams());
-            execLog.msg("Initializing printer");
-            FP.init();
+            acquirePrinterSemaphore(pRequest.getPrinter().getModel());
+            try {
+                execLog.msg("Requesting Printer by Model:"+pRequest.getPrinter().getModel());
+                FP = FPCBase.getFPCObject(pRequest.getPrinter().getModel());
+                execLog.msg("Setting printer parameters:");
+                for (HashMap.Entry<?, ?> pEntry : pRequest.getPrinter().getParams().entrySet()) {
+                    String key = pEntry.getKey().toString();
+                    String value = pEntry.getValue().toString();
+                    execLog.msg(key+"="+value);
+                }    
+                FP.setParams(pRequest.getPrinter().getParams());
+                execLog.msg("Initializing printer");
+                FP.init();
+            } catch (Exception E) {
+                releasePrinterSemaphore();
+                execLog.msg("Exception:"+E.getMessage());
+                E.printStackTrace();
+                throw new FPException((long)-1, E.getMessage());
+            }
         }    
     }
     
@@ -137,6 +157,7 @@ public class PrintResource extends ServerResource {
         if (FP != null) 
             FP.destroy();
         FP = null;
+        releasePrinterSemaphore();
         if (printerSemaphore != null) {
             printerSemaphore.release();
             printerSemaphore = null;

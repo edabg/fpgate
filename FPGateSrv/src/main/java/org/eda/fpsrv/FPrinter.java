@@ -19,6 +19,8 @@ package org.eda.fpsrv;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -87,7 +89,18 @@ public class FPrinter {
     public void setModelID(String value) {
         modelID = value;
     }
-    
+
+    public String getModelDesctiption() {
+        String Description = "";
+        if (modelID.length() > 0) {
+            try {
+                Description = FPCBase.getClassDecription(modelID);
+            } catch (Exception ex) {
+                Description = "Can't get model decription!";
+            }
+        }    
+        return Description;
+    }
     
     public String getDescription() {
         return description;

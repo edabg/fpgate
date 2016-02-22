@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import org.reflections.Reflections;
 import org.restlet.Application;
@@ -122,14 +123,17 @@ public class FPCBase {
     public static FPCBaseClassList getDerivedClasses() {
         if (FPCList == null) {
             FPCList = new FPCBaseClassList();
+            // Use tree map to be sorted
+            TreeMap<String, Class<? extends FPCBase>> tmpList = new TreeMap<>();
             Reflections reflections = new Reflections("org.eda.fpsrv");
             Set<Class<? extends FPCBase>> classes = reflections.getSubTypesOf(FPCBase.class);
             Iterator iter = classes.iterator();
             Class<? extends FPCBase> fpc;
             while (iter.hasNext()) {
               fpc = (Class<? extends FPCBase>)iter.next();
-              FPCList.put(fpc.getSimpleName(), fpc);
+              tmpList.put(fpc.getSimpleName(), fpc);
             }
+            FPCList.putAll(tmpList);
         }
         return FPCList;
     }

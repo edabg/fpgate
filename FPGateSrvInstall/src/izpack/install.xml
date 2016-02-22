@@ -80,7 +80,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <singlefile src="@{project.fpgatesrv.target}/FPGateSrv-@{project.fpgatesrv.version}-WL.jar" target="$INSTALL_PATH/bin/FPGateSrv.jar" />
             <singlefile src="@{izpack.staging}/FPGateSrv.cmd" target="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
             <parsable targetfile="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
-            <fileset dir="@{project.fpgatesrv.target}/classes" includes="*.dll"  targetdir="$INSTALL_PATH/bin" override="true" />
+<!--            <fileset dir="@{project.fpgatesrv.target}/classes" includes="*.dll"  targetdir="$INSTALL_PATH/bin" override="true" />-->
+            <fileset dir="@{project.fpgatesrv.target}/../lib/" includes="*.dll"  targetdir="$INSTALL_PATH/lib" override="true" />
+            <fileset dir="@{project.fpgatesrv.target}/../lib/x86/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x86" override="true" />
+            <fileset dir="@{project.fpgatesrv.target}/../lib/x64/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x64" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../public_html" includes="**"  targetdir="$INSTALL_PATH/public_html" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../" includes="logs"  targetdir="$INSTALL_PATH/" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../ssl" includes="*.jks"  targetdir="$INSTALL_PATH/ssl" override="true" />

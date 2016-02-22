@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -33,6 +34,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
@@ -120,7 +122,74 @@ public class FPServer extends Application {
     public String getAppBasePath() {
         return appBasePath;
     }
+
     
+    /**
+     * Sets the java library path to the specified path
+     * http://fahdshariff.blogspot.bg/2011/08/changing-java-library-path-at-runtime.html
+     * 
+     * @param path the new library path
+     * @throws Exception
+     */
+    protected static void setLibraryPath(String path) throws Exception {
+        System.setProperty("java.library.path", path);
+
+        //set sys_paths to null
+        final Field sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
+        sysPathsField.setAccessible(true);
+        sysPathsField.set(null, null);
+    }
+
+    /**
+    * Adds the specified path to the java library path
+     * http://fahdshariff.blogspot.bg/2011/08/changing-java-library-path-at-runtime.html
+    *
+    * @param pathToAdd the path to add
+    * @throws Exception
+    */
+    protected static void addLibraryPath(String pathToAdd) throws Exception{
+        final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+        usrPathsField.setAccessible(true);
+
+        //get array of paths
+        final String[] paths = (String[])usrPathsField.get(null);
+
+        //check if the path to add is already present
+        for(String path : paths) {
+            if(path.equals(pathToAdd)) {
+                return;
+            }
+        }
+
+        //add the new path
+        final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
+        newPaths[newPaths.length-1] = pathToAdd;
+        usrPathsField.set(null, newPaths);
+    }    
+
+    /**
+     * Detects whether this is a 32-bit JVM.
+     * 
+     * @return {@code true} if this is a 32-bit JVM.
+     */
+    protected static boolean shouldLoad32Bit() {
+            // This guesses whether we are running 32 or 64 bit Java.
+            // This works for Sun and IBM JVMs version 5.0 or later.
+            // May need to be adjusted for non-Sun JVMs.
+
+            String bits = System.getProperty("sun.arch.data.model", "?");
+            if (bits.equals("32"))
+                    return true;
+            else if (bits.equals("64"))
+                    return false;
+
+            // this works for jRocket
+            String arch = System.getProperty("java.vm.name", "?");
+            if (arch.toLowerCase().indexOf("64-bit") >= 0)
+                    return false;
+
+            return true;
+    }
     
     private void initProperties() {
         // Read Version Number
@@ -167,11 +236,18 @@ public class FPServer extends Application {
             String pfile = appBasePath+"/FPGateSrv.properties";
             if (new File(pfile).exists())
                 this.appProperties.load(new FileInputStream(pfile));
-        } catch (IOException E) {
-            E.printStackTrace();
+            // Set library paths
+            addLibraryPath(appBasePath+"/lib");
+            if (shouldLoad32Bit()) 
+                addLibraryPath(appBasePath+"/lib/x86");
+            else
+                addLibraryPath(appBasePath+"/lib/x64");
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 //        String libPathProperty = System.getProperty("java.library.path");
-//        System.out.println(libPathProperty);        
+//        System.out.println(libPathProperty);  
+//        System.out.println(File.pathSeparator);
 //        System.out.println("Server Port:"+this.appProperties.getProperty("ServerPort"));
     }
     

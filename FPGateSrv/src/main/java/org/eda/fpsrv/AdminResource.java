@@ -447,6 +447,7 @@ public class AdminResource extends ServerResource {
                 put("idPrinter", Integer.toString(printer.getIdPrinter()));
                 put("RefID", printer.getRefId());
                 put("ModelID", printer.getModelID());
+                put("ModelDescription", printer.getModelDesctiption());
                 put("Name", printer.getName());
                 put("Description", printer.getDescription());
                 put("Location", printer.getLocation());
