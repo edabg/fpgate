@@ -15,7 +15,7 @@ The server contains two main components:
 
 Current version of FPGate supports following fiscal printers:
 
-DATECS FP3530,FP550,FP55,FP1000,FP300,FP60KL,FP2000KL, FP1000KL,FP700KL
+DATECS FP3530,FP550,FP55,FP1000,FP300,FP60KL,FP2000KL, FP1000KL,FP700KL,FP705KL
 
 Current version of FPGate supports following cash registers:
 
@@ -26,7 +26,7 @@ Requirements
 ============
 - Java Runtime Environment 8.0+
 - Drivers for implemented fiscal printers. 
-For DATECS models [FP3530 COM Server](http://www.datecs.bg/en/support/Downloads/4) v2.0.0/822 or newer is required.
+For DATECS models [FP3530 COM Server](http://www.datecs.bg/en/downloads/zip?id=FP3530_COM_Server_SETUP_2016_04_06v2_0_0_845.zip) v2.0.0/845 or newer is required.
 
 Installation
 ============
