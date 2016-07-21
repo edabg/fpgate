@@ -690,5 +690,16 @@ public class FPCBase {
     public Date setDateTime(java.util.Date dateTime) throws FPException {
         return new Date();
     }
+    
+    /**
+     * Register Cash In/Out
+     * @param ioSum positive number makes Cash In, negative Cash Out
+     *              Zero value return Accumulated Cash In/Out
+     * @return
+     * @throws FPException
+     */
+    public StrTable cashInOut(Double ioSum) throws FPException {
+        return null;
+    }
 }
 

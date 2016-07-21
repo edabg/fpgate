@@ -934,4 +934,26 @@ Byte 7: Not used
     public StrTable getJournal(boolean readAndErase) throws FPException {
         throw new FPException((long)-1, "Not supported!");
     }
+
+    @Override
+    public StrTable cashInOut(Double ioSum) throws FPException {
+        int[] errorCode = new int[]{0};
+        int cashType = (ioSum < 0)?1:0; // 0 - cash in, 1 - cash out
+        String[] cashSum = new String[]{""};
+        String[] cashIn = new String[]{""};
+        String[] cashOut = new String[]{""};
+
+        lastCommand = "command_070";
+        // int command_070(int reportType, String amount, int[] errorCode, String[] cashSum, String[] cashIn, String[] cashOut)
+        lastErrorCode = FP.command_070(cashType, String.format(Locale.ROOT, "%.2f", Math.abs(ioSum)), errorCode, cashSum, cashIn, cashOut);
+        checkForError();
+        
+        StrTable res = new StrTable();
+        res.put("CashSum", cashSum[0]);
+        res.put("CashIn", cashIn[0]);
+        res.put("CashOut", cashOut[0]);
+        return res;
+    }
+    
+    
 }
