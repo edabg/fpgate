@@ -89,6 +89,7 @@ and open the template in the editor.
                                 <option value="AbnormalComplete">AbnormalComplete</option> 
                                 <option value="GetDateTime">GetDateTime</option> 
                                 <option value="SetDateTime">SetDateTime</option> 
+                                <option value="CashInOut">CashInOut</option>
                                 <option value="CustomCommand">CustomCommand</option>
                                 <option value="GetJournalInfo">GetJournalInfo</option>
                                 <option value="GetJournal">GetJournal</option>

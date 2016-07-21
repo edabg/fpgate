@@ -59,6 +59,9 @@ function cmdSelect(el) {
         , "GetDateTime": ""
         , "SetDateTime":
                 "#DateTime=2015-07-08 10:01:02"
+        , "CashInOut":
+                "Amount=0\n" +
+                ""
         , "CustomCommand":
                 "Cmd=65\n" +
                 "Args=0\n" +

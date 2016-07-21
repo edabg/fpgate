@@ -535,6 +535,26 @@ public class PrintResource extends ServerResource {
         }    
     }
           
+    public void cashInOut() throws ParseException, FPException {
+        execLog.msg("Request cashInOut");
+        String amountStr = "";
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("Amount"))
+            amountStr = namedArgs.get("Amount");
+
+        execLog.msg("Cash In/Out requested:"+amountStr);
+        if (amountStr.length() == 0)
+            amountStr = "0";
+        Double amount = Double.parseDouble(amountStr);
+        execLog.msg("Calling cashInOut");
+        StrTable res = FP.cashInOut(amount);
+        if (res == null) {
+            execLog.msg("cashInOut returns no result!");
+        } else {
+            execLog.msg("cashInOut returns result!");
+            response.getResultTable().putAll(res);
+        }    
+    }
     
     @Post("json:json")
     public PrintResponse processCommand(PrintRequest request) throws IOException {
@@ -577,6 +597,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "setdatetime" :
                         setDateTime();
+                        break;
+                    case "cashinout" :
+                        cashInOut();
                         break;
                     case "customcommand" :
                         customCommand();

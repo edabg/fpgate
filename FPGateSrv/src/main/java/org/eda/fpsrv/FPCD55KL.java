@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import org.datecs.fpcom.CS_BGR_DP55_KL;
 
 /**
@@ -760,5 +761,22 @@ public class FPCD55KL  extends FPCBase {
 //    public StrTable getJournal(boolean readAndErase) throws FPException {
 //    }
     
+    @Override
+    public StrTable cashInOut(Double ioSum) throws FPException {
+        String[] exitCode = new String[]{""};
+        String[] cashSum = new String[]{""};
+        String[] cashIn = new String[]{""};
+        String[] cashOut = new String[]{""};
+
+        lastCommand = "cMD_70_0_0";
+        // int cMD_70_0_0(String amount, String[] exitCode, String[] cashSum, String[] servIn, String[] servOut)
+        lastErrorCode = FP.cMD_70_0_0(String.format(Locale.ROOT, "%.2f", Math.abs(ioSum)), exitCode, cashSum, cashIn, cashOut);
+        checkForError();
+        StrTable res = new StrTable();
+        res.put("CashSum", cashSum[0]);
+        res.put("CashIn", cashIn[0]);
+        res.put("CashOut", cashOut[0]);
+        return res;
+    }
     
 }

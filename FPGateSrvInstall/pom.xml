@@ -3,13 +3,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eda</groupId>
     <artifactId>FPGateSrvInstall</artifactId>
-    <version>1.0.3-b</version>
+    <version>1.0.4-b</version>
     <packaging>pom</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <izpack.version>5.0.0-rc5</izpack.version>
         <izpack.staging>${project.build.directory}/staging</izpack.staging>
-        <project.fpgatesrv.version>1.0.3-b</project.fpgatesrv.version>
+        <project.fpgatesrv.version>1.0.4-b</project.fpgatesrv.version>
         <project.fpgatesrv.target>${basedir}/../FPGateSrv/target</project.fpgatesrv.target>
     </properties>
 <!-- https://izpack.atlassian.net/wiki/display/IZPACK/Compiling+Using+Maven -->    
