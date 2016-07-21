@@ -837,12 +837,12 @@ public class FPCFP700KL  extends FPCBase {
 
         lastCommand = "cMD_70_0_0";
         // int cMD_70_0_0(String amount, String[] exitCode, String[] cashSum, String[] servIn, String[] servOut)
-        lastErrorCode = FP.cMD_70_0_0(String.format(Locale.ROOT, "%.2f", Math.abs(ioSum)), exitCode, cashSum, cashIn, cashOut);
+        lastErrorCode = FP.cMD_70_0_0(String.format(Locale.ROOT, "%.2f", ioSum), exitCode, cashSum, cashIn, cashOut);
         checkForError();
         StrTable res = new StrTable();
-        res.put("CashSum", cashSum[0]);
-        res.put("CashIn", cashIn[0]);
-        res.put("CashOut", cashOut[0]);
+        res.put("CashSum", String.format(Locale.ROOT, "%.2f", Double.parseDouble(cashSum[0])/100));
+        res.put("CashIn", String.format(Locale.ROOT, "%.2f", Double.parseDouble(cashIn[0])/100));
+        res.put("CashOut", String.format(Locale.ROOT, "%.2f", Double.parseDouble(cashOut[0])/100));
         return res;
     }
     

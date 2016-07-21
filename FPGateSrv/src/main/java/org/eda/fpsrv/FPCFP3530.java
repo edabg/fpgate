@@ -767,9 +767,9 @@ public class FPCFP3530 extends FPCBase{
             throw createException();
         
         StrTable res = new StrTable();
-        res.put("CashSum", Double.toString(cashSum[0]));
-        res.put("CashIn", Double.toString(cashIn[0]));
-        res.put("CashOut", Double.toString(cashOut[0]));
+        res.put("CashSum", String.format(Locale.ROOT, "%.2f", cashSum[0]));
+        res.put("CashIn", String.format(Locale.ROOT, "%.2f", cashIn[0]));
+        res.put("CashOut", String.format(Locale.ROOT, "%.2f", cashOut[0]));
         return res;
     }
     

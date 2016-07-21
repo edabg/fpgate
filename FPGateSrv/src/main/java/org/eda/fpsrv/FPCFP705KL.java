@@ -949,9 +949,9 @@ Byte 7: Not used
         checkForError();
         
         StrTable res = new StrTable();
-        res.put("CashSum", cashSum[0]);
-        res.put("CashIn", cashIn[0]);
-        res.put("CashOut", cashOut[0]);
+        res.put("CashSum", String.format(Locale.ROOT, "%.2f", Double.parseDouble(cashSum[0])/100));
+        res.put("CashIn", String.format(Locale.ROOT, "%.2f", Double.parseDouble(cashIn[0])/100));
+        res.put("CashOut", String.format(Locale.ROOT, "%.2f", Double.parseDouble(cashOut[0])/100));
         return res;
     }
     
