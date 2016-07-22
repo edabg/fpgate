@@ -179,7 +179,7 @@ STG        |Text,TaxCode,Price,Percent,Quantity | Register Sell by Tax Group. Pe
 SDP        |Text,DepCode,Price,Percent,Quantity | Register Sell by Department. Percent and Quantity are optional. Department Code is programmed code of department.
 STL        |ToPrint,ToDisplay,Percent           | Calculate subtotal. Parameters are optional.
 TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4. Amount is Sum paid by customer.
-CMD        |Command,Params...                   | Call custom printer command, depending on printer model behavior will be different.
+CMD        |Command,Params...                   | Call custom printer command. Depending on printer model behavior will be different.
 
 PFT and PNT supports some simple formatting syntax in the following from.
 @padl\tText[\tPaddingSymbol] - Align text to the left and pad to the whole width with padding symbol (by default is space)
@@ -234,6 +234,10 @@ Request journal information and return it. Available only if printer support it.
 GetJournal
 ----------
 Request printer journal return it. Available only if printer support it.
+
+CashInOut
+----------
+Register `cash in` and `cash out` to the cash register. Accepts parameter `Amount` which set cash value. The positive `Amount` is  `cash in`, negative `Amount` is `cash out`, zero `Amount` prints current cash.
 
 CustomCommand
 -------------
