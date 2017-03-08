@@ -82,7 +82,7 @@ function csvToTdv(csv) {
     var tdv = csv, token = '==token-escaped-comma==';
     tdv = tdv.replace(/([\\]\,)/g, token);
     tdv = tdv.replace(/[,]/g, '\t');
-    tdv = tdv.replace(token, ',');
+    tdv = tdv.replace(new RegExp(token, 'g'), ',');
     return tdv;
 }
 

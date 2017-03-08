@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 nikolabintev@edabg.com
+ * Copyright (C) 2016 EDA Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,23 @@
 package org.eda.fpsrv;
 
 import com.taliter.fiscal.device.FiscalDeviceIOException;
-import org.eda.fiscal.device.DaisyFiscalDevice;
-import org.eda.fiscal.device.DaisyFiscalPrinter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.eda.fiscal.device.DatecsECRPrinter;
 
 /**
  *
- * @author nikolabintev@edabg.com
+ * @author Dimitar Angelov
  */
-public class FPCDaisyICL extends FPCBase {
+public class FPCDatecsECRICL extends FPCBase {
 
-    private DaisyFiscalPrinter FP;
+    private DatecsECRPrinter FP;
     private String lastCommand;
     private int lastErrorCode;
     private String lastErrorMsg;
@@ -42,10 +41,10 @@ public class FPCDaisyICL extends FPCBase {
     private HashMap<String, String[]> printerStatus;
     
     /**
-     * FPCDaisy constructor.
+     * FPCDatecsECRICL constructor.
      * @throws Exception Throws an exception
      */
-    public FPCDaisyICL() throws Exception {
+    public FPCDatecsECRICL() throws Exception {
         super();
         
         lastCommand = "";
@@ -54,7 +53,7 @@ public class FPCDaisyICL extends FPCBase {
     }
     
     public static String getClassDecription() {
-        return "(BETA Version!) This class supports Daisy fiscal printers via raw ICL serial communication protocol!";
+        return "(BETA Version!) This class supports Datecs ECR via raw ICL serial communication protocol!";
     }
     
     public static FPParams getDefinedParams() throws Exception {
@@ -83,12 +82,12 @@ public class FPCDaisyICL extends FPCBase {
                      addProperty(new FPProperty(
                         String.class
                         , "portSourceLib", "Port source library", "Port source library"
-                        , DaisyFiscalPrinter.RXTX
+                        , DatecsECRPrinter.RXTX
                         , new FPPropertyRule<>(
                                 null, null, true
                                 , new LinkedHashMap() {{
-                                    put(DaisyFiscalPrinter.RXTX, "RXTX library");
-                                    put(DaisyFiscalPrinter.SERIAL, "SERIAL library");
+                                    put(DatecsECRPrinter.RXTX, "RXTX library");
+                                    put(DatecsECRPrinter.SERIAL, "SERIAL library");
                                 }}
                         )
                      ));
@@ -118,7 +117,7 @@ public class FPCDaisyICL extends FPCBase {
     public void init() throws Exception, FPException {
         
         lastCommand = "Init";
-        this.FP = new DaisyFiscalPrinter(getParam("COM"), Integer.parseInt(getParam("BaudRate")), getParam("portSourceLib"));
+        this.FP = new DatecsECRPrinter(getParam("COM"), Integer.parseInt(getParam("BaudRate")), getParam("portSourceLib"));
     }
     
     @Override
@@ -126,7 +125,7 @@ public class FPCDaisyICL extends FPCBase {
         try {
             FP.close();
         } catch (Exception ex) {
-            Logger.getLogger(FPCDaisyICL.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(FPCDatecsECRICL.class.getName()).log(Level.SEVERE, null, ex);
         }
         FP = null;
     }
@@ -156,7 +155,7 @@ public class FPCDaisyICL extends FPCBase {
     
     @Override
     public void cancelFiscalCheck() throws FPException {
-        lastCommand = "cancelFiscalCheck - " + Integer.toString(DaisyFiscalDevice.CMD_CANCEL_FISCAL_CHECK);
+        lastCommand = "cancelFiscalCheck";
         try {
             FP.cmdCancelFiscalCheck();
         } catch (FiscalDeviceIOException ex) {
@@ -168,7 +167,7 @@ public class FPCDaisyICL extends FPCBase {
     
     @Override
     public void printDiagnosticInfo() throws FPException {
-        lastCommand = "printDiagnosticInfo - " + Integer.toString(DaisyFiscalDevice.CMD_PRINT_DIAGNOSTIC_INFO);
+        lastCommand = "printDiagnosticInfo";
 
         try {
             FP.cmdPrintDiagnosticInfo();
@@ -181,7 +180,7 @@ public class FPCDaisyICL extends FPCBase {
     
     @Override
     public String getLastPrintDoc() throws FPException {
-        lastCommand = "getLastPrintDoc - " + Integer.toString(DaisyFiscalDevice.CMD_LAST_DOC_NUM);
+        lastCommand = "getLastPrintDoc";
         String lastDocNum = "";
         try {
             lastDocNum = Integer.toString(FP.cmdLastDocNum());
@@ -320,7 +319,7 @@ public class FPCDaisyICL extends FPCBase {
                     }
                 }    
                 // close fiscal check
-                lastCommand = "closeFiscalCheck - " + Integer.toString(DaisyFiscalDevice.CMD_CLOSE_FISCAL_CHECK);
+                lastCommand = "closeFiscalCheck";
                 try {
                     FP.cmdCloseFiscalCheck();
                 } catch (FiscalDeviceIOException ex) {
@@ -329,7 +328,7 @@ public class FPCDaisyICL extends FPCBase {
                 }
             } else {
                 //close nonfiscal check
-                lastCommand = "closeNonFiscalCheck - " + Integer.toString(DaisyFiscalDevice.CMD_CLOSE_NONFISCAL_CHECK);
+                lastCommand = "closeNonFiscalCheck";
                 try {
                     FP.cmdCloseNonFiscalCheck();
                 } catch (FiscalDeviceIOException ex) {
@@ -343,11 +342,12 @@ public class FPCDaisyICL extends FPCBase {
     
     @Override
     public String customCmd(String CMD, String params) throws FPException {
+        String input = params.replace("\\t", "\t");
         lastCommand = "cUSTOM_CMD("+CMD+")";
         String output = "";
         
         try {
-            output = FP.customCmd(Integer.parseInt(CMD), params);
+            output = FP.customCmd(Integer.parseInt(CMD), input);
         } catch (FiscalDeviceIOException ex) {
             lastErrorCode = -1;
             lastErrorMsg = ex.getMessage();
@@ -364,7 +364,7 @@ public class FPCDaisyICL extends FPCBase {
         if (passwd.length() == 0)
            passwd = getParam("OperatorPass");
         
-        lastCommand = "setOperator - " + Integer.toString(DaisyFiscalDevice.CMD_SET_OPERATOR);
+        lastCommand = "setOperator";
         
         try {
             FP.cmdSetOperator(code, passwd, fullName);
@@ -381,7 +381,7 @@ public class FPCDaisyICL extends FPCBase {
     public void openFiscalCheck() throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         
-        lastCommand = "openFiscalCheck - " + Integer.toString(DaisyFiscalDevice.CMD_OPEN_FISCAL_CHECK);
+        lastCommand = "openFiscalCheck";
         try {
             response = FP.cmdOpenFiscalCheck(params.get("OperatorCode", "1"), params.get("OperatorPass", "0000"), false);
         } catch (FiscalDeviceIOException ex) {
@@ -396,7 +396,7 @@ public class FPCDaisyICL extends FPCBase {
     public void closeFiscalCheck() throws FPException{
         LinkedHashMap<String, String> response = new LinkedHashMap();
 
-        lastCommand = "closeFiscalCheck - " + Integer.toString(DaisyFiscalDevice.CMD_CLOSE_FISCAL_CHECK);
+        lastCommand = "closeFiscalCheck";
         try {
             response = FP.cmdCloseFiscalCheck();
         } catch (FiscalDeviceIOException ex) {
@@ -410,7 +410,7 @@ public class FPCDaisyICL extends FPCBase {
     public void sell(String text, taxGroup taxCode, double price, double quantity, double discountPerc)  throws FPException {
         String[] lines = splitOnLines(text);
 
-        lastCommand = "sell - " + Integer.toString(DaisyFiscalDevice.CMD_SELL);
+        lastCommand = "sell";
         
         try {
             FP.cmdSell(lines[0], lines.length > 1 ? lines[1] : "", this.taxGroupToChar(taxCode), price, quantity, discountPerc, true);
@@ -430,7 +430,7 @@ public class FPCDaisyICL extends FPCBase {
     public void sellDept(String text, String deptCode, double price, double quantity, double discountPerc)  throws FPException{
         String[] lines = splitOnLines(text);
 
-        lastCommand = "sellDept - " + Integer.toString(DaisyFiscalDevice.CMD_SELL_DEPT);
+        lastCommand = "sellDept";
         
         try {
             FP.cmdSellDept(lines[0], lines.length > 1 ? lines[1] : "", deptCode, price, quantity, discountPerc, true);
@@ -443,7 +443,7 @@ public class FPCDaisyICL extends FPCBase {
     
     @Override
     public void printFiscalText(String text) throws FPException {
-        lastCommand = "printFiscalText - " + Integer.toString(DaisyFiscalDevice.CMD_PRINT_FISCAL_TEXT);
+        lastCommand = "printFiscalText";
         String[] lines = splitOnLines(text);
         
         for (String line : lines) {
@@ -459,7 +459,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public void printNonFiscalText(String text) throws FPException {
-        lastCommand = "printNonFiscalText - " + Integer.toString(DaisyFiscalDevice.CMD_PRINT_NONFISCAL_TEXT);
+        lastCommand = "printNonFiscalText";
         String[] lines = splitOnLines(text);
         
         for (String line : lines) {
@@ -477,7 +477,7 @@ public class FPCDaisyICL extends FPCBase {
     public StrTable subTotal(boolean toPrint, boolean toDisplay, double discountPerc) throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         
-        lastCommand = "subTotal - " + Integer.toString(DaisyFiscalDevice.CMD_SUBTOTAL);
+        lastCommand = "subTotal";
         try {
             response = FP.cmdSubTotal(toPrint, toDisplay, discountPerc, true);
         } catch (FiscalDeviceIOException ex) {
@@ -497,7 +497,7 @@ public class FPCDaisyICL extends FPCBase {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         String[] lines = splitOnLines(text);
         
-        lastCommand = "total - " + Integer.toString(DaisyFiscalDevice.CMD_TOTAL);
+        lastCommand = "total";
         
         try {
             response = FP.cmdTotal(lines[0], lines.length > 1 ? lines[1] : "", paymenTypeChar(payType), payAmount);
@@ -519,22 +519,23 @@ public class FPCDaisyICL extends FPCBase {
     public StrTable getCurrentCheckInfo() throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         
+        StrTable res = new StrTable();
         //Current check info.
-        lastCommand = "getCurrentCheckInfo - " + Integer.toString(DaisyFiscalDevice.CMD_CURRENT_CHECK_INFO);
+        lastCommand = "getCurrentCheckInfo";
         try {
             response = FP.cmdCurrentCheckInfo();
+            res.putAll(response);
+            String[] TaxGr = {"TaxA","TaxB","TaxC","TaxD", "TaxE", "TaxF", "TaxG", "TaxH"};
+            for(String tg : TaxGr) 
+                res.put(tg, response.containsKey(tg)?response.get(tg):"");
         } catch (FiscalDeviceIOException ex) {
             lastErrorCode = -1;
             lastErrorMsg = ex.getMessage();
 //            throw createException();       
         }
         
-        StrTable res = new StrTable();
-        
-        res.putAll(response);
-        
         //Last printed doc number.
-        lastCommand = "lastPrintedDocNumber - " + Integer.toString(DaisyFiscalDevice.CMD_LAST_DOC_NUM);
+        lastCommand = "lastPrintedDocNumber";
         int lastDoc = 0;
         try {
             lastDoc = FP.cmdLastDocNum();
@@ -548,7 +549,8 @@ public class FPCDaisyICL extends FPCBase {
         res.put("LastPrintDocNum", Integer.toString(lastDoc));
         
         //Last fiscal record.
-        lastCommand = "lastFiscalRecord - " + Integer.toString(DaisyFiscalDevice.CMD_LAST_FISCAL_RECORD);
+        lastCommand = "lastFiscalRecord";
+        response.clear();
         try {
             response = FP.cmdLastFiscalRecord();
         } catch (FiscalDeviceIOException ex) {
@@ -556,8 +558,6 @@ public class FPCDaisyICL extends FPCBase {
             lastErrorMsg = ex.getMessage();
 //            throw createException();       
         }
-        
-        response.clear();
         
         res.put("LFRI_DocNum", response.containsKey("Number")?response.get("Number"):"");
         res.put("LFRI_DateTime_", response.containsKey("Date")?response.get("Date"):"");
@@ -570,7 +570,6 @@ public class FPCDaisyICL extends FPCBase {
         String[] TaxGr = {"TaxA","TaxB","TaxC","TaxD", "TaxE", "TaxF", "TaxG", "TaxH"};
         for(String tg : TaxGr) 
             res.put("LFRI_"+tg, response.containsKey(tg)?response.get(tg):"");
-        
 //        response.clear();
         
         // "cMD_86_0_0"
@@ -580,7 +579,7 @@ public class FPCDaisyICL extends FPCBase {
     
     @Override
     public void openNonFiscalCheck() throws FPException {
-        lastCommand = "openNonFiscalChek - " + Integer.toString(DaisyFiscalDevice.CMD_OPEN_NONFISCAL_CHECK);
+        lastCommand = "openNonFiscalChek";
         
         try {
              FP.cmdOpenNonFiscalCheck();
@@ -593,7 +592,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public void closeNonFiscalCheck() throws FPException {
-        lastCommand = "closeNonFiscalCheck - " + Integer.toString(DaisyFiscalDevice.CMD_CLOSE_NONFISCAL_CHECK);
+        lastCommand = "closeNonFiscalCheck";
         try {
             FP.cmdCloseNonFiscalCheck();
         } catch (FiscalDeviceIOException ex) {
@@ -608,7 +607,7 @@ public class FPCDaisyICL extends FPCBase {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         StrTable res = new StrTable();
         
-        lastCommand = "getPrinterStatus - " + Integer.toString(DaisyFiscalDevice.CMD_PRINTER_STATUS);
+        lastCommand = "getPrinterStatus";
         try {
             response = FP.cmdPrinterStatus();
         } catch (FiscalDeviceIOException ex) {
@@ -625,7 +624,7 @@ public class FPCDaisyICL extends FPCBase {
     @Override
     public StrTable getDiagnosticInfo() throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        lastCommand = "getDiagnosticInfo - " + Integer.toString(DaisyFiscalDevice.CMD_DIAGNOSTIC_INFO);
+        lastCommand = "getDiagnosticInfo";
         
         try {
             response = FP.cmdDiagnosticInfo();
@@ -646,7 +645,7 @@ public class FPCDaisyICL extends FPCBase {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         
         String item = reportType == dailyReportType.Z ? "0" : "2";
-        lastCommand = "reportDaily - " + Integer.toString(DaisyFiscalDevice.CMD_REPORT_DAILY);
+        lastCommand = "reportDaily";
         
         try {
             response = FP.cmdReportDaily(item, true);
@@ -668,12 +667,11 @@ public class FPCDaisyICL extends FPCBase {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMdd");
         StrTable res = new StrTable();
 
-        lastCommand = "reportByDates - " + Integer.toString(DaisyFiscalDevice.CMD_REPORT_BY_DATE_SHORT);
+        lastCommand = "reportByDates";
         
         boolean detailed = false;
         
         if (reportType == datesReportType.DETAIL) {
-            lastCommand = Integer.toString(DaisyFiscalDevice.CMD_REPORT_BY_DATE);
             detailed = true;
         }
 
@@ -690,7 +688,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public Date getDateTime() throws FPException {
-        lastCommand = "getDateTime - " + Integer.toString(DaisyFiscalDevice.CMD_DATETIME_INFO);
+        lastCommand = "getDateTime";
         
         Date dateTime = null;
         try {
@@ -706,7 +704,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public Date setDateTime(Date dateTime) throws FPException {
-        lastCommand = "setDateTime - " + Integer.toString(DaisyFiscalDevice.CMD_SET_DATETIME);
+        lastCommand = "setDateTime";
         
         Calendar c = Calendar.getInstance();
         c.setTime(dateTime);
@@ -723,7 +721,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public void paperFeed(int lineCount) throws FPException {
-        lastCommand = "paperFeed - " + Integer.toString(DaisyFiscalDevice.CMD_PAPER_FEED);
+        lastCommand = "paperFeed";
         
         try {
             FP.cmdPaperFeed(lineCount);
@@ -736,7 +734,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public void printLastCheckDuplicate() throws FPException  {
-        lastCommand = "printLastCheckDuplicate - " + Integer.toString(DaisyFiscalDevice.CMD_PRINT_CHECK_DUBLICATE);
+        lastCommand = "printLastCheckDuplicate";
         
         try {
             FP.cmdPrintCheckDuplicate();
@@ -754,7 +752,7 @@ public class FPCDaisyICL extends FPCBase {
 
     @Override
     public StrTable cashInOut(Double ioSum) throws FPException {
-        lastCommand = "cashInOut - " + ioSum.toString();
+        lastCommand = "cashInOut";
         StrTable res = new StrTable();
         try {
             LinkedHashMap<String,String> res_ = FP.cmdCashInOut(ioSum);

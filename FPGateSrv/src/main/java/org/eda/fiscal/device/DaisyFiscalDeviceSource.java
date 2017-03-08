@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.taliter.fiscal.device.daisy;
+package org.eda.fiscal.device;
 
 import com.taliter.fiscal.device.icl.ICLFiscalDevice;
 import com.taliter.fiscal.device.icl.ICLFiscalDeviceSource;

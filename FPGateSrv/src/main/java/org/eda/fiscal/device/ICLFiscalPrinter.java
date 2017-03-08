@@ -1,4 +1,4 @@
-package com.taliter.fiscal.device.daisy;
+package org.eda.fiscal.device;
 
 import com.taliter.fiscal.device.FiscalDeviceIOException;
 import java.util.Date;
@@ -38,18 +38,18 @@ public interface ICLFiscalPrinter {
      * @param text Sale description text.
      * @param sellDescription Additional sale description text.
      * @param taxGroup One symbol for tax group (А, Б, В, Г, Д, Е, Ж, З).
-     * @param sign "+" or "-".
      * @param price Price (to 8 digits).
      * @param quantity Quantity of sale (to 8 digits).
      * @param discount The value of discount/add (depends on the sign).
      * @param inPercent Determines whether the value of discount is in percent or netto.
      * @throws FiscalDeviceIOException
      */
-    public void cmdSell(String text, String sellDescription, String taxGroup, String sign, String price, String quantity, String discount, boolean inPercent) throws FiscalDeviceIOException;
+    public void cmdSell(String text, String sellDescription, String taxGroup, double price, double quantity, double discount, boolean inPercent) throws FiscalDeviceIOException;
 
     /**
      * Sale by department. A fiscal check should be opened first.
-     * @param sign "+" or "-"
+     * @param text Sale description text.
+     * @param sellDescription Additional sale description text.
      * @param dept Department number (2 digits).
      * @param price - Price (to 8 digits).
      * @param quantity - Quantity of sale (to 8 digits).
@@ -57,7 +57,7 @@ public interface ICLFiscalPrinter {
      * @param inPercent Determines whether the value of discount is in percent or netto.
      * @throws FiscalDeviceIOException
      */
-    public void cmdSellDept(String sign, String dept, String price, String quantity, String discount, boolean inPercent) throws FiscalDeviceIOException;
+    public void cmdSellDept(String text, String sellDescription, String dept, double price, double quantity, double discount, boolean inPercent) throws FiscalDeviceIOException;
     
     /**
      * Cancel the check.
@@ -101,14 +101,7 @@ public interface ICLFiscalPrinter {
      * @return Returns the subtotal.
      * @throws FiscalDeviceIOException
      */
-    public LinkedHashMap<String, String> cmdSubTotal(boolean toPrint, boolean toDisplay, String discountPercent) throws FiscalDeviceIOException;
-
-    /**
-     * Prints the total of the fiscal check.
-     * @return Returns the result of command execution and payment information as a LinkedHashMap.
-     * @throws FiscalDeviceIOException
-     */
-    public LinkedHashMap<String, String> cmdTotal() throws FiscalDeviceIOException;
+    public LinkedHashMap<String, String> cmdSubTotal(boolean toPrint, boolean toDisplay, double discount, boolean inPercent) throws FiscalDeviceIOException;
 
     /**
      * Prints the total of the fiscal check.
@@ -119,7 +112,7 @@ public interface ICLFiscalPrinter {
      * @return Returns the result of command execution and payment information as a LinkedHashMap.
      * @throws FiscalDeviceIOException
      */
-    public LinkedHashMap<String, String> cmdTotal(String firstRowText, String secondRowText, String paymentType, String amount) throws FiscalDeviceIOException;
+    public LinkedHashMap<String, String> cmdTotal(String firstRowText, String secondRowText, String paymentType, double amount) throws FiscalDeviceIOException;
 
     /**
      * This command shows whether it is possible to correct registered sales, and information on the accumulated turnovers in the individual tax groups.
@@ -130,11 +123,10 @@ public interface ICLFiscalPrinter {
 
     /**
      * On receipt of this command fiscal device returns information about the last daily report in the fiscal memory.
-     * @param type The type of returned data. "T" - amounts with VAT; "N" - amounts without VAT. By default is "N".
      * @return Returns received data as a LinkedHashMap.
      * @throws FiscalDeviceIOException
      */
-    public LinkedHashMap<String, String> cmdLastFiscalRecord(String type) throws FiscalDeviceIOException;
+    public LinkedHashMap<String, String> cmdLastFiscalRecord() throws FiscalDeviceIOException;
 
     /**
      *  Prints diagnostic information of the fiscal device.
@@ -158,11 +150,10 @@ public interface ICLFiscalPrinter {
 
     /**
      *  Diagnostic information.
-     * @param toCalculate if it's true check sum is calculated.
      * @return Returns the diagnostic information of fiscal device as a LinkedHashMap
      * @throws FiscalDeviceIOException
      */
-    public LinkedHashMap<String, String> cmdDiagnosticInfo(boolean toCalculate) throws FiscalDeviceIOException;
+    public LinkedHashMap<String, String> cmdDiagnosticInfo() throws FiscalDeviceIOException;
 
     /**
      * Get the fiscal device's date and time.
@@ -199,14 +190,14 @@ public interface ICLFiscalPrinter {
      * @param endDate end date of report
      * @throws FiscalDeviceIOException
      */
-    public void cmdReportByDates(boolean detailed, String startDate, String endDate) throws FiscalDeviceIOException;
+    public void cmdReportByDates(boolean detailed, Date startDate, Date endDate) throws FiscalDeviceIOException;
 
     /**
      *  Paper feed.
      * @param lines number of lines
      * @throws FiscalDeviceIOException
      */
-    public void cmdPaperFeed(String lines) throws FiscalDeviceIOException;
+    public void cmdPaperFeed(int lines) throws FiscalDeviceIOException;
 
     /**
      *  Sets operator's name. This command can't be executed if the sales by this operator are not reset.
@@ -240,4 +231,12 @@ public interface ICLFiscalPrinter {
      * @throws FiscalDeviceIOException
      */
     public LinkedHashMap<String, String> cmdGetConstants() throws FiscalDeviceIOException;
+    
+    /**
+     * Register Cash in or Cash out
+     * @param ioSum Cash amount depending of sign +In/-Out
+     * @return
+     * @throws FiscalDeviceIOException
+     */
+    public LinkedHashMap<String, String> cmdCashInOut(Double ioSum) throws FiscalDeviceIOException;
 }

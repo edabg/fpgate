@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eda</groupId>
     <artifactId>FPGateSrv</artifactId>
-    <version>1.0.4-b</version>
+    <version>1.0.5-a</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -128,10 +128,17 @@
             <type>jar</type>
         </dependency> 
 
+<!--        
         <dependency>
             <groupId>org.rxtx</groupId>
             <artifactId>rxtx</artifactId>
-            <version>2.2-20081207</version>
+            <version>2.2pre2</version>
+        </dependency>
+-->
+        <dependency>
+            <groupId>com.neuronrobotics</groupId>
+            <artifactId>nrjavaserial</artifactId>
+            <version>3.12.0</version>
         </dependency>
 
         <dependency>

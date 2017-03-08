@@ -1,4 +1,4 @@
-package com.taliter.fiscal.device.daisy;
+package org.eda.fiscal.device;
 
 import com.taliter.fiscal.device.icl.ICLFiscalDevice;
 import com.taliter.fiscal.port.FiscalPort;
@@ -88,6 +88,10 @@ public class DaisyFiscalDevice extends ICLFiscalDevice {
         
     /** Fiscal device's constants. (0x80) */
     public static final int CMD_GET_CONSTANTS                = 0x80;
+
+    /** Cash In/Cash Out operation (0x46) */
+    public static final int CMD_CASH_INOUT                   = 0x46;
+
     /**
      * Creates an instance of DaisyFiscalDevice.
      * @param port The port in which the fiscal device is connected.
