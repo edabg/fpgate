@@ -17,6 +17,16 @@
 package org.eda.fpsrv;
 
 
+import org.eda.fdevice.StrTable;
+import org.eda.fdevice.FPPropertyRule;
+import org.eda.fdevice.FPPropertyGroup;
+import org.eda.fdevice.FUser;
+import org.eda.fdevice.FPrinter;
+import org.eda.fdevice.FPProperty;
+import org.eda.fdevice.FPDatabase;
+import org.eda.fdevice.FPCBase;
+import org.eda.fdevice.FPCBaseClassList;
+import org.eda.fdevice.FPParams;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -110,10 +120,10 @@ public class AdminResource extends ServerResource {
                 tpl.process(responseData, out);
             } catch (TemplateException ex) {
                 getResponse().setStatus(Status.SERVER_ERROR_INTERNAL, ex.getMessage());
-                Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+                getLogger().log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 getResponse().setStatus(Status.SERVER_ERROR_INTERNAL, ex.getMessage());
-                Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+                getLogger().log(Level.SEVERE, null, ex);
             }
         } else {
             getResponse().setStatus(Status.SERVER_ERROR_NOT_IMPLEMENTED, "Can't find template "+tplName);
@@ -309,7 +319,7 @@ public class AdminResource extends ServerResource {
                 }
         } catch (Exception ex) {
             responseError(ex.getMessage());
-            Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, null, ex);
         }    
         return processTemplate("printer-test");
     }
@@ -326,7 +336,7 @@ public class AdminResource extends ServerResource {
             responseData.put("UserCountValid", db.getUserCountValid());
         } catch (SQLException ex) {
             responseError(ex.getMessage());
-            Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, null, ex);
         }
         return processTemplate("index");
     }
@@ -355,7 +365,7 @@ public class AdminResource extends ServerResource {
             }
         } catch (Exception ex) {
             responseError(ex.getMessage());
-            Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, null, ex);
         }    
         return processTemplate("printers");
     }
@@ -476,12 +486,12 @@ public class AdminResource extends ServerResource {
                                         FPPropertyRule rule = prop.getRule();
                                         put("RuleApply", (rule != null)?"1":"0");
                                         if (rule != null) {
-                                            put("RuleMinDefined", (rule.min != null)?"1":"0");
-                                            put("RuleMin", rule.min);
-                                            put("RuleMaxDefined", (rule.max != null)?"1":"0");
-                                            put("RuleMax", rule.max);
-                                            put("RuleStrict", rule.strict?"1":"0");
-                                            put("RuleListDefined", (rule.list != null)?"1":"0");
+                                            put("RuleMinDefined", (rule.getMin() != null)?"1":"0");
+                                            put("RuleMin", rule.getMin());
+                                            put("RuleMaxDefined", (rule.getMax() != null)?"1":"0");
+                                            put("RuleMax", rule.getMax());
+                                            put("RuleStrict", rule.isStrict()?"1":"0");
+                                            put("RuleListDefined", (rule.getList() != null)?"1":"0");
                                             put("RuleList", rule.getStringList());
                                         }
                                     }});    
@@ -491,12 +501,12 @@ public class AdminResource extends ServerResource {
                     }
                 } catch (Exception ex) {
                     responseError(ex.getMessage());
-                    Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+                    getLogger().log(Level.SEVERE, null, ex);
                 }
             }});
         } catch (Exception ex) {
             responseError(ex.getMessage());
-            Logger.getLogger(AdminResource.class.getName()).log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, null, ex);
         }    
         return processTemplate("printer-edit");
     }

@@ -15,18 +15,22 @@ The server contains two main components:
 
 Current version of FPGate supports following fiscal printers:
 
-DATECS FP3530,FP550,FP55,FP1000,FP300,FP60KL,FP2000KL, FP1000KL,FP700KL,FP705KL
+- Tremol full range of fiscal printers via ZFPLabServer (No real tests was made)
+- DATECS FP-800, FP-2000, FP-650, SK1-21F, SK1-31F, FMP-10, FP-550 (Real test was made only on FP2000!)
+- Daisy fiscal printers (No real tests was made)
 
 Current version of FPGate supports following cash registers:
 
-DATECS DP-05KL, DP-15KL,DP-25KL,DP-35KL,DP-45KL,DP-50KL,DP-50CKL,DP-55KL,MP-55 KL,DP-500PLUS KL
+- Tremol full range of cash registers via ZFPLabServer (Real tests was made with S21)
+- DATECS DP-05, DP-25, DP-35, WP-50, DP-150 (Real tests was made with DP-150)
+- Daisy cash registers (Real tests was made with Compact M)
 
 
 Requirements
 ============
 - Java Runtime Environment 8.0+
 - Drivers for implemented fiscal printers. 
-For DATECS models [FP3530 COM Server](http://www.datecs.bg/en/downloads/zip?id=FP3530_COM_Server_SETUP_2016_04_06v2_0_0_845.zip) v2.0.0/845 or newer is required.
+For Tremol fiscal devices ZFPLabServer 1902191535 or newer is required.
 
 Installation
 ============
@@ -48,12 +52,12 @@ Request Object
 ---------------------------
 Request Object contains following attributes:
 
-Attribute  |Type   |Description
------------|-------|-------------------------
-jsonrpc    |String |A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
-method     |String |A String containing the name of the method/printer command to be invoked. Method names that begin with the word rpc followed by a period character (U+002E or ASCII 46) are reserved for rpc-internal methods and extensions and MUST NOT be used for anything else.
-params     |Object |A Structured value that holds the parameter values to be used during the invocation of the method. 
-id         |String |An identifier established by the Client that MUST contain a String, Number, or NULL value if included.
+Attribute   | Type    | Description
+----------- | ------- | -------------------------
+jsonrpc     | String  | A String specifying the version of the JSON-RPC protocol. MUST be exactly "2.0".
+method      | String  | A String containing the name of the method/printer command to be invoked. Method names that begin with the word rpc followed by a period character (U+002E or ASCII 46) are reserved for rpc-internal methods and extensions and MUST NOT be used for anything else.
+params      | Object  | A Structured value that holds the parameter values to be used during the invocation of the method. 
+id          | String  | An identifier established by the Client that MUST contain a String, Number, or NULL value if included.
 
 'params' object in request contain following attributes:
 
@@ -115,6 +119,7 @@ Here is example request:
     });
     var args = 
         'SON\tOperator Name\n' +
+        'UNS\tZK970007\n'+
         'STG\tProduct of tax group B\tB\t0.12\t0\n' +
         'STG\tProduct of tax group A\tA\t0.25\t0\n' +
         'PFT\tSample fiscal text\n' +
@@ -172,6 +177,23 @@ Where subcommand can be:
 Subcommand | Parameters                         | Description
 -----------|------------------------------------|-----------------------
 SON        |OperatorName                        | Set operator name
+UNS        |DDDDDDDD-OOOO-#######               | Unique Number of Sell
+REV        |                                    | Revision/Storno type
+RTA        |RevType                             | Revision/Storno type 'RET' - Return, 'ERR' - Error, 'RED' - Reduce amount
+RDN        |#######                             | Doc Number subject of revision/storno
+RDT        |YYYY-MM-DD HH:mm:ss                 | Doc Date/time subject of revision/storno
+RIN        |##########                          | Credit note to InvoiceNum
+RUS        |DDDDDDDD-OOOO-#######               | Unique Number of sell subject of revision/storno
+RFM        |########                            | Fiscal Memory number subject of revision/storno document
+RRR        |Text                                | Optional revision/storno text
+INV        |                                    | Extended/invoice fiscal check
+CRCP       |Recipient                           | Customer Recipient name
+CBUY       |Buyer                               | Customer  company name
+CADR       |Addrsss                             | Customer  address 
+CUIC       |UIC                                 | Customer Unified Identification Code
+CUIT       |UICType                             | Customer UIC Type code. 'BULSTAT', 'EGN', 'FOREIGN', 'NRA'
+CVAT       |VATNum                              | Customer VAT Number
+CSEL       |Seller                              | Seller name (Not supported on all devices!)
 PFT        |Text                                | Print Fiscal Text 
 PNT        |Text                                | Print Nonfiscal Text 
 PLF        |RowCount                            | Paper Line Feed
@@ -180,6 +202,7 @@ SDP        |Text,DepCode,Price,Percent,Quantity | Register Sell by Department. P
 STL        |ToPrint,ToDisplay,Percent           | Calculate subtotal. Parameters are optional.
 TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4. Amount is Sum paid by customer.
 CMD        |Command,Params...                   | Call custom printer command. Depending on printer model behavior will be different.
+
 
 PFT and PNT supports some simple formatting syntax in the following from.
 @padl\tText[\tPaddingSymbol] - Align text to the left and pad to the whole width with padding symbol (by default is space)
@@ -192,9 +215,25 @@ PrintDuplicateCheck
 Prints duplicate of last printed fiscal check. Can be executed only once.
 Only one duplicate check can be printed.
 
+PrintDuplicateCheckByDocNum
+---------------------------
+Print duplicate check from EJ by document (check) number.
+`DocNum=0000070` Document number
+
+SetOperatorName
+---------------
+Sets the name of operator.
+`Code=1` Operator Code
+`Passwd` Operator Password
+`FullName` Operator Full Name
+
+CurrentCheckInfo
+----------------
+Return information about current/last check.
+
 LastFiscalRecordInfo
 --------------------
-Requests last fiscal record info.
+Requests last fiscal record info (Data for last Z-Report).
 
 ReportDaily
 -----------
@@ -233,7 +272,12 @@ Request journal information and return it. Available only if printer support it.
 
 GetJournal
 ----------
-Request printer journal return it. Available only if printer support it.
+Request printer journal and return it. 
+`FromDoc=0000070` From Document Number
+`ToDoc=0000070` To Document Number. If missing `ToDoc`=`FromDoc`
+`FromDate=2019-02-14` From Date
+`ToDate=2019-02-14` To Date. If Missing `ToDate`=`FromDate`
+If `FromDoc` is used `FromDate` is ignored.
 
 CashInOut
 ----------

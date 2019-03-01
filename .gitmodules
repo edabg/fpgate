@@ -1,4 +1,0 @@
-[submodule "Java-Fiscal-Device-API"]
-	path = Java-Fiscal-Device-API
-	url = git@github.com:edabg/Java-Fiscal-Device-API.git
-	branch = icl-protocol

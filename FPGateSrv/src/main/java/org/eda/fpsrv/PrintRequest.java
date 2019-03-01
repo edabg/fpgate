@@ -16,6 +16,7 @@
  */
 package org.eda.fpsrv;
 
+import org.eda.fdevice.StrTable;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

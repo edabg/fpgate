@@ -16,16 +16,22 @@
  */
 package org.eda.fpsrv;
 
+import org.eda.fdevice.StrTable;
+import org.eda.fdevice.FPrinter;
+import org.eda.fdevice.FPDatabase;
+import org.eda.fdevice.FPException;
+import org.eda.fdevice.FPCBase;
 import com.google.common.util.concurrent.Striped;
 import java.io.IOException;
 import static java.lang.System.currentTimeMillis;
-import java.sql.SQLException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import org.restlet.resource.ServerResource;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -193,6 +199,27 @@ public class PrintResource extends ServerResource {
      *  CMD\t[Params]<br>
      * Valid commands are:<br>
      * SON\tOperatorName - Sets operator name<br>
+     * <br>
+     * UNS\tDDDDDDDD-OOOO-####### - Unique Number of Sell<br>
+     * <br>
+     * REV - Revision/Storno check<br>
+     * RTA\tRET|ERR|RED - Revision/Storno type<br>
+     * RDN\t####### - Doc Number subject of revision/storno<br>
+     * RDT\tYYYY-MM-DD HH:mm:ss - Doc Date/time subject of revision/storno<br>
+     * RIN\t########## - Credit note to InvoiceNum 
+     * RUS\tDDDDDDDD-OOOO-####### - Unique Number of sell subject of revision/storno<br>
+     * RFM\t######## - Fiscal Memory number subject of revision/storno document<br>
+     * RRR\tText - Optional revision/storno text<br>
+     * <br>
+     * INV - extended/invoice fiscal check
+     * CRCP\tRecipient - Recipient name
+     * CBUY\tBuyer - Buyer company name
+     * CADR\tAddrsss - Buyer address 
+     * CUIC\tUIC - Unified Identification Code
+     * CUIT\tUICType - UIC Type code. 'BULSTAT', 'EGN', 'FOREIGN', 'NRA'
+     * CVAT\tVATNum - VAT Number
+     * CSEL\tSeller - Seller name (Not supported on all devices!)
+     * <br>
      * PFT\tText - Print Fiscal Text<br>
      *  PFT\tText<br>
      * PNT\tText - Print Non Fiscal Text<br>
@@ -225,32 +252,113 @@ public class PrintResource extends ServerResource {
     public void commonPrint(boolean fiscal) throws FPException, Exception {
         ArrayList<String[]> cmdList = new ArrayList<>();
         String[] cmdParams;
+        String setOperatorCode = "";
+        String setOperatorPass = "";
         String setOperatorName = "";
+        boolean isInvoice = false;
+        FPCBase.CustomerInfo custInfo = new FPCBase.CustomerInfo();
+        String UNS = ""; // Unique Number of Sell (only in fiscal)
+        // Data for reverse/storno Fiscal receipt
+        boolean isRevision = false;
+        FPCBase.fiscalCheckRevType RevType = FPCBase.fiscalCheckRevType.OP_ERROR; // Reason for Reverse/Storno By default Error
+        String RevDocNum = "";
+        String RevUNS = "";
+        Date RevDateTime = null;
+        String RevFMNum = "";
+        String RevReason = "";
+        String RevInvoiceNum = "";
+        Date RevInvoiceDate = null;
         for(String arg : pRequest.getArguments()) {
-            if (arg.length() > 0) {
-                cmdParams = arg.split("\\t");
-                // Check for per open fiscal check command
-                if ((cmdParams[0].length() > 1) && cmdParams[0].equals("SON"))
+            if (arg.length() == 0) continue;
+            cmdParams = arg.split("\\t");
+            // Check for per open fiscal check command
+            if ((cmdParams[0].length() > 1)) {
+                if (cmdParams[0].equals("SON")) {
                     setOperatorName = cmdParams[1];
-                else
-                    cmdList.add(cmdParams);
-            }    
+                } else if (cmdParams[0].equals("SOC")) {
+                    setOperatorCode = cmdParams[1];
+                } else if (cmdParams[0].equals("SOP")) {
+                    setOperatorPass = cmdParams[1];
+                } else if (cmdParams[0].equals("UNS")) {
+                    UNS = cmdParams[1]; 
+                } else if (cmdParams[0].equals("REV")) { // Is Reverse/Strono receipt
+                    isRevision = true; 
+                } else if (cmdParams[0].equals("RTA")) { // Reverse/Storno type abbr
+                    RevType = FPCBase.fiscalCheckRevTypeAbbrToType(cmdParams[1]); 
+                } else if (cmdParams[0].equals("RDN")) { // Reverse/Storno Doc Num
+                    RevDocNum = cmdParams[1]; 
+                } else if (cmdParams[0].equals("RUS")) { // Reverse/Storno UNS
+                    RevUNS = cmdParams[1]; 
+                } else if (cmdParams[0].equals("RDT")) { // Reverse/Storno date/time
+                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+                    RevDateTime = format.parse(cmdParams[1]);
+                } else if (cmdParams[0].equals("RFM")) { // Reverse/Storno Fiscal Memory Num
+                    RevFMNum = cmdParams[1];
+                } else if (cmdParams[0].equals("RRR")) { // Reverse/Storno Reson text
+                    RevReason = cmdParams[1];
+                } else if (cmdParams[0].equals("RIN")) { // Reverse/Storno Invoice num
+                    RevInvoiceNum = cmdParams[1];
+                } else if (cmdParams[0].equals("RID")) { // Reverse/Storno Invoice date/time
+                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                    RevInvoiceDate = format.parse(cmdParams[1]);
+                } else if (cmdParams[0].equals("INV")) {
+                    isInvoice = true; 
+                } else if (cmdParams[0].equals("CRCP")) { // Customer Recipient
+                    custInfo.recipient = cmdParams[1];
+                } else if (cmdParams[0].equals("CBUY")) { // Customer Buyer
+                    custInfo.buyer = cmdParams[1];
+                } else if (cmdParams[0].equals("CADR")) { // Customer Address
+                    custInfo.address = cmdParams[1];
+                } else if (cmdParams[0].equals("CUIC")) { // Customer UIC
+                    custInfo.UIC = cmdParams[1];
+                } else if (cmdParams[0].equals("CUIT")) { // Customer UIC Type
+                    custInfo.setUICtypeStr(cmdParams[1]);
+                } else if (cmdParams[0].equals("CVAT")) { // VAT Number
+                    custInfo.VATNumber = cmdParams[1];
+                } else if (cmdParams[0].equals("CSEL")) { // Customer Info Seller
+                    custInfo.seller = cmdParams[1];
+                } else {
+                   cmdList.add(cmdParams);
+                }
+            } else
+               cmdList.add(cmdParams);
         }
+
         if (setOperatorName.length() > 0) {
-            execLog.msg("setOperatorName("+setOperatorName+")");
+            execLog.msg("setOperator("+setOperatorCode+",*,"+setOperatorName+")");
             try {
-                FP.setOperator("", "", setOperatorName);
+                FP.setOperator(setOperatorCode, setOperatorPass, setOperatorName);
             } catch (FPException e) {
-                execLog.error("Set Operator Name: FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
+                execLog.error("Set Operator: FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
             }    
         }
+
+        Date dtBeforeOpen = null;
+        Date dtAfterOpen = null;
+        Date dtBeforeClose = null;
+        Date dtAfterClose = null;
+        
+        try {dtBeforeOpen = FP.getDateTime();} finally{};
         if (fiscal) {
-            execLog.msg("Opening fiscal check");
-            FP.openFiscalCheck();
+            if (isInvoice) {
+                FP.setInvoiceFiscalCheckOn(custInfo);
+            } else
+                FP.setInvoiceFiscalCheckOff();
+            if (!isRevision) {
+                execLog.msg("Opening fiscal check UNS:"+UNS+" Invoice:"+(isInvoice?"Yes":"No"));
+                if (UNS.length() > 0) 
+                    FP.openFiscalCheck(UNS);
+                else 
+                    FP.openFiscalCheck();
+            } else {
+                execLog.msg("Opening Reverse/Storno fiscal check");
+                FP.openFiscalCheckRev(UNS, RevType, RevDocNum, RevUNS, RevDateTime, RevFMNum, RevReason, RevInvoiceNum, RevInvoiceDate);
+            }    
         } else {
             execLog.msg("Opening non fiscal check");
             FP.openNonFiscalCheck();
         }    
+        try {dtAfterOpen = FP.getDateTime();} finally{};
         Integer lineNum = 0;
         for(String[] cmd : cmdList) {
             lineNum++;
@@ -314,10 +422,7 @@ public class PrintResource extends ServerResource {
                         );
                         break;
                     case "TTL" : // TTL\tText\tPaymentAbbr\\tAmount - total
-                        if (cmd.length > 2) {
-                            FP.total(cmd[1], FP.payAbbrToType(cmd[2]), Double.parseDouble(cmd[3]));
-                        } else
-                           execLog.error("line:"+lineNum+" cmd:"+cmd[0]+": Invalid number of arguments");
+                        FP.total((cmd.length > 1)?cmd[1]:"", FP.payAbbrToType((cmd.length> 2)?cmd[2]:""), Double.parseDouble((cmd.length > 3)?cmd[3]:"0"));
                         break;
                     case "CMD" : // CMD\tCMD\tParams
                         String params = "";
@@ -335,8 +440,15 @@ public class PrintResource extends ServerResource {
                 execLog.error("line:"+lineNum+" cmd:"+cmd[0]+" Error:"+e.getMessage());
             }    
         } // for each command
+        try {dtBeforeClose = FP.getDateTime();} finally{};
+        try {response.getResultTable().putAll(FP.getCurrentCheckInfo().toStrTable());} finally{};
         if (fiscal) {
             execLog.msg("Closing fiscal check");
+            Date docDate = FP.getLastFiscalCheckDate();
+            if (docDate != null) {
+                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                response.getResultTable().put("DocDate", fmt.format(docDate));
+            }
             FP.printFiscalText("www.colibrierp.com");
             FP.closeFiscalCheck();
         } else {
@@ -344,8 +456,15 @@ public class PrintResource extends ServerResource {
             FP.printNonFiscalText("www.colibrierp.com");
             FP.closeNonFiscalCheck();
         }
+        try {dtAfterClose = FP.getDateTime();} finally{};
         response.getResultTable().put("CloseStatus", "1");
-        response.getResultTable().putAll(FP.getCurrentCheckInfo());
+        DateFormat dtFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        response.getResultTable().put("dtBeforeOpen", (dtBeforeOpen != null)?dtFormat.format(dtBeforeOpen):"");
+        response.getResultTable().put("dtAfterOpen", (dtAfterOpen != null)?dtFormat.format(dtAfterOpen):"");
+        response.getResultTable().put("dtBeforeClose", (dtBeforeClose != null)?dtFormat.format(dtBeforeClose):"");
+        response.getResultTable().put("dtAfterClose", (dtAfterClose != null)?dtFormat.format(dtAfterClose):"");
+        response.getResultTable().put("LastPrintDocNum", FP.getLastPrintDoc());
+        response.getResultTable().putAll(FP.getDeviceInfo().toStrTable());
     }
 
     public void printDuplicateCheck() throws FPException {
@@ -353,23 +472,43 @@ public class PrintResource extends ServerResource {
         FP.printLastCheckDuplicate();
     }
 
-    public void lastFiscalRecordInfo() throws FPException {
-        execLog.msg("Entering lastFiscalRecordInfo");
+    public void printDuplicateCheckByDocNum() throws FPException {
+        execLog.msg("Entering printDuplicateCheckByDocNum");
+        String docNum = "";
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("DocNum"))
+            docNum = namedArgs.get("DocNum");
+        execLog.msg("Print duplicate check of document number:"+docNum);
+        FP.printCheckDuplicateByDocNum(docNum);
+    }
+    
+    public void currentCheckInfo() throws FPException {
+        execLog.msg("Entering currentCheckInfo");
         StrTable res;
-        execLog.msg("Calling daily getLastFiscalRecordInfo");
-        res = FP.getLastFiscalRecordInfo();
+        res = FP.getCurrentCheckInfo().toStrTable();
         if (res == null) {
-            execLog.msg("getLastFiscalRecordInfo report returns no result!");
+            execLog.msg("getCurrentCheckInfo report returns no result!");
         } else {
-            execLog.msg("getLastFiscalRecordInfo report returns result!");
+            execLog.msg("getCurrentCheckInfo report returns result!");
             response.getResultTable().putAll(res);
         }    
     }
 
+    public void lastFiscalRecordInfo() throws FPException {
+        execLog.msg("Entering lastFiscalRecordInfo");
+        StrTable res;
+        res = FP.getLastFiscalRecordInfo().toStrTable();
+        if (res == null) {
+            execLog.msg("lastFiscalRecordInfo report returns no result!");
+        } else {
+            execLog.msg("lastFiscalRecordInfo report returns result!");
+            response.getResultTable().putAll(res);
+        }    
+    }
+    
     public void printerStatus() throws FPException {
         execLog.msg("Entering printerStatus");
         StrTable res;
-        execLog.msg("Calling daily getLastFiscalRecordInfo");
         res = FP.getPrinterStatus();
         if (res == null) {
             execLog.msg("getPrinterStatus report returns no result!");
@@ -494,8 +633,9 @@ public class PrintResource extends ServerResource {
     
     public void getJournalInfo() throws FPException {
         execLog.msg("Entering getJournalInfo");
+        
         StrTable res;
-        execLog.msg("Calling daily getJournalInfo");
+        execLog.msg("Calling daily getJournalInfo()");
         res = FP.getJournalInfo();
         if (res == null) {
             execLog.msg("getJournalInfo report returns no result!");
@@ -507,17 +647,66 @@ public class PrintResource extends ServerResource {
 
     public void getJournal() throws FPException {
         execLog.msg("Entering getJournal");
-        StrTable res;
-        String readAndEraseStr = "false";
+        StrTable res = null;
         StrTable namedArgs = pRequest.getNamedArguments();
-        if (namedArgs.containsKey("ReadAndErase"))
-            readAndEraseStr = namedArgs.get("ReadAndErase");
-        execLog.msg("Calling daily getJournal(readAndErase="+readAndEraseStr+")");
-        res = FP.getJournal(Boolean.parseBoolean(readAndEraseStr));
+        if (namedArgs.containsKey("FromDoc")) {
+            String fromDoc = namedArgs.get("FromDoc");
+            String toDoc = fromDoc;
+            if (namedArgs.containsKey("ToDoc"))
+                toDoc = namedArgs.get("ToDoc");
+            execLog.msg("Calling getJournal("+fromDoc+","+toDoc+")");
+            res = FP.getJournal(fromDoc, toDoc);
+        } else { 
+            // read journal by dates
+            String fromDateStr = "";
+            String toDateStr = "";
+            if (namedArgs.containsKey("FromDate"))
+                fromDateStr = namedArgs.get("FromDate");
+            if (namedArgs.containsKey("ToDate"))
+                toDateStr = namedArgs.get("ToDate");
+
+            execLog.msg("From Date :"+fromDateStr);
+            execLog.msg("To Date :"+toDateStr);
+            Date fromDate = new Date();
+            Date toDate = new Date();
+            SimpleDateFormat dtFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+            if (fromDateStr.length() > 0)
+                try {
+                    fromDate = dtFormat.parse(fromDateStr);
+                } catch (ParseException ex) {
+                    execLog.error(ex.getMessage());
+                }
+            if (toDateStr.length() > 0)
+                try {
+                    toDate = dtFormat.parse(toDateStr);
+                } catch (ParseException ex) {
+                    execLog.error(ex.getMessage());
+                }
+            execLog.msg("Calling getJournal("+dtFormat.format(fromDate)+","+dtFormat.format(toDate)+")");
+            res = FP.getJournal(fromDate, toDate);
+        }    
         if (res == null) {
             execLog.msg("getJournal report returns no result!");
         } else {
             execLog.msg("getJournal report returns result!");
+            response.getResultTable().putAll(res);
+        }    
+    }
+
+    public void getDocInfo() throws FPException {
+        execLog.msg("Entering getDocInfo");
+        StrTable res = null;
+        StrTable namedArgs = pRequest.getNamedArguments();
+        String docNum = "";
+        if (namedArgs.containsKey("DocNum")) 
+            docNum = namedArgs.get("DocNum");
+        execLog.msg("Calling getDocInfo("+docNum+")");
+        res = FP.getDocInfo(docNum);
+        if (res == null) {
+            execLog.msg("getDocInfo report returns no result!");
+        } else {
+            execLog.msg("getDocInfo report returns result!");
             response.getResultTable().putAll(res);
         }    
     }
@@ -583,6 +772,12 @@ public class PrintResource extends ServerResource {
                     case "printduplicatecheck" :
                         printDuplicateCheck();
                         break;
+                    case "printduplicatecheckbydocnum" :
+                        printDuplicateCheckByDocNum();
+                        break;
+                    case "currentcheckinfo" :
+                        currentCheckInfo();
+                        break;
                     case "lastfiscalrecordinfo" :
                         lastFiscalRecordInfo();
                         break;
@@ -609,6 +804,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "getjournal" :
                         getJournal();
+                        break;
+                    case "getdocinfo" :
+                        getDocInfo();
                         break;
                     case "printerstatus" :
                         printerStatus();

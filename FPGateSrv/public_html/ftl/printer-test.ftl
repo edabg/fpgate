@@ -78,21 +78,27 @@ and open the template in the editor.
                         <div class="input-field col m4 s12">
                             <select name="Command" id="test_command" onChange="cmdSelect(this);">
                                 <option value="">- Command -</option> 
-                                <option value="PrintFiscalCheck">PrintFiscalCheck</option> 
-                                <option value="PrintNonFiscalCheck">PrintNonFiscalCheck</option>
-                                <option value="PrintDuplicateCheck">PrintDuplicateCheck</option>
-                                <option value="LastFiscalRecordInfo">LastFiscalRecordInfo</option>
-                                <option value="PrinterStatus">PrinterStatus</option>
-                                <option value="GetDiagnosticInfo">GetDiagnosticInfo</option>
-                                <option value="ReportDaily">ReportDaily</option> 
-                                <option value="ReportByDates">ReportByDates</option> 
-                                <option value="AbnormalComplete">AbnormalComplete</option> 
-                                <option value="GetDateTime">GetDateTime</option> 
-                                <option value="SetDateTime">SetDateTime</option> 
-                                <option value="CashInOut">CashInOut</option>
-                                <option value="CustomCommand">CustomCommand</option>
-                                <option value="GetJournalInfo">GetJournalInfo</option>
-                                <option value="GetJournal">GetJournal</option>
+                                <option value="AbnormalComplete">Abnormal Complete Fix</option> 
+                                <option value="PrintFiscalCheck">Print Fiscal Check</option> 
+                                <option value="PrintFiscalCheck_Rev_">Print Fiscal Check Rev/Storno</option> 
+                                <option value="PrintNonFiscalCheck">Print Non-Fiscal Check</option>
+                                <option value="PrintDuplicateCheck">Print Duplicate Check</option>
+                                <option value="PrintDuplicateCheckByDocNum">Print Duplicate Check By DocNum</option>
+                                <option value="CurrentCheckInfo">Current Check Info</option>
+                                <option value="PrintFiscalCheck_Inv_">Print Invoice Fiscal Check</option> 
+                                <option value="PrintFiscalCheck_RevInv_">Print Credit Note Fiscal Check</option> 
+                                <option value="PrinterStatus">Printer Status</option>
+                                <option value="GetDiagnosticInfo">Get Diagnostic Info</option>
+                                <option value="ReportDaily">Report Daily</option> 
+                                <option value="ReportByDates">Report By Dates</option> 
+                                <option value="LastFiscalRecordInfo">Last Fiscal Record Info</option>
+                                <option value="GetDateTime">Get Date Time</option> 
+                                <option value="SetDateTime">Set Date Time</option> 
+                                <option value="CashInOut">Cash In/Out</option>
+                                <option value="CustomCommand">Custom Command</option>
+                                <option value="GetJournalInfo">Get Journal Info</option>
+                                <option value="GetJournal">Get Journal</option>
+                                <option value="GetDocInfo">Get Doc Info</option>
                                 <option value="test">test</option> 
                             </select>                            
                             <label for="test_command" class="select">Select Command</label>

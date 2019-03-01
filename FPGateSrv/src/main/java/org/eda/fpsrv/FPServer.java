@@ -16,6 +16,10 @@
  */
 package org.eda.fpsrv;
 
+import TremolZFP.FPcore;
+import org.eda.fdevice.FUser;
+import org.eda.fdevice.FPDatabase;
+import org.eda.fdevice.FPCBase;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -33,13 +37,18 @@ import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import org.eda.protocol.AbstractFiscalDevice;
+import org.eda.protocol.AbstractProtocol;
 import org.restlet.Application;
 import org.restlet.Component;
 import org.restlet.Restlet;
 import org.restlet.Server;
 import org.restlet.data.ChallengeScheme;
+import org.restlet.data.CharacterSet;
 import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
 import org.restlet.engine.Engine;
@@ -53,13 +62,21 @@ import org.restlet.resource.Directory;
 import org.restlet.security.SecretVerifier;
 import static org.restlet.security.Verifier.RESULT_INVALID;
 import static org.restlet.security.Verifier.RESULT_VALID;
+import org.restlet.service.MetadataService;
 import org.restlet.util.Series;
+import sun.rmi.log.LogHandler;
 
 /**
  *
  * @author Dimitar Angelov
  */
 public class FPServer extends Application {
+
+    private static Logger loggerProtocolPackage;
+    private static Logger loggerProtocol;
+    private static Logger loggerProtocolDevice;
+    private static Logger loggerTremolFPCore;
+    private static Logger loggerFPCBase;
 
     public static FPServer application;
     public static Component mainComponent;
@@ -224,6 +241,10 @@ public class FPServer extends Application {
         defaultProperties.setProperty("SSLKeyFileType", "JKS"); // jks
         defaultProperties.setProperty("SSLKeyStorePassword", "FPGate"); // 
         defaultProperties.setProperty("SSLKeyPassword", "FPGate"); // 
+
+        defaultProperties.setProperty("LLProtocol", Level.WARNING.getName()); // 
+        defaultProperties.setProperty("LLDevice", Level.WARNING.getName()); // 
+        defaultProperties.setProperty("LLFPCBase", Level.WARNING.getName()); // 
         
         this.appProperties = new Properties(defaultProperties);
         try {
@@ -255,8 +276,9 @@ public class FPServer extends Application {
         try {
             File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
             String pfile = appBasePath+"/FPGateSrv.properties";
-            this.appProperties.store(new FileOutputStream(pfile), "No Comments");
+            this.appProperties.store(new FileOutputStream(pfile), "EDA FPGate Properties");
             userGuard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
+            adjustLogLevels();
         } catch (IOException E) {
             E.printStackTrace();
         }
@@ -352,11 +374,30 @@ public class FPServer extends Application {
 
     protected void initLogs() {
         try {
-            mainComponent.getLogger().addHandler(
-                    new FileHandler(application.getAppBasePath()+"/logs/"+application.getName()+"-access-%u-%g.log", 5*1024*1024, 10, true){{
-                        setFormatter(new org.restlet.engine.log.AccessLogFormatter());
-                    }}
-            );
+            FileHandler logfile = new FileHandler(application.getAppBasePath()+"/logs/"+application.getName()+"-access-%u-%g.log", 5*1024*1024, 10, true){{
+//                        setFormatter(new org.restlet.engine.log.AccessLogFormatter());
+                        setFormatter(new SimpleFormatter());
+                    }};
+            // Resltlet framework logger
+            mainComponent.getLogger().addHandler(logfile);
+
+            // The handler is over whole package
+            loggerProtocolPackage = Logger.getLogger(AbstractFiscalDevice.class.getPackage().getName());
+            loggerProtocolPackage.addHandler(logfile);
+            // Log levels for protocol package are separated for protocol and device
+            loggerProtocol = Logger.getLogger(AbstractProtocol.class.getName());
+            loggerProtocolDevice = Logger.getLogger(AbstractFiscalDevice.class.getName());
+
+            // Tremol SDK
+            loggerTremolFPCore = Logger.getLogger(FPcore.class.getName());
+            loggerTremolFPCore.addHandler(logfile);
+            
+            // FPCBase 
+            loggerFPCBase =  Logger.getLogger(FPCBase.class.getName());
+            loggerFPCBase.addHandler(logfile);
+            
+            adjustLogLevels();
+            
         } catch (IOException ex) {
             ex.printStackTrace();
 //            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -365,6 +406,21 @@ public class FPServer extends Application {
             ex.printStackTrace();
         }
     }
+
+    public void adjustLogLevels() {
+        loggerProtocol.setLevel(Level.parse(this.appProperties.getProperty("LLProtocol")));
+        loggerProtocolDevice.setLevel(Level.parse(this.appProperties.getProperty("LLDevice")));
+        loggerTremolFPCore.setLevel(Level.parse(this.appProperties.getProperty("LLDevice")));
+        loggerFPCBase.setLevel(Level.parse(this.appProperties.getProperty("LLFPCBase")));
+    }
+    
+    public static void addLogHandler(Handler h) {
+        mainComponent.getLogger().addHandler(h);
+        loggerProtocolPackage.addHandler(h);
+        loggerTremolFPCore.addHandler(h);
+        loggerFPCBase.addHandler(h);
+    }
+    
     public void addSSL() {
         if (!appProperties.getProperty("UseSSL", "0").equals("1")) return;
         String keyFileName = appBasePath+"/"+appProperties.getProperty("SSLKeyFile", "ssl/fpgate.jks");
@@ -417,6 +473,8 @@ public class FPServer extends Application {
 
     @Override
     public Restlet createInboundRoot() {
+        getMetadataService().setDefaultCharacterSet(CharacterSet.UTF_8);
+        CharacterSet cs = getMetadataService().getDefaultCharacterSet();
         // Create a router
         Router router = new Router(getContext());
 

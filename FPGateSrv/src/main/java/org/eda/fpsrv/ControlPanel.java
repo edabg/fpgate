@@ -42,8 +42,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
 import org.restlet.ext.crypto.DigestUtils;
-import javax.swing.UIManager;        
-import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  *
@@ -53,6 +51,7 @@ public class ControlPanel extends javax.swing.JFrame {
 
     private static int logViewCapacity = 300; // lines
     private static int logViewCapacityDelta = 30; // lines
+    private Logger ll;
     /**
      * Creates new form ControlPanel
      */
@@ -85,7 +84,8 @@ public class ControlPanel extends javax.swing.JFrame {
 */        
         jlAppVersion.setText("Version: "+FPServer.application.getVersion());
         jlBuildInfo.setText("Build: "+FPServer.application.getBuildNumber());
-        FPServer.mainComponent.getLogger().addHandler(new LogHandler(this));
+        LogHandler lh = new LogHandler(this);
+        FPServer.addLogHandler(lh);
         // Catch System out
         System.setOut(new SysOutInterceptor(System.out, this));
         System.setErr(new SysOutInterceptor(System.err, this));
@@ -94,7 +94,7 @@ public class ControlPanel extends javax.swing.JFrame {
         jtaLog.append("Application base path:"+FPServer.application.getAppBasePath()+ "\n");
         hideToSystemTray();
     }
-
+    
     private void adjustTextAreaToCapacity(javax.swing.JTextArea ta) {
         int lines = ta.getLineCount();
         if (lines > ControlPanel.logViewCapacity+ControlPanel.logViewCapacityDelta) {
@@ -194,6 +194,12 @@ public class ControlPanel extends javax.swing.JFrame {
         jlGoAdmin = new javax.swing.JLabel();
         jcbUseSSL = new javax.swing.JCheckBox();
         jtServerPortSSL = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jComboBoxLLProtocol = new javax.swing.JComboBox<>();
+        jComboBoxLLDevice = new javax.swing.JComboBox<>();
+        jComboBoxLLFPCBase = new javax.swing.JComboBox<>();
         jScrollPane3 = new javax.swing.JScrollPane();
         jtaLicense = new javax.swing.JTextArea();
 
@@ -285,6 +291,8 @@ public class ControlPanel extends javax.swing.JFrame {
 
         jcbDisableAnonymousPrint.setText("Disable anonymous printing");
 
+        jSeparator2.setToolTipText("");
+
         jbSave.setText("Save");
         jbSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -319,18 +327,38 @@ public class ControlPanel extends javax.swing.JFrame {
 
         jtServerPortSSL.setText("8183");
 
+        jLabel6.setLabelFor(jComboBoxLLProtocol);
+        jLabel6.setText("Log Level - protocol");
+
+        jLabel7.setLabelFor(jComboBoxLLDevice);
+        jLabel7.setText("Log Level - device low");
+
+        jLabel8.setLabelFor(jComboBoxLLFPCBase);
+        jLabel8.setText("Log Level - device user");
+
+        jComboBoxLLProtocol.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        jComboBoxLLDevice.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
+        jComboBoxLLFPCBase.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
         javax.swing.GroupLayout jpSettingsLayout = new javax.swing.GroupLayout(jpSettings);
         jpSettings.setLayout(jpSettingsLayout);
         jpSettingsLayout.setHorizontalGroup(
             jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jpSettingsLayout.createSequentialGroup()
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jSeparator2)
+                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jbSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jbCancel)))
+                .addGap(6, 6, 6))
             .addGroup(jpSettingsLayout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jpSettingsLayout.createSequentialGroup()
-                        .addGap(147, 147, 147)
-                        .addComponent(jcbDisableAnonymousPrint)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jpSettingsLayout.createSequentialGroup()
-                        .addContainerGap()
                         .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
                             .addComponent(jLabel1)
@@ -345,21 +373,28 @@ public class ControlPanel extends javax.swing.JFrame {
                             .addComponent(jtAdminPassword)
                             .addComponent(jtAdminPassword2))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jcbUseSSL)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jtServerPortSSL, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 80, Short.MAX_VALUE)
-                        .addComponent(jlGoAdmin)))
-                .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jpSettingsLayout.createSequentialGroup()
-                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jSeparator2)
+                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                .addComponent(jcbUseSSL)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jtServerPortSSL, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 80, Short.MAX_VALUE)
+                                .addComponent(jlGoAdmin))
+                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                .addComponent(jcbDisableAnonymousPrint)
+                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(jpSettingsLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jbSave)
+                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jbCancel)))
-                .addGap(6, 6, 6))
+                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
 
         jpSettingsLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jtAdminName, jtServerPort});
@@ -389,12 +424,24 @@ public class ControlPanel extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel4)
-                    .addComponent(jtAdminPassword2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jtAdminPassword2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jcbDisableAnonymousPrint)))
                 .addGap(18, 18, 18)
                 .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jcbDisableAnonymousPrint)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 125, Short.MAX_VALUE)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel6)
+                    .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 70, Short.MAX_VALUE)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jbSave)
                     .addComponent(jbCancel))
@@ -500,6 +547,29 @@ public class ControlPanel extends javax.swing.JFrame {
         jtAdminPassword2.setText("");
         jcbDisableAnonymousPrint.setSelected(prop.getProperty("DisableAnonymous").equals("1"));
         jcbUseSSL.setSelected(prop.getProperty("UseSSL").equals("1"));
+        
+        String[] levels = new String[] {
+            Level.OFF.getName()
+            , Level.SEVERE.getName()
+            , Level.WARNING.getName()
+            , Level.INFO.getName()
+            , Level.CONFIG.getName()
+            , Level.FINE.getName()
+            , Level.FINEST.getName()
+            , Level.ALL.getName()
+        };
+        jComboBoxLLDevice.removeAllItems();
+        jComboBoxLLProtocol.removeAllItems();
+        jComboBoxLLFPCBase.removeAllItems();
+        for (int i =0; i < levels.length; i++) {
+            jComboBoxLLDevice.addItem(levels[i]);
+            jComboBoxLLProtocol.addItem(levels[i]);
+            jComboBoxLLFPCBase.addItem(levels[i]);
+        }
+        
+        jComboBoxLLDevice.setSelectedItem(prop.getProperty("LLDevice"));
+        jComboBoxLLProtocol.setSelectedItem(prop.getProperty("LLProtocol"));
+        jComboBoxLLFPCBase.setSelectedItem(prop.getProperty("LLFPCBase"));
     }//GEN-LAST:event_jTabbedPane1FocusGained
 
     private void jbSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSaveActionPerformed
@@ -518,6 +588,9 @@ public class ControlPanel extends javax.swing.JFrame {
         }
         prop.setProperty("DisableAnonymous", jcbDisableAnonymousPrint.isSelected()?"1":"0");
         prop.setProperty("UseSSL", jcbUseSSL.isSelected()?"1":"0");
+        prop.setProperty("LLDevice", (String)jComboBoxLLDevice.getSelectedItem());
+        prop.setProperty("LLProtocol", (String)jComboBoxLLProtocol.getSelectedItem());
+        prop.setProperty("LLFPCBase", (String)jComboBoxLLFPCBase.getSelectedItem());
         FPServer.application.updateProperties();
     }//GEN-LAST:event_jbSaveActionPerformed
 
@@ -700,15 +773,20 @@ public class ControlPanel extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> jComboBoxLLDevice;
+    private javax.swing.JComboBox<String> jComboBoxLLFPCBase;
+    private javax.swing.JComboBox<String> jComboBoxLLProtocol;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTabbedPane jTabbedPane1;

@@ -232,7 +232,9 @@ function FPGate(options) {
 			data: request.toJSON(),
 			dataType: 'json',
 			contentType : 'application/json',
-			crossDomain : true,
+//                        headers: {
+//                          "Authorization": "Basic " + btoa(thisgate.authUser + ":" + thisgate.authPass)
+//                        },			crossDomain : true,
 			success: function(data, textStatus, jqXHR){
 	//			alert(JSON.stringify(data));
                             if ('result' in data && data.result) {

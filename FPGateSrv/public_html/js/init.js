@@ -21,29 +21,87 @@ $(document).ready(function () {
 function cmdSelect(el) {
 //    alert("Function:\n" + el.value);
     var params = {
-        "PrintFiscalCheck":
-                "SON,Operator Name\n" +
-                "STG,Product of tax group B,B,0.12,0\n" +
-                "STG,Product of tax group A,A,0.25,0\n" +
-                "PFT,Sample fiscal text\n" +
+        "PrinterStatus": ""
+        , "PrintFiscalCheck":
+                "UNS,XX000001-OP01-0000001\n" +
+                "STG,Продукт от група B,B,0.12,0\n" +
+                "STG,Продукт от група A,A,0.25,0\n" +
+                "PFT,Примерен фискален текст\n" +
                 "STL\n" +
                 "TTL,Total:,CASH,2.00\n" +
                 ""
+        , "PrintFiscalCheck_Rev_":
+                "UNS,XX000001-OP01-0000002\n" +
+                "REV\n"+
+                "RTA,RET\n"+
+                "RDN,0000036\n"+
+                "RDT,2019-02-13 12:17:04\n"+
+                "RUS,DT000001-OP01-0000001\n"+
+                "RFM,02278392\n"+
+                "RRR,Неудоволетворен\n"+
+                "STG,Продукт от група B,B,0.12,0\n" +
+                "STG,Продукт от група A,A,0.25,0\n" +
+                "PFT,Примерен фискален текст\n" +
+                "STL\n" +
+                "TTL,Total:\n" +
+                ""
         , "PrintNonFiscalCheck":
-                "SON,Good Operator\n" +
                 "PNT,@padl,,#\n" +
-                "PNT,@padc,DOCUMENT\n" +
+                "PNT,@padc,ДОКУМЕНТ\n" +
                 "PNT,@padl,,#\n" +
-                "PNT,Sample text\n" +
-                "PNT,@padl,Left aligned,.\n" +
-                "PNT,@padr,Right aligned,.\n" +
-                "PNT,Next is label and value\\, label is left aligned and value to the right\n" +
-                "PNT,@lval,Label,Value\n" +
+                "PNT,Примерен текст\n" +
+                "PNT,@padl,Ляво подравнен,.\n" +
+                "PNT,@padr,Дясно подравнен,.\n" +
+                "PNT,Следва етикет и стойност\\, етикета е ляво подравнен\\, стойността дясно\n" +
+                "PNT,@lval,Етикет,Стойност\n" +
                 "PNT,@padl,,#\n" +
                 ""
         , "PrintDuplicateCheck": ""
+        , "PrintDuplicateCheckByDocNum": "DocNum=00000000"
+        , "PrintFiscalCheck_Inv_":
+                "UNS,XX000001-OP01-0000001\n" +
+                "INV\n" +
+                "CUIC,818078106\n" +
+                "CUIT,BULSTAT\n" +
+                "CRCP,Драгомир Драганов\n" +
+                "CBUY,Драго ТЕСТ ЕООД\n" +
+                "CADR,Драгоман\n" +
+                "CVAT,BG818078106\n" +
+                "CSEL,Иван Иванов\n" +
+                "STG,Продукт от група B,B,0.12,0\n" +
+                "STG,Продукт от група A,A,0.25,0\n" +
+                "PFT,Примерен фискален текст\n" +
+                "STL\n" +
+                "TTL,Total:,CASH,2.00\n" +
+                ""
+        , "PrintFiscalCheck_RevInv_":
+                "UNS,XX000001-OP01-0000002\n" +
+                "INV\n" +
+                "CUIC,818078106\n" +
+                "CUIT,BULSTAT\n" +
+                "CRCP,Драгомир Драганов\n" +
+                "CBUY,Драго ТЕСТ ЕООД\n" +
+                "CADR,Драгоман\n" +
+                "CVAT,BG818078106\n" +
+                "CSEL,Иван Иванов\n" +
+                "REV\n"+
+                "RTA,RET\n"+
+                "RDN,0000036\n"+
+                "RDT,2019-02-13 12:17:04\n"+
+                "RUS,DT000001-OP01-0000001\n"+
+                "RFM,02278392\n"+
+                "RRR,Неудоволетворен\n"+
+                "RIN,0000000001\n"+
+                "RID,2019-02-13\n"+
+                "STG,Продукт от група B,B,0.12,0\n" +
+                "STG,Продукт от група A,A,0.25,0\n" +
+                "PFT,Примерен фискален текст\n" +
+                "STL\n" +
+                "TTL,Total:\n" +
+                ""
+        
+        , "CurrentCheckInfo": ""
         , "LastFiscalRecordInfo": ""
-        , "PrinterStatus": ""
         , "GetDiagnosticInfo": ""
         , "ReportDaily":
                 "ReportType=X\n" +
@@ -58,7 +116,7 @@ function cmdSelect(el) {
         , "AbnormalComplete": ""
         , "GetDateTime": ""
         , "SetDateTime":
-                "#DateTime=2015-07-08 10:01:02"
+                "#DateTime=2019-02-14 10:01:02"
         , "CashInOut":
                 "Amount=0\n" +
                 ""
@@ -67,7 +125,13 @@ function cmdSelect(el) {
                 "Args=0\n" +
                 ""
         , "GetJournalInfo": ""
-        , "GetJournal": ""
+        , "GetJournal": 
+                "#FromDate=2019-02-14\n"+
+                "#ToDate=2019-02-14\n"+
+                "#FromDoc=0000001\n"+
+                "#ToDoc=0000001\n"
+        , "GetDocInfo": 
+                "#DocNum=0000001\n"
         , "Test": ""
     }
     if (el.value in params)
@@ -118,7 +182,7 @@ function cmdExecute(el) {
     try {
         var cmdURL = window.location.protocol + '//' + window.location.host + '' + f.elements["Printer.URL"].value;
         var cmdID = f.elements["Printer.ID"].value;
-        var cmdCommand = f.elements['Command'].value;
+        var cmdCommand = f.elements['Command'].value.replace(/_.*_/, '');
         var cmdArguments = csvToTdv(f.elements['Parameters'].value).split('\n');
 //    alert(URL);
     } catch (err) {
