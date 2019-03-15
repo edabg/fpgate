@@ -1735,8 +1735,8 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         QRData – данните на QR баркода        
         */
         String QRCode = "";
-        if (isFiscalized()) {
-            String res = cmdCustomStream(116, "");
+//        if (isFiscalized()) {
+            String res = cmdCustom(116, "");
             if (res.substring(0, 1).equals("P")) {
                if ((res.length() > 4) && res.substring(1, 2).equals("F")) {
                    //PF,0,QR
@@ -1744,7 +1744,7 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
                }
             } else
                 throw new FDException("Грешка при четене на информация за QRCode!");
-        }    
+//        }    
         return QRCode;
     }
 
