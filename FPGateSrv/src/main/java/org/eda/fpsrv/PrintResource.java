@@ -444,11 +444,7 @@ public class PrintResource extends ServerResource {
         try {response.getResultTable().putAll(FP.getCurrentCheckInfo().toStrTable());} finally{};
         if (fiscal) {
             execLog.msg("Closing fiscal check");
-            Date docDate = FP.getLastFiscalCheckDate();
-            if (docDate != null) {
-                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                response.getResultTable().put("DocDate", fmt.format(docDate));
-            }
+            try {response.getResultTable().putAll(FP.getLastFiscalCheckQRCode().toStrTable());} finally{};
             FP.printFiscalText("www.colibrierp.com");
             FP.closeFiscalCheck();
         } else {
@@ -467,6 +463,11 @@ public class PrintResource extends ServerResource {
         response.getResultTable().putAll(FP.getDeviceInfo().toStrTable());
     }
 
+    public void getVersion() {
+        response.getResultTable().put("version", FPServer.application.getVersion());
+        response.getResultTable().put("build", FPServer.application.getBuildNumber());
+    }
+    
     public void printDuplicateCheck() throws FPException {
         execLog.msg("Entering printDuplicateCheck");
         FP.printLastCheckDuplicate();
@@ -492,6 +493,8 @@ public class PrintResource extends ServerResource {
             execLog.msg("getCurrentCheckInfo report returns result!");
             response.getResultTable().putAll(res);
         }    
+        FPCBase.FiscalCheckQRCodeInfo qri = FP.getLastFiscalCheckQRCode();
+        response.getResultTable().putAll(qri.toStrTable());
     }
 
     public void lastFiscalRecordInfo() throws FPException {
@@ -813,6 +816,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "getdiagnosticinfo" :
                         getDiagnosticInfo();
+                        break;
+                    case "getversion" :
+                        getVersion();
                         break;
                     case "test" :
                         test();

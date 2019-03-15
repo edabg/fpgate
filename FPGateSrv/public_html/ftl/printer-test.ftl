@@ -78,7 +78,7 @@ and open the template in the editor.
                         <div class="input-field col m4 s12">
                             <select name="Command" id="test_command" onChange="cmdSelect(this);">
                                 <option value="">- Command -</option> 
-                                <option value="AbnormalComplete">Abnormal Complete Fix</option> 
+                                <option value="PrinterStatus">Printer Status</option>
                                 <option value="PrintFiscalCheck">Print Fiscal Check</option> 
                                 <option value="PrintFiscalCheck_Rev_">Print Fiscal Check Rev/Storno</option> 
                                 <option value="PrintNonFiscalCheck">Print Non-Fiscal Check</option>
@@ -87,7 +87,6 @@ and open the template in the editor.
                                 <option value="CurrentCheckInfo">Current Check Info</option>
                                 <option value="PrintFiscalCheck_Inv_">Print Invoice Fiscal Check</option> 
                                 <option value="PrintFiscalCheck_RevInv_">Print Credit Note Fiscal Check</option> 
-                                <option value="PrinterStatus">Printer Status</option>
                                 <option value="GetDiagnosticInfo">Get Diagnostic Info</option>
                                 <option value="ReportDaily">Report Daily</option> 
                                 <option value="ReportByDates">Report By Dates</option> 
@@ -99,7 +98,9 @@ and open the template in the editor.
                                 <option value="GetJournalInfo">Get Journal Info</option>
                                 <option value="GetJournal">Get Journal</option>
                                 <option value="GetDocInfo">Get Doc Info</option>
-                                <option value="test">test</option> 
+                                <option value="GetVersion">Get FPGate Version</option>
+                                <option value="AbnormalComplete">Abnormal Complete Fix</option> 
+                                <option value="test">Test</option> 
                             </select>                            
                             <label for="test_command" class="select">Select Command</label>
                         </div>

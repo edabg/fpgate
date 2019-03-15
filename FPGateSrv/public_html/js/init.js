@@ -26,7 +26,7 @@ function cmdSelect(el) {
                 "UNS,XX000001-OP01-0000001\n" +
                 "STG,Продукт от група B,B,0.12,0\n" +
                 "STG,Продукт от група A,A,0.25,0\n" +
-                "PFT,Примерен фискален текст\n" +
+                "PFT,Примерен фиckaлeн текст\n" +
                 "STL\n" +
                 "TTL,Total:,CASH,2.00\n" +
                 ""
@@ -41,7 +41,7 @@ function cmdSelect(el) {
                 "RRR,Неудоволетворен\n"+
                 "STG,Продукт от група B,B,0.12,0\n" +
                 "STG,Продукт от група A,A,0.25,0\n" +
-                "PFT,Примерен фискален текст\n" +
+                "PFT,Примерен фиckaлeн текст\n" +
                 "STL\n" +
                 "TTL,Total:\n" +
                 ""
@@ -70,7 +70,7 @@ function cmdSelect(el) {
                 "CSEL,Иван Иванов\n" +
                 "STG,Продукт от група B,B,0.12,0\n" +
                 "STG,Продукт от група A,A,0.25,0\n" +
-                "PFT,Примерен фискален текст\n" +
+                "PFT,Примерен фиckaлeн текст\n" +
                 "STL\n" +
                 "TTL,Total:,CASH,2.00\n" +
                 ""
@@ -95,7 +95,7 @@ function cmdSelect(el) {
                 "RID,2019-02-13\n"+
                 "STG,Продукт от група B,B,0.12,0\n" +
                 "STG,Продукт от група A,A,0.25,0\n" +
-                "PFT,Примерен фискален текст\n" +
+                "PFT,Примерен фиckaлeн текст\n" +
                 "STL\n" +
                 "TTL,Total:\n" +
                 ""
@@ -132,6 +132,7 @@ function cmdSelect(el) {
                 "#ToDoc=0000001\n"
         , "GetDocInfo": 
                 "#DocNum=0000001\n"
+        , "GetVersion": ""
         , "Test": ""
     }
     if (el.value in params)

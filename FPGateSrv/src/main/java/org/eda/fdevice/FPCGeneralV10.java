@@ -45,6 +45,8 @@ public class FPCGeneralV10 extends FPCBase {
     protected int lastErrorCode;
     protected String lastErrorMsg;
     
+    protected CheckInfo lastCurrentCheckInfo = null;
+    protected Date dtAfterOpenFiscalCheck = null;
     
     /**
      * FPCDatecsECRICL constructor.
@@ -335,6 +337,10 @@ public class FPCGeneralV10 extends FPCBase {
         lastCommand = "openFiscalCheck";
         try {
             response = FP.cmdOpenFiscalCheck(params.get("OperatorCode", "1"), params.get("OperatorPass", "1"), params.get("TillNumber"), "",  invoiceMode);
+            try {
+                dtAfterOpenFiscalCheck = FP.cmdGetDateTime();
+            } catch (Exception e) {
+            }
         } catch (IOException ex) {
             throw createException(ex);
         }
@@ -347,6 +353,10 @@ public class FPCGeneralV10 extends FPCBase {
         lastCommand = "openFiscalCheckUNS";
         try {
             response = FP.cmdOpenFiscalCheck(params.get("OperatorCode", "1"), params.get("OperatorPass", "1"), params.get("TillNumber", "1"), UNS,  invoiceMode);
+            try {
+                dtAfterOpenFiscalCheck = FP.cmdGetDateTime();
+            } catch (Exception e) {
+            }
         } catch (IOException ex) {
             lastErrorCode = -1;
             lastErrorMsg = ex.getMessage();
@@ -363,6 +373,10 @@ public class FPCGeneralV10 extends FPCBase {
             response = FP.cmdOpenFiscalCheckRev(
                 params.get("OperatorCode", "1"),  params.get("OperatorPass", "1"),  params.get("TillNumber", "1")
                 , UNS, revTypeChar(RevType), RevDocNum, RevUNS, RevDateTime, RevFMNum, RevReason, RevInvNum, invoiceMode);
+            try {
+                dtAfterOpenFiscalCheck = FP.cmdGetDateTime();
+            } catch (Exception e) {
+            }
         } catch (IOException ex) {
             throw createException(ex);
         }
@@ -552,9 +566,47 @@ public class FPCGeneralV10 extends FPCBase {
             lastErrorMsg = ex.getMessage();
 //            throw createException();       
         }
+        lastCurrentCheckInfo = res;
         return res;
     }
 
+    @Override
+    public FiscalCheckQRCodeInfo getLastFiscalCheckQRCode() {
+        String QR = "";
+        try {
+            QR = FP.cmdLastFiscalCheckQRCode();
+        } catch (Exception e) {
+            logger.warning(e.getMessage());
+        }
+        FiscalCheckQRCodeInfo QRInfo = null;
+        if (QR.length() > 0)
+            QRInfo = new FiscalCheckQRCodeInfo(QR);
+        else {
+            // Alternate method to create QRCode
+            CheckInfo ci = lastCurrentCheckInfo;
+            if (ci == null) {
+                try {
+                    ci = getCurrentCheckInfo();
+                } catch (FPException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }    
+            if (ci != null) {
+                Date lastDocDate = null;
+                try {
+                    lastDocDate = FP.cmdLastFiscalCheckDate();
+                } catch (IOException ex) {
+                }
+                QRInfo = new FiscalCheckQRCodeInfo(FP.getFMNum(), ci.DocNum, (lastDocDate != null)?lastDocDate:dtAfterOpenFiscalCheck, ci.SellAmount);
+            }    
+            
+        }
+        if (QRInfo == null)
+            QRInfo = new FiscalCheckQRCodeInfo();
+        return QRInfo;
+    }
+
+    
     @Override
     public FiscalRecordInfo getLastFiscalRecordInfo() throws FPException {
         LinkedHashMap<String, String> response;

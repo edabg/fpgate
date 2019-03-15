@@ -87,16 +87,4 @@ public class FPCDatecsDP extends FPCGeneralV10 {
             return "2";
     }
 
-    @Override
-    public Date getLastFiscalCheckDate() {
-        
-        Date res = null;
-        try {
-            res = FP.cmdLastFiscalCheckDate();
-        } catch (Exception ex) {
-            logger.severe(ex.getMessage());
-        }
-        return res;
-    }
-    
 }

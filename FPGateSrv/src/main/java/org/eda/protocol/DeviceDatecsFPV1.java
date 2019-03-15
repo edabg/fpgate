@@ -431,7 +431,8 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
         36h (54) ПЕЧАТАНЕ НА ФИСКАЛЕН СВОБОДЕН ТЕКСТ
         Област за данни: [<Tab><Font>[<Flags>],]<Text>
         Отговор: Няма данни
-        Text Свободен текст за печат. В началото и края на реда се отпечатва символът '#'. Текстът може да бъде с произволна дължина, но се оставят само толкова символа, колкото се побират на реда (без вдигане на грешка при изрязването).
+        Text Свободен текст за печат. В началото и края на реда се отпечатва символът '#'. 
+        Текстът може да бъде с произволна дължина, но се оставят само толкова символа, колкото се побират на реда (без вдигане на грешка при изрязването).
         Командата допуска опционално посочване на шрифт и атрибути за печат на реда:
         Font Цяло число от 0 до 3:
         0 32 точки (4 mm) височина, по-високи букви
@@ -922,6 +923,11 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
                 throw new FDException(-1L, "Грешка при обща сума и плащане!"+res);
             } else {
                 String rAmount = reformatCurrency(res.substring(1), 100);
+                double rAmountD = 0;
+                try {
+                    rAmountD = Double.parseDouble(rAmount);
+                } catch (Exception ex) {
+                }
                 if (paidCode.equals("E")) {
                     // Изчислената междинна сума е отрицателна. Плащане не се извършва и Amount ще съдържа отрицателната междинна сума.
                     err("Изчислената междинна сума е отрицателна. Плащане не се извършва и Amount ще съдържа отрицателната междинна сума.");
@@ -929,7 +935,8 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
                     response.put("Amount", rAmount);
                 } else if (paidCode.equals("D")) {
                     // Ако платената сума е по-малка от сумата на бона. Остатъкът за доплащане се връща в Amount.
-                    warn("Платената сума е по-малка от сумата на бона. Остатъкът за доплащане се връща в Amount.");
+                    if (Math.abs(rAmountD) >= 0.01)
+                        warn("Платената сума е по-малка от сумата на бона. Остатъкът за доплащане се връща в Amount.");
                     response.put("PaidCode", "D");
                     response.put("Amount", rAmount);
                 } else if (paidCode.equals("R")) {

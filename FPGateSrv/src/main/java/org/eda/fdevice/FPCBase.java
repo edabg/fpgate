@@ -17,9 +17,7 @@
 package org.eda.fdevice;
 
 import java.io.IOException;
-import static java.lang.System.currentTimeMillis;
 import java.lang.reflect.Method;
-import java.text.Annotation;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,10 +26,8 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.reflections.Reflections;
-import org.restlet.Application;
 
 /**
  *
@@ -50,6 +46,66 @@ public class FPCBase {
 
     public static enum UICTypes {
         BULSTAT, EGN, FOREIGN, NRA
+    }
+    
+    public static class FiscalCheckQRCodeInfo {
+        public String QRCode = "";
+        public String FMNum = "";
+        public String DocNum = "";
+        public Date DocDateTime = null;
+        public Double Sum = 0d;
+        protected boolean isNative = false;
+        
+        public FiscalCheckQRCodeInfo() {
+            
+        }
+
+        public FiscalCheckQRCodeInfo(String QR) {
+            QRCode = QR;
+            String[] qr_parts = QR.split("\\*");
+            // 50970007*000456*2019-03-05*14:39:33*0.00
+            // FMNum*DocNum*DocDate*DocTime*Sum
+            if (qr_parts.length > 3) {
+                FMNum = qr_parts[0];
+                DocNum = qr_parts[1];
+                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                try {
+                    DocDateTime = fmt.parse(qr_parts[2] + " " + qr_parts[3]);
+                } catch (Exception ex) {
+                    logger.severe(ex.getMessage());
+                }
+                try {
+                    Sum = Double.parseDouble(qr_parts[4]);
+                    isNative = true;
+                } catch (Exception ex) {
+                    logger.severe(ex.getMessage());
+                }
+            }
+        }
+
+        public FiscalCheckQRCodeInfo(String FMNum_, String DocNum_, Date DocDateTime_, Double Sum_) {
+            FMNum = FMNum_;
+            DocNum = DocNum_;
+            DocDateTime = DocDateTime_;
+            Sum = Sum_;
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd*HH:mm:ss");
+            QRCode = FMNum+"*"+DocNum+"*"+((DocDateTime != null)?fmt.format(DocDateTime):"0000-00-00 00:00:00")+"*"+String.format(Locale.ROOT, "%.2f", Sum);
+        }
+        
+        public StrTable toStrTable() {
+            return toStrTable("");
+        }
+        public StrTable toStrTable(String prefix) {
+            StrTable res = new StrTable();
+            res.put(prefix+"QR_FMNum", FMNum);
+            res.put(prefix+"QR_DocNum", DocNum);
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            res.put(prefix+"QR_DocDate", (DocDateTime != null)?fmt.format(DocDateTime):"");
+            res.put(prefix+"QR_Sum", String.format(Locale.ROOT, "%.2f", Sum));
+            res.put(prefix+"QR_Code", QRCode);
+            res.put(prefix+"QR_IsNative", isNative?"1":"0");
+            return res;
+        }
     }
     
     public static class CustomerInfo {
@@ -635,14 +691,14 @@ public class FPCBase {
         return "";
     }
     
+
     /**
-     * Return date/time of last fiscal check
+     * Get Information about Last QR-Code
      * @return 
      */
-    public Date getLastFiscalCheckDate() {
-        return null;
+    public FiscalCheckQRCodeInfo getLastFiscalCheckQRCode() {
+        return new FiscalCheckQRCodeInfo();
     }
-
     /**
      * Returns information about device
      * @return

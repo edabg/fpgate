@@ -24,9 +24,7 @@ import TremolZFP.LastDailyReportInfoRes;
 import TremolZFP.OptionChange;
 import TremolZFP.OptionChangeType;
 import TremolZFP.OptionDisplay;
-import TremolZFP.OptionFinalizedPayment;
 import TremolZFP.OptionFiscalRcpPrintType;
-import TremolZFP.OptionInitiatedPayment;
 import TremolZFP.OptionInvoiceCreditNotePrintType;
 import TremolZFP.OptionInvoicePrintType;
 import TremolZFP.OptionIsReceiptOpened;
@@ -46,7 +44,6 @@ import TremolZFP.RegistrationInfoRes;
 import TremolZFP.SerialAndFiscalNumsRes;
 import TremolZFP.StatusRes;
 import TremolZFP.VersionRes;
-import java.io.IOException;
 import static java.lang.Math.abs;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
@@ -1029,28 +1026,19 @@ FWDT=23NOV18 1000
     }
 
     @Override
-    public Date getLastFiscalCheckDate() {
-        Date res = null;
+    public FiscalCheckQRCodeInfo getLastFiscalCheckQRCode() {
+        FiscalCheckQRCodeInfo res = null;
         try {
             String qr;
             qr = fp.ReadLastReceiptQRcodeData();
-            String[] qr_parts = qr.split("\\*");
-            // 50970007*000456*2019-03-05*14:39:33*0.00
-            // FMNum*DocNum*DocDate*DocTime*Sum
-            if (qr_parts.length > 3) {
-                SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                try {
-                    res = fmt.parse(qr_parts[2]+" "+qr_parts[3]);
-                } catch (Exception ex) {
-                    logger.severe(ex.getMessage());
-                }
-            }
+            res = new FiscalCheckQRCodeInfo(qr);
         } catch (Exception ex) {
             logger.severe(ex.getMessage());
         }
+        if (res == null)
+            res = new FiscalCheckQRCodeInfo();
         return res;
     }
-
     
     @Override
     public void openNonFiscalCheck() throws FPException {

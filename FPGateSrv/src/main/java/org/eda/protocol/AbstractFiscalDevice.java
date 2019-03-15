@@ -698,6 +698,14 @@ public abstract class AbstractFiscalDevice {
         throw new FDException("Unsupported command");
     }
     
+    /**
+     * Return QRCode of last fiscal Check
+     * @return
+     * @throws IOException 
+     */
+    public String cmdLastFiscalCheckQRCode() throws IOException {
+        throw new FDException("Unsupported command (cmdLastFiscalCheckQRCode)");
+    }
     
     /**
      * Return information of fiscal status of the device

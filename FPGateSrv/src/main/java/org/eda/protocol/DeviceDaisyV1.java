@@ -352,8 +352,8 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         fiscalCheckRevOpened = false;
         
         String params;
-        if (UNS.length() == 0) 
-            throw new FDException("Липсва УНП!");
+//        if (UNS.length() == 0) 
+//            throw new FDException("Липсва УНП!");
 
         params = opCode+","+opPasswd+","+UNS+(invoice?"\tI":"");
         String res = cmdCustom(48, params);
@@ -1716,4 +1716,37 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         return response;
     }
 
+    @Override
+    public String cmdLastFiscalCheckQRCode() throws IOException {
+        /*
+        116 (74h) Получаване на QR данни от последния документ
+        Област за данни: Няма данни
+        Отговор: {Result}[DocType,Data]
+        Result Един байт със стойност “P”(Pass) или “F”(Fail)
+        DocType Един байт със стойност “F”(Fiscal) или “S”(Service)
+        Data - Ако документът не е съпроводен с печат на QR баркод, ФУ връща “XXXXX”
+        - Ако документът е съпроводен с печат на QR баркод, ФУ връща:
+        OpType,QRData
+        OpType – 1 байт със стойности:
+        “0” = Фискален бон за продажба
+        “1” = Сторно фискален бон поради рекламация
+        “2“ = Сторно фискален бон поради операторска грешка
+        “3” = Сторно фискален бон поради нам. на данъчната основа
+        QRData – данните на QR баркода        
+        */
+        String QRCode = "";
+        if (isFiscalized()) {
+            String res = cmdCustomStream(116, "");
+            if (res.substring(0, 1).equals("P")) {
+               if ((res.length() > 4) && res.substring(1, 2).equals("F")) {
+                   //PF,0,QR
+                   QRCode = res.substring(4);
+               }
+            } else
+                throw new FDException("Грешка при четене на информация за QRCode!");
+        }    
+        return QRCode;
+    }
+
+    
 }
