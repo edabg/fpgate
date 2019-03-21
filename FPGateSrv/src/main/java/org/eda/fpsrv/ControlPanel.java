@@ -176,6 +176,9 @@ public class ControlPanel extends javax.swing.JFrame {
         jComboBoxLLProtocol = new javax.swing.JComboBox<>();
         jComboBoxLLDevice = new javax.swing.JComboBox<>();
         jComboBoxLLFPCBase = new javax.swing.JComboBox<>();
+        jcbStartMinimized = new javax.swing.JCheckBox();
+        jcbCheckVersionAtStartup = new javax.swing.JCheckBox();
+        jbCheckVersion = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jtaLicense = new javax.swing.JTextArea();
 
@@ -318,6 +321,23 @@ public class ControlPanel extends javax.swing.JFrame {
 
         jComboBoxLLFPCBase.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        jcbStartMinimized.setText("Start Minimized");
+        jcbStartMinimized.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcbStartMinimizedActionPerformed(evt);
+            }
+        });
+
+        jcbCheckVersionAtStartup.setText("Check for new version at startup");
+
+        jbCheckVersion.setText("Check now");
+        jbCheckVersion.setToolTipText("");
+        jbCheckVersion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbCheckVersionActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jpSettingsLayout = new javax.swing.GroupLayout(jpSettings);
         jpSettings.setLayout(jpSettingsLayout);
         jpSettingsLayout.setHorizontalGroup(
@@ -357,8 +377,14 @@ public class ControlPanel extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 80, Short.MAX_VALUE)
                                 .addComponent(jlGoAdmin))
                             .addGroup(jpSettingsLayout.createSequentialGroup()
-                                .addComponent(jcbDisableAnonymousPrint)
-                                .addGap(0, 0, Short.MAX_VALUE))))
+                                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jcbDisableAnonymousPrint)
+                                    .addComponent(jcbStartMinimized))
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                .addComponent(jcbCheckVersionAtStartup)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jbCheckVersion))))
                     .addGroup(jpSettingsLayout.createSequentialGroup()
                         .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -388,11 +414,14 @@ public class ControlPanel extends javax.swing.JFrame {
                 .addGap(1, 1, 1)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jtServerAddr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel5))
+                    .addComponent(jLabel5)
+                    .addComponent(jcbStartMinimized))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(jtAdminName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jtAdminName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jcbCheckVersionAtStartup)
+                    .addComponent(jbCheckVersion))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
@@ -417,7 +446,7 @@ public class ControlPanel extends javax.swing.JFrame {
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 70, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jbSave)
                     .addComponent(jbCancel))
@@ -523,6 +552,9 @@ public class ControlPanel extends javax.swing.JFrame {
         jtAdminPassword2.setText("");
         jcbDisableAnonymousPrint.setSelected(prop.getProperty("DisableAnonymous").equals("1"));
         jcbUseSSL.setSelected(prop.getProperty("UseSSL").equals("1"));
+        jcbStartMinimized.setSelected(prop.getProperty("StartMinimized").equals("1"));
+        jcbCheckVersionAtStartup.setSelected(prop.getProperty("CheckVersionAtStartup").equals("1"));
+        
         
         String[] levels = new String[] {
             Level.OFF.getName()
@@ -564,6 +596,8 @@ public class ControlPanel extends javax.swing.JFrame {
         }
         prop.setProperty("DisableAnonymous", jcbDisableAnonymousPrint.isSelected()?"1":"0");
         prop.setProperty("UseSSL", jcbUseSSL.isSelected()?"1":"0");
+        prop.setProperty("StartMinimized", jcbStartMinimized.isSelected()?"1":"0");
+        prop.setProperty("CheckVersionAtStartup", jcbCheckVersionAtStartup.isSelected()?"1":"0");
         prop.setProperty("LLDevice", (String)jComboBoxLLDevice.getSelectedItem());
         prop.setProperty("LLProtocol", (String)jComboBoxLLProtocol.getSelectedItem());
         prop.setProperty("LLFPCBase", (String)jComboBoxLLFPCBase.getSelectedItem());
@@ -603,6 +637,14 @@ public class ControlPanel extends javax.swing.JFrame {
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         exitApplication();
     }//GEN-LAST:event_formWindowClosing
+
+    private void jcbStartMinimizedActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbStartMinimizedActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jcbStartMinimizedActionPerformed
+
+    private void jbCheckVersionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCheckVersionActionPerformed
+        FPServer.application.checkAppVersion(true);
+    }//GEN-LAST:event_jbCheckVersionActionPerformed
 
     
     public void notifyChange() {
@@ -767,10 +809,13 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JButton jbCancel;
+    private javax.swing.JButton jbCheckVersion;
     private javax.swing.JButton jbSave;
     private javax.swing.JButton jbStart;
     private javax.swing.JButton jbStop;
+    private javax.swing.JCheckBox jcbCheckVersionAtStartup;
     private javax.swing.JCheckBox jcbDisableAnonymousPrint;
+    private javax.swing.JCheckBox jcbStartMinimized;
     private javax.swing.JCheckBox jcbUseSSL;
     private javax.swing.JLabel jlAppName;
     private javax.swing.JLabel jlAppVersion;

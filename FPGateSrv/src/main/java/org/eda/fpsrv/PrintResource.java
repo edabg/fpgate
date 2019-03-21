@@ -34,7 +34,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import org.restlet.data.Form;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
@@ -50,10 +52,40 @@ public class PrintResource extends ServerResource {
     private PrintRequest pRequest;
     private FPDatabase FPDB;
     private localExecutionLog execLog;
+    private FPCLogHandler fpcLogHandler = null;
 
     public PrintResource() {
         super();
         execLog = this.new localExecutionLog();
+    }
+    
+    // Catch logs from AbstractFiscalDevice
+    private class FPCLogHandler extends Handler {
+//        private ControlPanel panel;
+        private localExecutionLog execLog;
+        
+        public FPCLogHandler() {
+        }
+
+        public FPCLogHandler(localExecutionLog execLog_) {
+            this.execLog = execLog_;
+        }
+
+        @Override
+        public void publish(LogRecord lr) {
+            if (this.execLog != null)
+                this.execLog.log(lr.getLevel(), lr.getMessage());
+        }
+
+        @Override
+        public void flush() {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void close() throws SecurityException {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
     
     private class localExecutionLog {
@@ -87,7 +119,6 @@ public class PrintResource extends ServerResource {
         public void debug(String msg) {
             log(Level.FINER, msg);
         }
-        
     }
     
     protected static Striped<Semaphore> printerSemaphores = Striped.semaphore(20,1);
@@ -115,6 +146,7 @@ public class PrintResource extends ServerResource {
     protected void initPrinter() throws FPException, Exception {
         FP = null;
         printerRefID = pRequest.getPrinter().getID();
+        fpcLogHandler = null;
         if (printerRefID.length() > 0) {
             acquirePrinterSemaphore(printerRefID);
             try {
@@ -129,6 +161,8 @@ public class PrintResource extends ServerResource {
                 execLog.msg("Setting printer parameters:");
                 FP.setParams(fp_.getProperties());
                 execLog.msg("Initializing printer");
+                fpcLogHandler = new FPCLogHandler(execLog);
+                FPCBase.getLogger().addHandler(fpcLogHandler);
                 FP.init();
             } catch (Exception E) {
                 releasePrinterSemaphore();
@@ -149,6 +183,8 @@ public class PrintResource extends ServerResource {
                 }    
                 FP.setParams(pRequest.getPrinter().getParams());
                 execLog.msg("Initializing printer");
+                fpcLogHandler = new FPCLogHandler(execLog);
+                FPCBase.getLogger().addHandler(fpcLogHandler);
                 FP.init();
             } catch (Exception E) {
                 releasePrinterSemaphore();
@@ -160,6 +196,11 @@ public class PrintResource extends ServerResource {
     }
     
     protected void donePrinter() {
+        if (fpcLogHandler != null) {
+            FPCBase.getLogger().removeHandler(fpcLogHandler);
+            fpcLogHandler = null;
+        }    
+            
         if (FP != null) 
             FP.destroy();
         FP = null;

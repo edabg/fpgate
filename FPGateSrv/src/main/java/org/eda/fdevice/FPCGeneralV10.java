@@ -27,6 +27,8 @@ import org.eda.protocol.FDException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.restlet.engine.util.DateUtils;
 
@@ -48,6 +50,10 @@ public class FPCGeneralV10 extends FPCBase {
     protected CheckInfo lastCurrentCheckInfo = null;
     protected Date dtAfterOpenFiscalCheck = null;
     
+    static {
+        AbstractFiscalDevice.getLogger().addHandler(new LogHandler());
+    }
+    
     /**
      * FPCDatecsECRICL constructor.
      * @throws Exception Throws an exception
@@ -58,6 +64,36 @@ public class FPCGeneralV10 extends FPCBase {
         lastCommand = "";
         lastErrorCode = 0;
         lastErrorMsg = "";
+        
+        
+    }
+
+    // Catch logs from AbstractFiscalDevice
+    private static class LogHandler extends Handler {
+//        private ControlPanel panel;
+
+        public LogHandler() {}
+
+//        public LogHandler(ControlPanel panel) {
+//            this.panel = panel;
+//        }
+
+        @Override
+        public void publish(LogRecord lr) {
+            if ((lr.getLevel() == Level.WARNING) || (lr.getLevel() == Level.SEVERE)) {
+                logger.log(lr);
+            }
+        }
+
+        @Override
+        public void flush() {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void close() throws SecurityException {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
     
     public static FPParams getDefinedParams() throws Exception {
@@ -88,7 +124,8 @@ public class FPCGeneralV10 extends FPCBase {
                      addProperty(new FPProperty(String.class, "OperatorCode", "Operator Code", "Operator Code", "1"));
                      addProperty(new FPProperty(String.class, "OperatorPass", "Operator Password", "Operator Password", "0000"));
                      addProperty(new FPProperty(String.class, "TillNumber", "Till Number", "Till Number", "1"));
-                     addProperty(new FPProperty(Integer.class, "LWIDTH", "Line width", "Line width in characters", 38));
+                     addProperty(new FPProperty(Integer.class, "LWIDTH", "Line width Fiscal", "Line width for fiscal text in characters", 36));
+                     addProperty(new FPProperty(Integer.class, "LWIDTHN", "Line width Nonfiscal", "Line width for nonfiscal text in characters", 40));
                 }}
 
         );
@@ -103,6 +140,24 @@ public class FPCGeneralV10 extends FPCBase {
        return lw; 
     }
 
+    protected int getLineWidthFiscalText() {
+        int lw = FP.getLineWidthFiscalText();
+        if (lw <= 0)
+            lw = getParamInt("LWIDTH");
+        if (lw <= 0) 
+            lw = 36;
+        return lw;
+    }
+
+    protected int getLineWidthNonFiscalText() {
+        int lw = FP.getLineWidthNonFiscalText();
+        if (lw <= 0)
+            lw = getParamInt("LWIDTHN");
+        if (lw <= 0) 
+            lw = 36;
+        return lw;
+    }
+    
     @Override
     public void init() throws Exception, FPException {
         lastCommand = "Init";
@@ -411,7 +466,7 @@ public class FPCGeneralV10 extends FPCBase {
     
     @Override
     public void sell(String text, taxGroup taxCode, double price, double quantity, double discountPerc)  throws FPException {
-        String[] lines = splitOnLines(text);
+        String[] lines = splitOnLines(text, getLineWidthFiscalText());
         lastCommand = "sell";
         
         try {
@@ -433,7 +488,7 @@ public class FPCGeneralV10 extends FPCBase {
 
     @Override
     public void sellDept(String text, String deptCode, double price, double quantity, double discountPerc)  throws FPException{
-        String[] lines = splitOnLines(text);
+        String[] lines = splitOnLines(text, getLineWidthFiscalText());
 
         lastCommand = "sellDept";
         
@@ -452,7 +507,7 @@ public class FPCGeneralV10 extends FPCBase {
     @Override
     public void printFiscalText(String text) throws FPException {
         lastCommand = "printFiscalText";
-        String[] lines = splitOnLines(text);
+        String[] lines = splitOnLines(text, getLineWidthFiscalText());
         
         for (String line : lines) {
             try {
@@ -466,7 +521,7 @@ public class FPCGeneralV10 extends FPCBase {
     @Override
     public void printNonFiscalText(String text) throws FPException {
         lastCommand = "printNonFiscalText";
-        String[] lines = splitOnLines(text);
+        String[] lines = splitOnLines(text, getLineWidthNonFiscalText());
         
         for (String line : lines) {
             try {
@@ -497,7 +552,7 @@ public class FPCGeneralV10 extends FPCBase {
     @Override
     public StrTable total(String text, paymentTypes payType, double payAmount) throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        String[] lines = splitOnLines(text);
+        String[] lines = splitOnLines(text, getLineWidthFiscalText());
         
         lastCommand = "total";
         
@@ -639,14 +694,16 @@ public class FPCGeneralV10 extends FPCBase {
             res.TaxF = parseDouble(response.get("TaxF"));
             res.TaxG = parseDouble(response.get("TaxG"));
             res.TaxH = parseDouble(response.get("TaxH"));
-            res.RevTaxA = parseDouble(response.get("RevTaxA"));
-            res.RevTaxB = parseDouble(response.get("RevTaxB"));
-            res.RevTaxC = parseDouble(response.get("RevTaxC"));
-            res.RevTaxD = parseDouble(response.get("RevTaxD"));
-            res.RevTaxE = parseDouble(response.get("RevTaxE"));
-            res.RevTaxF = parseDouble(response.get("RevTaxF"));
-            res.RevTaxG = parseDouble(response.get("RevTaxG"));
-            res.RevTaxH = parseDouble(response.get("RevTaxH"));
+            if (response.containsKey("RevTaxA")) {
+                res.RevTaxA = parseDouble(response.get("RevTaxA"));
+                res.RevTaxB = parseDouble(response.get("RevTaxB"));
+                res.RevTaxC = parseDouble(response.get("RevTaxC"));
+                res.RevTaxD = parseDouble(response.get("RevTaxD"));
+                res.RevTaxE = parseDouble(response.get("RevTaxE"));
+                res.RevTaxF = parseDouble(response.get("RevTaxF"));
+                res.RevTaxG = parseDouble(response.get("RevTaxG"));
+                res.RevTaxH = parseDouble(response.get("RevTaxH"));
+            }    
         } catch (IOException ex) {
             lastErrorCode = -1;
             lastErrorMsg = ex.getMessage();

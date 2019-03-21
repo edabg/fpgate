@@ -36,7 +36,7 @@ import org.eda.fdevice.FPCBase;
 public abstract class AbstractFiscalDevice {
 
     protected static final Logger logger = Logger.getLogger(AbstractFiscalDevice.class.getName());
-    
+
     protected AbstractProtocol protocol;
     
     protected String mDeviceInfo;  // Device info in raw format returned from device
@@ -65,7 +65,8 @@ public abstract class AbstractFiscalDevice {
      * Describes which bits in status bytes indicate for errors
      */
     protected LinkedHashMap<String, byte[]> errorStatusBits;
-    
+
+    // Errors and warnings collector
     protected List<String> mErrors = new ArrayList<>();;
     protected List<String> mWarnings = new ArrayList<>();;
 
@@ -83,6 +84,10 @@ public abstract class AbstractFiscalDevice {
         initPrinterStatusMap();
     }
 
+    public static Logger getLogger() {
+        return logger;
+    }
+    
     public void open() throws IOException {
         if (protocol == null)
             throw new IOException("Protocol is not initialized!");
@@ -103,6 +108,22 @@ public abstract class AbstractFiscalDevice {
      */
     protected abstract void readDeviceInfo() throws IOException ;
 
+    
+    /**
+     * Number of characters for fiscal text
+     * @return 
+     */
+    public int getLineWidthFiscalText() {
+        return 0;
+    }
+    
+    /**
+     * Number of characters for non-fiscal text
+     * @return 
+     */
+    public int getLineWidthNonFiscalText() {
+        return 0;
+    }
     
     protected double stringToDouble(String str) {
         return stringToDouble(str, 1);

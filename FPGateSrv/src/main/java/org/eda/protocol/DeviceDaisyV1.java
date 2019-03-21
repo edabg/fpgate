@@ -122,6 +122,17 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         else
             consts.put("COMMENT_LEN", 28);
     }
+
+    @Override
+    public int getLineWidthNonFiscalText() {
+        return consts.get("COMMENT_LEN");
+    }
+
+    @Override
+    public int getLineWidthFiscalText() {
+        return consts.get("COMMENT_LEN");
+    }
+    
     
     @Override
     protected void readDeviceInfo() throws IOException {
@@ -1392,8 +1403,10 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         */
         String res = cmdCustom(62, "");
         Date dt;
+        
         DateFormat format = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
         try {
+            res = res.replace(".", "-");
             dt = format.parse(res);
         } catch (ParseException ex) {
             throw new FDException("Грешка при четене на информация за дата/час ("+res+")!"+ex.getMessage());

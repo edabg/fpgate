@@ -16,6 +16,7 @@
  */
 package org.eda.fdevice;
 
+import java.util.LinkedHashMap;
 import org.eda.protocol.DeviceDatecsFPV1;
 
 /**
@@ -98,6 +99,13 @@ public class FPCDatecsFP extends FPCGeneralV10{
             return "0";
         else
             return "2";
+    }
+
+    public static FPParams getDefinedParams() throws Exception {
+        FPParams params = FPCGeneralV10.getDefinedParams();
+        params.getProperties().get("LWIDTH").setValue(46);
+        params.getProperties().get("LWIDTHN").setValue(46);
+        return params;
     }
     
 }

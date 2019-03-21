@@ -445,11 +445,11 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
         I Italic (Наклонено)
         Необходимо е да е отворен фискален бон. В противен случай не се отпечатва текста и се вдига S1.1.        
         */        
-        int maxLen = 36;
-        if (text.length() > maxLen) {
-            warn("Текст с дължина "+Integer.toString(text.length())+" повече от "+Integer.toString(maxLen)+" символа e съкратен!");
-            text = text.substring(0, maxLen);
-        }
+//        int maxLen = 36;
+//        if (text.length() > maxLen) {
+//            warn("Текст с дължина "+Integer.toString(text.length())+" повече от "+Integer.toString(maxLen)+" символа e съкратен!");
+//            text = text.substring(0, maxLen);
+//        }
         cmdCustom(54, text);
     }
 
@@ -501,12 +501,12 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
         H High (Двойна височина)
         I Italic (Наклонено)        
         */        
-        int maxLen = 40; //???
+//        int maxLen = 40; //???
         String params = "";
-        if (text.length() > maxLen) {
-            warn("Текст с дължина "+Integer.toString(text.length())+" повече от "+Integer.toString(maxLen)+" символа e съкратен!");
-            text = text.substring(0, maxLen);
-        }
+//        if (text.length() > maxLen) {
+//            warn("Текст с дължина "+Integer.toString(text.length())+" повече от "+Integer.toString(maxLen)+" символа e съкратен!");
+//            text = text.substring(0, maxLen);
+//        }
         if ((font >= 1) && (font <= 3))
             params = "\t"+Integer.toString(font)+","+text;
         else 

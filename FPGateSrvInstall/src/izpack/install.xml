@@ -22,12 +22,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     <info>
         <appname>FPGateSrv</appname>
-        <appversion>@{project.fpgatesrv.version}</appversion>
+        <appversion>@{fpgatesrv.version}</appversion>
 <!--    <appsubpath>myapp</appsubpath> -->
         <javaversion>1.6</javaversion>
         <uninstaller write="yes" />
         <singleinstance>yes</singleinstance>
-        <url>http://www.edabg.com</url>
+        <url>https://github.com/edabg/fpgate</url>
+        <run-privileged />
         <authors>
             <author name="EDA Ltd." email="support@edabg.com"/>
         </authors>
@@ -38,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <param name="variant" value="windows" />
             <os family="windows" />
         </laf>
+        <modifier key="showDebugWindow" value="true"/>
     </guiprefs>
 
     <locale>
@@ -45,27 +47,56 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </locale>
 
     <variables>
-        <variable name="TargetPanel.dir.windows" value="c:\FPGateSrv" />
+        <variable name="TargetPanel.dir.windows" value="C:\FPGateSrv" />
+        <variable name="DesktopShortcutCheckboxEnabled" value="true" />
+        <variable name="StartupShortcutCheckboxEnabled" value="true" />
+<!--        <variable name="modify.izpack.install" value="true" /> -->
     </variables>
-
+    <conditions>
+        <condition id="start-after-install" type="variable">
+            <name>start.after.install</name>
+            <value>true</value>
+        </condition>
+    </conditions>
     <panels>
         <panel classname="HelloPanel" />
 <!--        <panel classname="DefaultTargetPanel" />-->
         <panel classname="LicencePanel"/>
-        <panel classname="TargetPanel"/>
+        <panel classname="TargetPanel">
+            <validator classname="com.izforge.izpack.installer.validator.ConditionValidator"/>
+            <configuration>
+                <!-- Don't show warning if target directory already exists -->
+                <ShowExistingDirectoryWarning>false</ShowExistingDirectoryWarning>
+                <ShowCreateDirectoryMessage>false</ShowCreateDirectoryMessage>
+            </configuration>
+        </panel>    
         <panel classname="InstallPanel"/>
         <panel classname="ShortcutPanel"/>
+        <panel classname="UserInputPanel" id="panel_beforeprocess" />
+        <panel classname="ProcessPanel" condition="start-after-install" />
         <panel classname="SimpleFinishPanel" />
     </panels>
     <resources>
-        <res src="@{izpack.staging}/Win_shortcutSpec.xml" id="Win_shortcutSpec.xml"/>
+        <res id="Win_shortcutSpec.xml" src="@{izpack.staging}/Win_shortcutSpec.xml" />
         <res id="LicencePanel.licence" src="@{izpack.staging}/license.txt"/>
+        <res id="ProcessPanel.Spec.xml" src="@{izpack.staging}/ProcessPanel.Spec.xml" />
+        <res id="userInputSpec.xml" src="@{izpack.staging}/userInputSpec.xml" parse="yes" type="xml"/>        
 <!--      
         <res src="@{izpack.staging}/common_resources/img/install-sidebar.png" id="Installer.image"/>
         <res src="hello.html" id="HTMLHelloPanel.info"/>
         <res src="license.html" id="HTMLLicencePanel.licence"/>
 -->    
     </resources>
+<!--    
+    <listeners>
+        <listener classname="RegistryInstallerListener" stage="install" >
+            <os family="windows"/>
+        </listener>
+        <listener classname="RegistryUninstallerListener" stage="uninstall" >
+            <os family="windows"/>
+        </listener>
+    </listeners>    
+-->
     <natives>
         <native type="izpack" name="ShellLink.dll">
             <os family="windows" />
@@ -73,17 +104,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <native type="izpack" name="ShellLink_x64.dll">
             <os family="windows" />
         </native>    
+<!--        
+        <native type="3rdparty" name="COIOSHelper.dll" stage="both">
+           <os family="windows"/>
+        </native>
+        <native type="3rdparty" name="COIOSHelper_x64.dll" stage="both">
+           <os family="windows"/>
+        </native>
+-->                
     </natives>    
     <packs>
         <pack name="fpgatesrv" required="yes">
             <description>FPGateSrv Installation</description>
-            <singlefile src="@{project.fpgatesrv.target}/FPGateSrv-@{project.fpgatesrv.version}-WL.jar" target="$INSTALL_PATH/bin/FPGateSrv.jar" />
+            <singlefile src="@{project.fpgatesrv.target}/FPGateSrv-@{fpgatesrv.version}-WL.jar" target="$INSTALL_PATH/bin/FPGateSrv.jar" />
             <singlefile src="@{izpack.staging}/FPGateSrv.cmd" target="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
             <parsable targetfile="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
 <!--            <fileset dir="@{project.fpgatesrv.target}/classes" includes="*.dll"  targetdir="$INSTALL_PATH/bin" override="true" />-->
-            <fileset dir="@{project.fpgatesrv.target}/../lib/" includes="*.dll"  targetdir="$INSTALL_PATH/lib" override="true" />
-            <fileset dir="@{project.fpgatesrv.target}/../lib/x86/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x86" override="true" />
-            <fileset dir="@{project.fpgatesrv.target}/../lib/x64/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x64" override="true" />
+<!--            <fileset dir="@{project.fpgatesrv.target}/../lib/" includes="*.dll"  targetdir="$INSTALL_PATH/lib" override="true" />-->
+<!--            <fileset dir="@{project.fpgatesrv.target}/../lib/x86/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x86" override="true" />-->
+<!--            <fileset dir="@{project.fpgatesrv.target}/../lib/x64/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x64" override="true" />-->
             <fileset dir="@{project.fpgatesrv.target}/../public_html" includes="**"  targetdir="$INSTALL_PATH/public_html" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../" includes="logs"  targetdir="$INSTALL_PATH/" override="true" />
             <fileset dir="@{project.fpgatesrv.target}/../ssl" includes="*.jks"  targetdir="$INSTALL_PATH/ssl" override="true" />

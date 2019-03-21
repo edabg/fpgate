@@ -41,6 +41,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import javax.swing.JOptionPane;
 import org.eda.protocol.AbstractFiscalDevice;
 import org.eda.protocol.AbstractProtocol;
 import org.restlet.Application;
@@ -62,10 +63,7 @@ import org.restlet.resource.Directory;
 import org.restlet.security.SecretVerifier;
 import static org.restlet.security.Verifier.RESULT_INVALID;
 import static org.restlet.security.Verifier.RESULT_VALID;
-import org.restlet.service.MetadataService;
 import org.restlet.util.Series;
-import sun.rmi.log.LogHandler;
-
 /**
  *
  * @author Dimitar Angelov
@@ -86,6 +84,8 @@ public class FPServer extends Application {
     public ChallengeAuthenticator userGuard;
     
     private String version;
+    
+    protected AppUpdateChecker.VersionInformation VersionInformation;
 
     /**
      * Get the value of version
@@ -105,6 +105,10 @@ public class FPServer extends Application {
      */
     public String getBuildNumber() {
         return buildNumber;
+    }
+
+    public AppUpdateChecker.VersionInformation getVersionInformation() {
+        return VersionInformation;
     }
     
     private Properties appProperties;
@@ -211,16 +215,23 @@ public class FPServer extends Application {
     private void initProperties() {
         // Read Version Number
         try {
+            version = "N/A";
+            buildNumber = "N/A";
             Enumeration<URL> resources = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
             while (resources.hasMoreElements()) {
                 try {
                   Manifest manifest = new Manifest(resources.nextElement().openStream());
                   // check that this is your manifest and do what you need or get the next one
                   Attributes attr = manifest.getMainAttributes();
-                  version = attr.getValue("Implementation-Version");
-                  if (version == null) version = "N/A";
-                  buildNumber = attr.getValue("Implementation-Build-TimeStamp");
-                  if (buildNumber == null) buildNumber = "N/A";
+                  String implementationTitle = attr.getValue("Implementation-Title");
+                  // 1553075604161 : 25 : FPError Code:-1 Message:getDateTime:Грешка при четене на информация за дата/час (20.03.19 11:51:38)!Unparseable date: "20.03.19 11:51:38"
+                  if ((implementationTitle != null) && implementationTitle.equals("FPGateSrv")) {
+                    System.out.println(attr.toString());
+                    version = attr.getValue("Implementation-Version");
+                    if (version == null) version = "N/A";
+                    buildNumber = attr.getValue("Implementation-Build-TimeStamp");
+                    if (buildNumber == null) buildNumber = "N/A";
+                  } 
                 } catch (IOException E) {
                   // handle
 //                  JOptionPane.showMessageDialog(this, E.getMessage());  
@@ -236,7 +247,9 @@ public class FPServer extends Application {
         defaultProperties.setProperty("AdminUser", "fpgadmin");
         defaultProperties.setProperty("AdminPass", DigestUtils.toMd5("Pr1nt"));
         defaultProperties.setProperty("DisableAnonymous", "0");
-        defaultProperties.setProperty("UseSSL", "0");
+        defaultProperties.setProperty("UseSSL", "1");
+        defaultProperties.setProperty("StartMinimized", "0");
+        defaultProperties.setProperty("CheckVersionAtStartup", "1");
         defaultProperties.setProperty("SSLKeyFile", "ssl/fpgate.jks");
         defaultProperties.setProperty("SSLKeyFileType", "JKS"); // jks
         defaultProperties.setProperty("SSLKeyStorePassword", "FPGate"); // 
@@ -291,9 +304,18 @@ public class FPServer extends Application {
     public URI getAdminURL() throws URISyntaxException {
         String serverAddr = getServerAddress();
         if (serverAddr.length() == 0) serverAddr = "localhost";
-        String serverPort = Integer.toString(getServerPort());
-        if (serverPort.length() == 0) serverPort = "8182";
-        return new URI("http://"+serverAddr+":"+serverPort+"/admin/");
+        String serverPort;
+        String scheme;
+        if (getUseSSL()) {
+            serverPort = Integer.toString(getServerPortSSL());
+            if (serverPort.length() == 0) serverPort = "8183";
+            scheme =  "https://";
+        } else {
+            serverPort = Integer.toString(getServerPort());
+            if (serverPort.length() == 0) serverPort = "8182";
+            scheme =  "http://";
+        }
+        return new URI(scheme+serverAddr+":"+serverPort+"/admin/");
     }
     public FPServer() {
         setName("Fiscal Printer Gateway");
@@ -301,6 +323,16 @@ public class FPServer extends Application {
         setOwner("EDA Ltd.");
         setAuthor("EDA Software Development Team");
         initProperties();
+    }
+    
+    protected void checkAppVersion(boolean showDetail) {
+        VersionInformation = AppUpdateChecker.CheckForNewVersion(version, buildNumber);
+        if ((VersionInformation.state == AppUpdateChecker.VersionState.NEW_VERSION) || (VersionInformation.state == AppUpdateChecker.VersionState.NEW_BUILD)){
+            AppVersionDlg appv = new AppVersionDlg(VersionInformation);
+            appv.setVisible(true);
+        } else if (showDetail) {
+            JOptionPane.showMessageDialog(null, "There is no new version available.", "Version Information", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
     
     protected int getServerPort() {
@@ -322,7 +354,7 @@ public class FPServer extends Application {
         }
         return port;
     }
-    
+
     protected String getServerAddress() {
         String address = "";
         try {
@@ -332,7 +364,11 @@ public class FPServer extends Application {
         }
         return address;
     }
-
+    
+    protected boolean getUseSSL() {
+        return appProperties.getProperty("UseSSL", "0").equals("1");
+    }
+    
     /**
      * Run as a standalone component.
      * 
@@ -366,10 +402,15 @@ public class FPServer extends Application {
         // Create a component
         ControlPanel cp = new ControlPanel();
         cp.setVisible(true);
+        if (application.appProperties.getProperty("StartMinimized", "0").equals("1"))
+            cp.setState(ControlPanel.ICONIFIED);
         
 //        mainComponent.start();
         application.startServer();
         cp.notifyChange();
+        // 
+        if (application.appProperties.getProperty("CheckVersionAtStartup", "0").equals("1"))
+            application.checkAppVersion(false);
     }
 
     protected void initLogs() {

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<izpack:processing version="5.0"
+  xmlns:izpack="http://izpack.org/schema/processing" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://izpack.org/schema/processing http://izpack.org/schema/5.0/izpack-processing-5.0.xsd">
+    
+    <logfiledir>$INSTALL_PATH</logfiledir>
+    <job name="Start FPGate Server" condition="start-after-install" >
+        <os family = "windows" />
+        <executefile name="$INSTALL_PATH/bin/FPGateSrv.cmd" workingDir="$INSTALL_PATH/bin/" />
+    </job>
+
+    <job name="Start FPGate Server" condition="start-after-install" >
+        <os family = "linux" />
+        <executefile name="$INSTALL_PATH/bin/FPGateSrv.jar" workingDir="$INSTALL_PATH/bin/" />
+    </job>
+
+</izpack:processing>    

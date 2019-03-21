@@ -17,25 +17,41 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<shortcuts>
+<izpack:shortcuts version="5.0"
+                  xmlns:izpack="http://izpack.org/schema/shortcuts"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://izpack.org/schema/shortcuts http://izpack.org/schema/5.0/izpack-shortcuts-5.0.xsd">
 <!--  <skipIfNotSupported/> -->
-  <programGroup defaultName="EDA\FPGate Server"
+  <programGroup defaultName="EDA FPGate Server"
                 location="applications"/>
-  <shortcut
-    name="Start FPGate Server"
-    target="$INSTALL_PATH\bin\FPGateSrv.cmd"
-    commandLine=""
-    workingDirectory="$INSTALL_PATH\bin"
-    description="Starts EDA FPGate Server"
-    iconFile="$INSTALL_PATH\public_html\favicon.ico"
-    iconIndex="0"
-    initialState="normal"
-    programGroup="yes"
-    desktop="yes"
-    applications="yes"
-    startMenu="yes"
-    startup="no">
-
-    <createForPack name="fpgatesrv"/>
-  </shortcut>
-</shortcuts>
+    <shortcut
+        name="Start FPGate Server"
+        target="$INSTALL_PATH\bin\FPGateSrv.cmd"
+        commandLine=""
+        workingDirectory="$INSTALL_PATH\bin"
+        description="Starts EDA FPGate Server"
+        iconFile="$INSTALL_PATH\public_html\favicon.ico"
+        iconIndex="0"
+        initialState="normal"
+        programGroup="yes"
+        desktop="yes"
+        applications="yes"
+        startMenu="yes"
+        startup="yes">
+        <createForPack name="fpgatesrv"/>
+    </shortcut>
+    <shortcut
+        name="Uninstaller"
+        programGroup="yes"
+        desktop="no"
+        applications="no"
+        startMenu="no"
+        startup="no"
+        target="$INSTALL_PATH\Uninstaller\uninstaller.jar"
+        commandLine=""
+        iconFile="%SystemRoot%\system32\SHELL32.dll"
+        iconIndex="31"
+        description="This uninstalls the test">
+        <createForPack name="fpgatesrv"/>
+    </shortcut>  
+</izpack:shortcuts>

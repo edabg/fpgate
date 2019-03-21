@@ -36,6 +36,10 @@ import org.reflections.Reflections;
 public class FPCBase {
 
     protected static final Logger logger = Logger.getLogger(FPCBase.class.getName());
+
+    public static Logger getLogger() {
+        return logger;
+    }
     
     protected final FPParams params;
     private static FPCBaseClassList FPCList = null;
@@ -212,7 +216,7 @@ public class FPCBase {
         }
         public StrTable toStrTable(String prefix) {
             StrTable res = new StrTable();
-            res.put(prefix+"Model", SerialNum);
+            res.put(prefix+"Model", Model);
             res.put(prefix+"SerialNum", SerialNum);
             res.put(prefix+"FMNum", FMNum);
             res.put(prefix+"Firmware", Firmware);

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eda</groupId>
     <artifactId>FPGateSrv</artifactId>
-    <version>2.0.1-a</version>
+    <version>2.0.2-b</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -56,34 +56,6 @@
             <artifactId>org.restlet.ext.crypto</artifactId>
             <version>${restlet-version}</version>
         </dependency>
-<!--        
-        <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>2.3.22</version>
-        </dependency>        
--->        
-<!--        
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.187</version>
-        </dependency>
--->        
-<!--        
-        <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>2.5.4</version>
-        </dependency>
--->        
-<!--        
-        <dependency>
-            <groupId>com.hp.gagawa</groupId>
-            <artifactId>gagawa</artifactId>
-            <version>1.0.1</version>
-        </dependency>
--->
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections-maven</artifactId>
@@ -104,39 +76,19 @@
                 <artifactId>sqlite-jdbc</artifactId>
                 <version>3.8.11.2</version>
         </dependency>
-       
-<!--        
-    <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna</artifactId>
-            <version>4.2.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna-platform</artifactId>
-            <version>4.2.0-SNAPSHOT</version>
-    </dependency>
--->
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
             <version>2.3.23</version>
         </dependency> 
-
 <!--        
-        <dependency>
-            <groupId>org.rxtx</groupId>
-            <artifactId>rxtx</artifactId>
-            <version>2.2pre2</version>
-        </dependency>
--->
-
         <dependency>
             <groupId>javax</groupId>
             <artifactId>comm</artifactId>
             <version>2.0</version>
             <type>jar</type>
         </dependency>
+-->                
         <dependency>
           <groupId>com.fazecast</groupId>
           <artifactId>jSerialComm</artifactId>
@@ -291,6 +243,33 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.internetitem</groupId>
+                <artifactId>write-properties-file-maven-plugin</artifactId>
+                <version>1.0.1</version>
+                <executions>
+                    <execution>
+                        <id>one</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>write-properties-file</goal>
+                        </goals>
+                            <configuration>
+                                <filename>version.properties</filename>
+                                <properties>
+                                    <property>
+                                        <name>fpgatesrv.version</name>
+                                        <value>${project.version}</value>
+                                    </property>
+                                    <property>
+                                        <name>fpgatesrv.build</name>
+                                        <value>${maven.build.timestamp}</value>
+                                    </property>
+                                </properties>
+                          </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
         </plugins>
     </build>
     <name>FPGateSrv</name>

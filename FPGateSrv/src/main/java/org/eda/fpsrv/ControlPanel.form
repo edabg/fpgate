@@ -241,9 +241,17 @@
                                       <EmptySpace pref="80" max="32767" attributes="0"/>
                                       <Component id="jlGoAdmin" min="-2" max="-2" attributes="0"/>
                                   </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="jcbDisableAnonymousPrint" min="-2" max="-2" attributes="0"/>
+                                  <Group type="102" attributes="0">
+                                      <Group type="103" groupAlignment="0" attributes="0">
+                                          <Component id="jcbDisableAnonymousPrint" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Component id="jcbStartMinimized" min="-2" max="-2" attributes="0"/>
+                                      </Group>
                                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="jcbCheckVersionAtStartup" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="32767" attributes="0"/>
+                                      <Component id="jbCheckVersion" min="-2" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
@@ -281,11 +289,14 @@
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jtServerAddr" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jcbStartMinimized" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jtAdminName" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jcbCheckVersionAtStartup" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="jbCheckVersion" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
@@ -317,7 +328,7 @@
                           <Component id="jLabel8" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jComboBoxLLFPCBase" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="70" max="32767" attributes="0"/>
+                      <EmptySpace pref="66" max="32767" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jbSave" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="jbCancel" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -513,6 +524,28 @@
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
               </AuxValues>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="jcbStartMinimized">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Start Minimized"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcbStartMinimizedActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="jcbCheckVersionAtStartup">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Check for new version at startup"/>
+              </Properties>
+            </Component>
+            <Component class="javax.swing.JButton" name="jbCheckVersion">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Check now"/>
+                <Property name="toolTipText" type="java.lang.String" value=""/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbCheckVersionActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
