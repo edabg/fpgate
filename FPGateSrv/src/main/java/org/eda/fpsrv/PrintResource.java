@@ -28,6 +28,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import org.restlet.resource.ServerResource;
 import java.util.HashMap;
@@ -277,6 +278,8 @@ public class PrintResource extends ServerResource {
      *  TTL\tText\tPaymentAbbr\\tAmount<br>
      * CMD - Custom command<br>
      *  CMD\tCCC\tParams<br>
+     * FTR - Print Text footer<br>
+     *  FTR\tText<br>
      * Notes:<br>
      * For fiscal check, there are must be at least 1 sell Row <br>
      * and at the end must be total<br>
@@ -309,6 +312,7 @@ public class PrintResource extends ServerResource {
         String RevReason = "";
         String RevInvoiceNum = "";
         Date RevInvoiceDate = null;
+        ArrayList<String[]> footer = new ArrayList<>();
         for(String arg : pRequest.getArguments()) {
             if (arg.length() == 0) continue;
             cmdParams = arg.split("\\t");
@@ -358,6 +362,11 @@ public class PrintResource extends ServerResource {
                     custInfo.VATNumber = cmdParams[1];
                 } else if (cmdParams[0].equals("CSEL")) { // Customer Info Seller
                     custInfo.seller = cmdParams[1];
+                } else if (cmdParams[0].equals("FTR")) { // Custom footer
+                    if (cmdParams.length > 1)
+                        footer.add(Arrays.copyOfRange(cmdParams, 1, cmdParams.length));
+                    else
+                        footer.add(new String[0]);
                 } else {
                    cmdList.add(cmdParams);
                 }
@@ -483,14 +492,30 @@ public class PrintResource extends ServerResource {
         } // for each command
         try {dtBeforeClose = FP.getDateTime();} finally{};
         try {response.getResultTable().putAll(FP.getCurrentCheckInfo().toStrTable());} finally{};
+        if (footer.isEmpty())
+            footer.add(new String[]{"@padc", "www.colibrierp.com"});
         if (fiscal) {
             execLog.msg("Closing fiscal check");
-            try {response.getResultTable().putAll(FP.getLastFiscalCheckQRCode().toStrTable());} finally{};
-            FP.printFiscalText("www.colibrierp.com");
+            for(String[] footline : footer) {
+                if (footline.length > 0) {
+                    String text = "";
+                    for (int i = 0; i < footline.length; i++)
+                        text = text + ((i > 0)?"\t":"") + footline[i];
+                    FP.printFiscalText(text);
+                }    
+            }    
             FP.closeFiscalCheck();
+            try {response.getResultTable().putAll(FP.getLastFiscalCheckQRCode().toStrTable());} finally{};
         } else {
             execLog.msg("Closing non fiscal check");
-            FP.printNonFiscalText("www.colibrierp.com");
+            for(String[] footline : footer) {
+                if (footline.length > 0) {
+                    String text = "";
+                    for (int i = 0; i < footline.length; i++)
+                        text = text + ((i > 0)?"\t":"") + footline[i];
+                    FP.printNonFiscalText(text);
+                }    
+            }    
             FP.closeNonFiscalCheck();
         }
         try {dtAfterClose = FP.getDateTime();} finally{};

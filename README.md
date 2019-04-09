@@ -125,6 +125,7 @@ Here is example request:
         'PFT\tSample fiscal text\n' +
         'STL\n' +
         'TTL\tTotal:\tCASH\t2.00\n' +
+        'FTR\tThank you!\n' +
         '';
 
     fpg.sendRequest(new FPGRequest({
@@ -202,6 +203,7 @@ SDP        |Text,DepCode,Price,Percent,Quantity | Register Sell by Department. P
 STL        |ToPrint,ToDisplay,Percent           | Calculate subtotal. Parameters are optional.
 TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4. Amount is Sum paid by customer.
 CMD        |Command,Params...                   | Call custom printer command. Depending on printer model behavior will be different.
+FTR        |Footer text                         | Print footer text before close check. 
 
 
 PFT and PNT supports some simple formatting syntax in the following from.

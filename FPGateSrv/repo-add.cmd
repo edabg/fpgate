@@ -84,7 +84,7 @@ goto end
 :tremol_sdk
 echo Adding tremol-sdk to repository ... 
 rem echo "%TREMOL_SDK_LIB_PATH%\Java-20190204\FPCore.jar"
-call "%MVN%" install:install-file -Dfile="%TREMOL_SDK_LIB_PATH%\Java-20190220\FPCore-1.0.1.jar" -DgroupId=TremolZFP -DartifactId=FPCore -Dversion=1.0.1 -Dpackaging=jar -DlocalRepositoryPath="%REPOSITORY%"
+call "%MVN%" install:install-file -Dfile="%TREMOL_SDK_LIB_PATH%\Java-201903211145\FPCore-1.0.2.jar" -DgroupId=TremolZFP -DartifactId=FPCore -Dversion=1.0.2 -Dpackaging=jar -DlocalRepositoryPath="%REPOSITORY%"
 goto end
 
 :usage

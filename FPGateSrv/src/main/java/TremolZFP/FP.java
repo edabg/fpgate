@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class FP extends FPcore {
      public FP(){
-        this.setVersionDef(1902191535);
+        this.setVersionDef(1903211145);
     }
 
     /**
@@ -475,14 +475,15 @@ public class FP extends FPcore {
      * - 'B' - Postponed Printing 
      * - 'D' - Buffered Printing
      * @param  optionStornoReason
-     *         1 symbol for reason of storno operation with value: 
-     *  - '0' - Operator error 
-     *  - '1' - Goods Claim or Goods return
+     *         1 symbol for reason of storno operation with value:  
+     * - '0' - Operator error  
+     * - '1' - Goods Claim or Goods return  
+     * - '2' - Tax relief
      * @param  relatedToRcpNum
      *         Up to 6 symbols for issued receipt number
      * @param  relatedToRcpDateTime
-     *         15 symbols for Date and Time of the issued receipt 
-     * in format DD-MM-YY HH:MM
+     *         17 symbols for Date and Time of the issued receipt 
+     * in format DD-MM-YY HH:MM:SS
      * @param  fMNum
      *         8 symbols for number of the Fiscal Memory
      * @param  relatedToURN
@@ -1151,10 +1152,15 @@ public class FP extends FPcore {
      *  - '1' - EGN 
      *  - '2' - Foreigner Number 
      *  - '3' - NRA Official Number
+     * @param  optionStornoReason
+     *         1 symbol for reason of storno operation with value:  
+     * - '0' - Operator error  
+     * - '1' - Goods Claim or Goods return  
+     * - '2' - Tax relief
      * @param  relatedToInvoiceNum
      *         10 symbols for issued invoice number
      * @param  relatedToInvoiceDateTime
-     *         15 symbols for issued invoice date and time in format
+     *         17 symbols for issued invoice date and time in format
      * @param  relatedToRcpNum
      *         Up to 6 symbols for issued receipt number
      * @param  fMNum
@@ -1168,8 +1174,8 @@ public class FP extends FPcore {
      * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
      * @throws java.lang.Exception
      */
-     public void OpenCreditNoteWithFreeCustomerData(Double operNum, String operPass, OptionInvoiceCreditNotePrintType optionInvoiceCreditNotePrintType, String recipient, String buyer, String vATNumber, String uIC, String address, OptionUICType optionUICType, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
-             Do("OpenCreditNoteWithFreeCustomerData", "OperNum", operNum, "OperPass", operPass, "OptionInvoiceCreditNotePrintType", optionInvoiceCreditNotePrintType, "Recipient", recipient, "Buyer", buyer, "VATNumber", vATNumber, "UIC", uIC, "Address", address, "OptionUICType", optionUICType, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
+     public void OpenCreditNoteWithFreeCustomerData(Double operNum, String operPass, OptionInvoiceCreditNotePrintType optionInvoiceCreditNotePrintType, String recipient, String buyer, String vATNumber, String uIC, String address, OptionUICType optionUICType, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
+             Do("OpenCreditNoteWithFreeCustomerData", "OperNum", operNum, "OperPass", operPass, "OptionInvoiceCreditNotePrintType", optionInvoiceCreditNotePrintType, "Recipient", recipient, "Buyer", buyer, "VATNumber", vATNumber, "UIC", uIC, "Address", address, "OptionUICType", optionUICType, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
      }
 
     /**
@@ -1622,10 +1628,15 @@ public class FP extends FPcore {
      * @param  customerNum
      *         Symbol '#' and following up to 4 symbols for related customer ID 
      * number corresponding to the FD database
+     * @param  optionStornoReason
+     *         1 symbol for reason of storno operation with value:  
+     * - '0' - Operator error  
+     * - '1' - Goods Claim or Goods return  
+     * - '2' - Tax relief
      * @param  relatedToInvoiceNum
      *         10 symbols for issued invoice number
      * @param  relatedToInvoiceDateTime
-     *         15 symbols for issued invoice date and time in format
+     *         17 symbols for issued invoice date and time in format
      * @param  relatedToRcpNum
      *         Up to 6 symbols for issued receipt number
      * @param  fMNum
@@ -1638,8 +1649,8 @@ public class FP extends FPcore {
      * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
      * @throws java.lang.Exception
      */
-     public void OpenCreditNoteWithFDCustomerDB(Double operNum, String operPass, OptionInvoiceCreditNotePrintType optionInvoiceCreditNotePrintType, String customerNum, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
-             Do("OpenCreditNoteWithFDCustomerDB", "OperNum", operNum, "OperPass", operPass, "OptionInvoiceCreditNotePrintType", optionInvoiceCreditNotePrintType, "CustomerNum", customerNum, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
+     public void OpenCreditNoteWithFDCustomerDB(Double operNum, String operPass, OptionInvoiceCreditNotePrintType optionInvoiceCreditNotePrintType, String customerNum, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
+             Do("OpenCreditNoteWithFDCustomerDB", "OperNum", operNum, "OperPass", operPass, "OptionInvoiceCreditNotePrintType", optionInvoiceCreditNotePrintType, "CustomerNum", customerNum, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
      }
 
     /**
@@ -1706,7 +1717,9 @@ public class FP extends FPcore {
      *  - 'j4' - To SD card
      * @param  optionCSVformat
      *         1 symbol with value: 
-     *  - 'C' - Yes 
+     *  - 'C' - Yes  
+     * 
+     * 
      *  - 'X' - No
      * @param  flagsReceipts
      *         1 symbol for Receipts included in EJ: 
@@ -1741,7 +1754,7 @@ public class FP extends FPcore {
     /**
      *Sets the date and time and prints out the current values.
      * @param  dateTime
-     *         Date Time parameter in format: DD-MM-YY HH:MM
+     *         Date Time parameter in format: DD-MM-YY HH:MM:SS
      * @throws java.lang.Exception
      */
      public void SetDateTime(Date dateTime) throws Exception {
@@ -2441,7 +2454,9 @@ public class FP extends FPcore {
      *  - 'C' - Yes 
      *  - 'X' - No
      * @param  flagsReceipts
-     *         1 symbol for Receipts included in EJ: 
+     *         1 symbol for Receipts included in EJ:  
+     * 
+     * 
      * Flags.7=0 
      * Flags.6=1 
      * Flags.5=1 Yes, Flags.5=0 No (Include PO) 

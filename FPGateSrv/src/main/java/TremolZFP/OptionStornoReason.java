@@ -1,7 +1,8 @@
 package TremolZFP;
     public enum OptionStornoReason {
         Goods_Claim_or_Goods_return("1"),
-        Operator_error("0");
+        Operator_error("0"),
+        Tax_relief("2");
 
         private final String value;
         private OptionStornoReason(String value) {

@@ -92,13 +92,20 @@ public abstract class AbstractFiscalDevice {
         if (protocol == null)
             throw new IOException("Protocol is not initialized!");
         if (!protocol.isOpen()) {
-            protocol.open();
-            readDeviceInfo();
+            try {
+                protocol.open();
+                readDeviceInfo();
+            } catch (Exception ex) {
+                this.close();
+                throw ex;
+            }
         }
     }
     
     public void close() throws IOException {
-        protocol.close();
+        if (protocol != null)
+            protocol.close();
+        protocol = null;
     }
     
     /**

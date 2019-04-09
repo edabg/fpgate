@@ -133,7 +133,7 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
         }
         );
         warningStatusBits.put("S1", new byte[] {
-            5, 6
+            6 // ,5 
         });
         errorStatusBits.put("S1", new byte[] {
             1

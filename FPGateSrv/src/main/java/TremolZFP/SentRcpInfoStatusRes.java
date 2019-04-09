@@ -14,7 +14,7 @@ public class SentRcpInfoStatusRes {
 
    /**
     *16 symbols for the date and time of the last sent receipt to NRA 
-    *server in format DD-MM-YYYY HH;MM
+    *server in format DD-MM-YYYY HH:MM
     */
     public Date LastSentRcpDateTime;
     public Date getLastSentRcpDateTime() {

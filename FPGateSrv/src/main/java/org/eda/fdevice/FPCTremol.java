@@ -165,6 +165,7 @@ public class FPCTremol extends FPCBase {
     @Override
     public void init() throws Exception, FPException {
         fp = new TremolZFP.FP();
+        logger.log(Level.INFO, "ZFPLabServer version defs:{0}", fp.getVersionDef());
         fp.setServerAddress(getParam("ServerURL"));
         if (getParam("LinkType").equals("TCP")) {
             fp.ServerSetDeviceTcpSettings(getParam("IPAddr"), getParamInt("IPPort"), getParam("IPPassword"));
@@ -196,7 +197,7 @@ public class FPCTremol extends FPCBase {
                 }
             }
         } catch (Exception ex) {
-            Logger.getLogger(FPCTremol.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -371,7 +372,7 @@ public class FPCTremol extends FPCBase {
                 rt = OptionStornoReason.Goods_Claim_or_Goods_return;
                 break;
             case REDUCTION :
-                rt = OptionStornoReason.Goods_Claim_or_Goods_return;
+                rt = OptionStornoReason.Tax_relief;
                 break;
         }
         return rt;
@@ -745,7 +746,7 @@ FWDT=23NOV18 1000
                         getParamDouble("OperatorCode"), getParam("OperatorPass")
                         , printType
                         , customer.recipient, customer.buyer, customer.VATNumber, customer.UIC, customer.address, OptionUICType.Bulstat
-                        , RevInvNum, RevInvDate, Double.parseDouble(RevDocNum), RevFMNum, RevUNS);
+                        , revTypeToStornoReason(RevType), RevInvNum, RevInvDate, Double.parseDouble(RevDocNum), RevFMNum, RevUNS);
                 
             } else {
                 OptionStornoRcpPrintType printType = OptionStornoRcpPrintType.Step_by_step_printing;

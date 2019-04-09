@@ -332,15 +332,34 @@ public class FPCGeneralV10 extends FPCBase {
     @Override
     public void abnormalComplete() throws FPException {
         // First Try to Cancel Fiscal Receipt
-        lastCommand = "abnormalComplete";
+            lastCommand = "abnormalComplete";
         try {
-            FP.cmdCancelFiscalCheck();
-        } catch (IOException ex) {
-//            throw createException(ex);
-        }
-        // try to Close non-fiscal check
-        try {
-            FP.cmdCloseNonFiscalCheck();
+            if (FP.isOpenNonFiscalCheck()) {
+                // Cance non-fiscal check
+                FP.cmdCloseNonFiscalCheck();
+            } else if (FP.isOpenFiscalCheck() || FP.isOpenFiscalCheckRev()) {
+                // opened fiscal check
+                // first try to cancel
+                try {
+                    FP.cmdCancelFiscalCheck();
+                } catch (Exception ex) {
+                    logger.warning(ex.getMessage());
+                }
+                // if it is continue to be open try to pay rest amount and close
+                if (FP.isOpenFiscalCheck() || FP.isOpenFiscalCheckRev()) {
+                    try {
+                        FP.cmdPrintFiscalText("АВАРИЙНО ЗАТВАРЯНЕ!");
+                        FP.cmdTotal("Аварийно плащане", "", 0, "");
+                    } catch (Exception ex) {
+                        logger.warning(ex.getMessage());
+                    }
+                    try {
+                        FP.cmdCloseFiscalCheck();
+                    } catch (Exception ex) {
+                        logger.warning(ex.getMessage());
+                    }
+                }
+            }
         } catch (IOException ex) {
 //            throw createException(ex);
         }
@@ -631,7 +650,7 @@ public class FPCGeneralV10 extends FPCBase {
         try {
             QR = FP.cmdLastFiscalCheckQRCode();
         } catch (Exception e) {
-            logger.warning(e.getMessage());
+            logger.info(e.getMessage());
         }
         FiscalCheckQRCodeInfo QRInfo = null;
         if (QR.length() > 0)

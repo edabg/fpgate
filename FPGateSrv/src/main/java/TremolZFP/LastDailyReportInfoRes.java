@@ -46,7 +46,7 @@ public class LastDailyReportInfoRes {
     }
 
    /**
-    *Date Time parameter in format: DD-MM-YYYY HH:MM:SS
+    *Date Time parameter in format: DD-MM-YYYY HH:MM
     */
     public Date DateTimeLastFiscRec;
     public Date getDateTimeLastFiscRec() {

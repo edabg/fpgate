@@ -185,9 +185,13 @@ public class AppUpdateChecker {
             while (assets.hasNext()){
                 JsonNode asset = assets.next();
                 //TODO: Check Asset name to match name convention!
-                vi.remoteVersionDownloadURL = (asset).get("browser_download_url").asText();
-                fileName = asset.get("name").asText();
-                vi.remoteVersionDownloadSize = (asset).get("size").asInt();
+                String name = asset.get("name").asText();
+                if (name.matches(".+[.]jar$")) {
+                    vi.remoteVersionDownloadURL = (asset).get("browser_download_url").asText();
+                    fileName = name;
+                    vi.remoteVersionDownloadSize = (asset).get("size").asInt();
+                    break;
+                }    
             }    
             if (vi.remoteVersion.substring(0,1).equals("v"))
                 vi.remoteVersion = vi.remoteVersion.substring(1);
