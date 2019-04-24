@@ -16,7 +16,6 @@
  */
 package org.eda.fdevice;
 
-import java.util.LinkedHashMap;
 import org.eda.protocol.DeviceDatecsFPV1;
 
 /**
@@ -64,9 +63,9 @@ public class FPCDatecsFP extends FPCGeneralV10{
         */        
         String pc = "";
         switch (payType) {
-            case CASH : pc = "P"; break;
+            case CASH : pc = params.get("PMCache", "P"); break;
             case CREDIT : pc = "N"; break;
-            case DEBIT_CARD : pc = "D"; break;
+            case CARD :  pc = params.get("PMCard", "D"); break;
             case CHECK : pc = "C"; break;
             case CUSTOM1 : pc = "I"; break;
             case CUSTOM2 : pc = "J"; break;
@@ -93,16 +92,34 @@ public class FPCDatecsFP extends FPCGeneralV10{
         return rt;
     }
     
-    @Override
-    protected String dailyReportTypeToChar(dailyReportType drType) {
-        if (dailyReportType.Z == drType)
-            return "0";
-        else
-            return "2";
+    protected String[] dailyReportTypeToOptions(dailyReportType drType) {
+        String[] options = new String[]{"2",""};
+        
+        switch (drType) {
+            case Z :
+               options[0] = "0";
+               options[1] = "";
+               break;
+            case ZD :
+               options[0] = "0";
+               options[1] = "D";
+               break;
+            case X :
+               options[0] = "2";
+               options[1] = "";
+               break;
+            case XD :
+               options[0] = "2";
+               options[1] = "D";
+               break;
+        }
+        return options;
     }
 
     public static FPParams getDefinedParams() throws Exception {
         FPParams params = FPCGeneralV10.getDefinedParams();
+        params.getProperties().get("PMCash").setDefaultValue("P");
+        params.getProperties().get("PMCard").setDefaultValue("D");
         params.getProperties().get("LWIDTH").setValue(46);
         params.getProperties().get("LWIDTHN").setValue(46);
         return params;

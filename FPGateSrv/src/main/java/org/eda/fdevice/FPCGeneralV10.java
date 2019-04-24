@@ -124,6 +124,8 @@ public class FPCGeneralV10 extends FPCBase {
                      addProperty(new FPProperty(String.class, "OperatorCode", "Operator Code", "Operator Code", "1"));
                      addProperty(new FPProperty(String.class, "OperatorPass", "Operator Password", "Operator Password", "0000"));
                      addProperty(new FPProperty(String.class, "TillNumber", "Till Number", "Till Number", "1"));
+                     addProperty(new FPProperty(String.class, "PMCash", "Payment code for cash", "Payment code for cash", "P"));
+                     addProperty(new FPProperty(String.class, "PMCard", "Payment code for debit/credit card", "Payment code for debit/credit card", "C"));
                      addProperty(new FPProperty(Integer.class, "LWIDTH", "Line width Fiscal", "Line width for fiscal text in characters", 36));
                      addProperty(new FPProperty(Integer.class, "LWIDTHN", "Line width Nonfiscal", "Line width for nonfiscal text in characters", 40));
                 }}
@@ -238,7 +240,7 @@ public class FPCGeneralV10 extends FPCBase {
         switch (payType) {
             case CASH : pc = "P"; break;
             case CREDIT : pc = "N"; break;
-            case DEBIT_CARD : pc = "C"; break;
+            case CARD : pc = "C"; break;
             case CHECK : pc = "D"; break;
             case CUSTOM1 : pc = "I"; break;
             case CUSTOM2 : pc = "J"; break;
@@ -262,13 +264,30 @@ public class FPCGeneralV10 extends FPCBase {
         return rt;
     }
     
-    protected String dailyReportTypeToChar(dailyReportType drType) {
-        if (dailyReportType.Z == drType)
-            return "0";
-        else
-            return "2";
+    protected String[] dailyReportTypeToOptions(dailyReportType drType) {
+        String[] options = new String[]{"2",""};
+        
+        switch (drType) {
+            case Z :
+               options[0] = "0";
+               options[1] = "";
+               break;
+            case ZD :
+               options[0] = "0";
+               options[1] = "D";
+               break;
+            case X :
+               options[0] = "2";
+               options[1] = "";
+               break;
+            case XD :
+               options[0] = "2";
+               options[1] = "D";
+               break;
+        }
+        return options;
     }
-
+    
     protected FPException createException() {
         return new FPException((long)lastErrorCode, lastCommand+":"+getLastErrorMessage());
     }
@@ -790,11 +809,11 @@ public class FPCGeneralV10 extends FPCBase {
     public StrTable reportDaily(dailyReportType reportType) throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
         
-        String item = dailyReportTypeToChar(reportType);
+        String[] options = dailyReportTypeToOptions(reportType);
         lastCommand = "reportDaily";
         
         try {
-            response = FP.cmdReportDaily(item, "");
+            response = FP.cmdReportDaily(options[0], options[1]);
         } catch (IOException ex) {
             throw createException(ex);
         }

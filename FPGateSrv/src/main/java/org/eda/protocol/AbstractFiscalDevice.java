@@ -582,7 +582,7 @@ public abstract class AbstractFiscalDevice {
     /**
      * Start daily report
      * @param option The type of report Z/X depends of device.
-     * @param subOption In case of sub option. For example keep data by operators.
+     * @param subOption Sub option. For example print summary by departments.
      * @return Sums in report
      * @throws IOException 
      */

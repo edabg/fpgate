@@ -1143,7 +1143,15 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         return response;
     }
 
-    @Override
+    /**
+     * Print daily report
+     * @param option 
+     *  '0' or '1' for Z-report
+     *  '2' or '3' for X-report
+     * @param subOption '' default, 'D' - by departments
+     * @return Sums in report
+     * @throws IOException 
+     */
     public LinkedHashMap<String, String> cmdReportDaily(String option, String subOption) throws IOException {
         /*
         69 (45h) ДНЕВЕН ФИНАНСОВ ОТЧЕТ С ИЛИ БЕЗ НУЛИРАНЕ 
@@ -1205,8 +1213,8 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
             response.put("StTaxG", reformatCurrency((resLines.length > 15)?resLines[15]:"0", 100));
             response.put("StTaxH", reformatCurrency((resLines.length > 16)?resLines[16]:"0", 100));
         } else {
-            err("Грешка при междинна сума във фискален бон!");
-            throw new FDException(mErrors.toString());
+            warn("Командата не връща птговор!");
+//            throw new FDException(mErrors.toString());
         }
         return response;
     }

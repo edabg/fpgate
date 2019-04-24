@@ -139,16 +139,20 @@ public class FPCBase {
     
     // Payment Types
     public static enum paymentTypes {
-        CASH, CREDIT, CHECK, DEBIT_CARD
+        CASH, CREDIT, CHECK, CARD
         , CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4
         , UNSPECIFIED
     }
     
     public static final HashMap<String, paymentTypes> paymentTypeAbbr = new HashMap<>(); static {
         paymentTypeAbbr.put("CASH", FPCBase.paymentTypes.CASH);
+        paymentTypeAbbr.put("DEBIT_CARD", FPCBase.paymentTypes.CARD);
+        paymentTypeAbbr.put("CARD", FPCBase.paymentTypes.CARD);
+
+        
         paymentTypeAbbr.put("CREDIT", FPCBase.paymentTypes.CREDIT);
         paymentTypeAbbr.put("CHECK", FPCBase.paymentTypes.CHECK);
-        paymentTypeAbbr.put("DEBIT_CARD", FPCBase.paymentTypes.DEBIT_CARD);
+
         paymentTypeAbbr.put("CUSTOM1", FPCBase.paymentTypes.CUSTOM1);
         paymentTypeAbbr.put("CUSTOM2", FPCBase.paymentTypes.CUSTOM2);
         paymentTypeAbbr.put("CUSTOM3", FPCBase.paymentTypes.CUSTOM3);
@@ -172,12 +176,14 @@ public class FPCBase {
     }
     
     public static enum dailyReportType {
-        X, Z
+        X, Z, XD, ZD
     }
 
     public static final HashMap<String, dailyReportType> dailyReportTypeAbbr = new HashMap<>(); static {
         dailyReportTypeAbbr.put("X", FPCBase.dailyReportType.X);
         dailyReportTypeAbbr.put("Z", FPCBase.dailyReportType.Z);
+        dailyReportTypeAbbr.put("XD", FPCBase.dailyReportType.XD);
+        dailyReportTypeAbbr.put("ZD", FPCBase.dailyReportType.ZD);
     }
 
     public static enum datesReportType {

@@ -390,7 +390,7 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
         */        
         int maxLen = 36;
         if (text.length() > maxLen) {
-            warn("Текст с дължина "+Integer.toString(text.length())+" повече от "+Integer.toString(maxLen)+" символа e съкратен!");
+            warn("Текст с дължина "+Integer.toString(text.length())+" повече от "+Integer.toString(maxLen)+" символа e съкратен!("+text+")");
             text = text.substring(0, maxLen);
         }
         cmdCustom(54, text);
@@ -1165,7 +1165,13 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
     }
 
     
-    @Override
+    /**
+     * Print daily report
+     * @param option '0' for Z-report, '2' for X-report
+     * @param subOption '' default, 'D' - by departments
+     * @return Sums in report
+     * @throws IOException 
+     */
     public LinkedHashMap<String, String> cmdReportDaily(String option, String subOption) throws IOException {
         /*
         45h (69) ДНЕВЕН ФИНАНСОВ ОТЧЕТ
@@ -1178,27 +1184,54 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
         Closure Номер на фискалния запис - 4 байта.
         FM_Total Сумата от всички продажби - 12 байта със знак
         TotX Сумите по всяка от данъчните групи ‘А’, ‘Б’, ‘В’, … - 12 байта със знак.        
+        
+        75h (117) ДНЕВЕН ФИНАНСОВ ОТЧЕТ С ПЕЧАТ НА ДАННИ ПО ДЕПАРТАМЕНТИ
+        Област за данни: [<Option>]
+        Отговор: Closure,FM_Total,TotA,TotB,TotC,TotD,TotE,TotF,TotG,TotH
+        Преди дневния отчет се отпечатва и отчет по департаменти, за които има продажби за деня.
+        Команди 69, 108, 117 и 118 с опция ‘0’ (дневен финансов отчет с нулиране) нулират и натрупаните данни по департаменти.        
         */
         if (!option.equals("0") && !option.equals("2"))
             throw new FDException("Невалиден тип за дневен отчет! 0 => Z отчет, 2 => X отчет");
-        String res = cmdCustom(69, option);
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        if (res.length() > 0) {
-            String[] resLines = res.split(",");
-            response.put("Closure", resLines[0]);
-            response.put("Total", reformatCurrency((resLines.length > 1)?resLines[1]:"0", 100));
-            response.put("TaxA", reformatCurrency((resLines.length > 2)?resLines[2]:"0", 100));
-            response.put("TaxB", reformatCurrency((resLines.length > 3)?resLines[3]:"0", 100));
-            response.put("TaxC", reformatCurrency((resLines.length > 4)?resLines[4]:"0", 100));
-            response.put("TaxD", reformatCurrency((resLines.length > 5)?resLines[5]:"0", 100));
-            response.put("TaxE", reformatCurrency((resLines.length > 6)?resLines[6]:"0", 100));
-            response.put("TaxF", reformatCurrency((resLines.length > 7)?resLines[7]:"0", 100));
-            response.put("TaxG", reformatCurrency((resLines.length > 8)?resLines[8]:"0", 100));
-            response.put("TaxH", reformatCurrency((resLines.length > 9)?resLines[9]:"0", 100));
+        if (subOption.equals("D")) { // By Departments
+            String res = cmdCustom(117, option.equals("0")?"0":"");
+            if (res.length() > 0) {
+                String[] resLines = res.split(",");
+                response.put("Closure", resLines[0]);
+                response.put("Total", reformatCurrency((resLines.length > 1)?resLines[1]:"0", 100));
+                response.put("TaxA", reformatCurrency((resLines.length > 2)?resLines[2]:"0", 100));
+                response.put("TaxB", reformatCurrency((resLines.length > 3)?resLines[3]:"0", 100));
+                response.put("TaxC", reformatCurrency((resLines.length > 4)?resLines[4]:"0", 100));
+                response.put("TaxD", reformatCurrency((resLines.length > 5)?resLines[5]:"0", 100));
+                response.put("TaxE", reformatCurrency((resLines.length > 6)?resLines[6]:"0", 100));
+                response.put("TaxF", reformatCurrency((resLines.length > 7)?resLines[7]:"0", 100));
+                response.put("TaxG", reformatCurrency((resLines.length > 8)?resLines[8]:"0", 100));
+                response.put("TaxH", reformatCurrency((resLines.length > 9)?resLines[9]:"0", 100));
+            } else {
+                long errCode = -1;
+                err("Грешка при печат на дневен отчет!");
+                throw new FDException(errCode, mErrors.toString());
+            }
         } else {
-            long errCode = -1;
-            err("Грешка при междинна сума във фискален бон!");
-            throw new FDException(errCode, mErrors.toString());
+            String res = cmdCustom(69, option);
+            if (res.length() > 0) {
+                String[] resLines = res.split(",");
+                response.put("Closure", resLines[0]);
+                response.put("Total", reformatCurrency((resLines.length > 1)?resLines[1]:"0", 100));
+                response.put("TaxA", reformatCurrency((resLines.length > 2)?resLines[2]:"0", 100));
+                response.put("TaxB", reformatCurrency((resLines.length > 3)?resLines[3]:"0", 100));
+                response.put("TaxC", reformatCurrency((resLines.length > 4)?resLines[4]:"0", 100));
+                response.put("TaxD", reformatCurrency((resLines.length > 5)?resLines[5]:"0", 100));
+                response.put("TaxE", reformatCurrency((resLines.length > 6)?resLines[6]:"0", 100));
+                response.put("TaxF", reformatCurrency((resLines.length > 7)?resLines[7]:"0", 100));
+                response.put("TaxG", reformatCurrency((resLines.length > 8)?resLines[8]:"0", 100));
+                response.put("TaxH", reformatCurrency((resLines.length > 9)?resLines[9]:"0", 100));
+            } else {
+                long errCode = -1;
+                err("Грешка при печат на дневен отчет!");
+                throw new FDException(errCode, mErrors.toString());
+            }
         }
         return response;
     }

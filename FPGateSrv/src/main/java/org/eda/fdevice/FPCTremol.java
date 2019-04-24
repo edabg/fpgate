@@ -19,6 +19,7 @@ package org.eda.fdevice;
 import TremolZFP.CurrentOrLastReceiptPaymentAmountsRes;
 import TremolZFP.CurrentReceiptInfoRes;
 import TremolZFP.DailyAvailableAmountsRes;
+import TremolZFP.DailyAvailableAmounts_OldRes;
 import TremolZFP.InvoiceRangeRes;
 import TremolZFP.LastDailyReportInfoRes;
 import TremolZFP.OptionChange;
@@ -44,6 +45,7 @@ import TremolZFP.RegistrationInfoRes;
 import TremolZFP.SerialAndFiscalNumsRes;
 import TremolZFP.StatusRes;
 import TremolZFP.VersionRes;
+import java.io.IOException;
 import static java.lang.Math.abs;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
@@ -56,6 +58,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static org.eda.fdevice.FPCBase.logger;
 import org.eda.protocol.FDException;
 
 /**
@@ -68,7 +71,12 @@ public class FPCTremol extends FPCBase {
     protected String lastCommand;
     protected int lastErrorCode;
     protected String lastErrorMsg;
+    protected CheckInfo lastCurrentCheckInfo = null;
+    protected Date dtAfterOpenFiscalCheck = null;
+    protected DeviceInfo devInfo;
+    
     protected int CONST_TEXTLENGTH=32;
+    protected boolean isOldDevice = false;
     
     protected TremolZFP.FP fp = null;
 
@@ -118,6 +126,8 @@ public class FPCTremol extends FPCBase {
                      addProperty(new FPProperty(String.class, "OperatorCode", "Operator Code", "Operator Code", "1"));
                      addProperty(new FPProperty(String.class, "OperatorPass", "Operator Password", "Operator Password", "1"));
                      addProperty(new FPProperty(String.class, "TillNumber", "Till Number", "Till Number", "1"));
+                     addProperty(new FPProperty(Integer.class, "PMCash", "Payment number for cash", "Payment number for cash", 0));
+                     addProperty(new FPProperty(Integer.class, "PMCard", "Payment number for debit/credit card", "Payment number for debit/credit card", 7));
                      addProperty(new FPProperty(Integer.class, "LWIDTH", "Line width", "Line width in characters", 32));
                      addProperty(new FPProperty(
                         String.class
@@ -184,6 +194,14 @@ public class FPCTremol extends FPCBase {
     
     protected void readParameters() {
         try {
+            devInfo = getDeviceInfo();
+            try {
+                isOldDevice = devInfo.Model.matches("^.+V2$");
+                logger.info(isOldDevice?"Old Device V2 detected":"New device model detected");
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+            
             CONST_TEXTLENGTH = getParamInt("LWIDTH");
             fp.RawWrite(new byte[] {0x1D, 0x49});
             byte[] res = fp.RawRead(0d, "\n");
@@ -324,9 +342,9 @@ public class FPCTremol extends FPCBase {
         */        
         int pc = 0;
         switch (payType) {
-            case CASH : pc = 0; break;
+            case CASH : pc = params.getInt("PMCache", 0); break;
             case CREDIT : pc = 3; break;
-            case DEBIT_CARD : pc = 7; break;
+            case CARD : pc = params.getInt("PMCard", 7); break;
             case CHECK : pc = 1; break;
             case CUSTOM1 : pc = 2; break;
             case CUSTOM2 : pc = 3; break;
@@ -334,6 +352,20 @@ public class FPCTremol extends FPCBase {
         return pc;
     }
     
+    protected OptionPaymentType paymentNumToOptionPaymentType(int payNum, OptionPaymentType defaultPaymentType) {
+        OptionPaymentType paymentType = defaultPaymentType;
+        switch (payNum) {
+            case 0 : paymentType = OptionPaymentType.Payment_0;break;
+            case 1 : paymentType = OptionPaymentType.Payment_1;break;
+            case 2 : paymentType = OptionPaymentType.Payment_2;break;
+            case 3 : paymentType = OptionPaymentType.Payment_3;break;
+            case 4 : paymentType = OptionPaymentType.Payment_4;break;
+            case 5 : paymentType = OptionPaymentType.Payment_5;break;
+            case 6 : paymentType = OptionPaymentType.Payment_6;break;
+            case 7 : paymentType = OptionPaymentType.Payment_7;break;
+        }
+        return paymentType;
+    }
     protected OptionPaymentType paymenTypeToOptionPaymentType(paymentTypes payType) {
         /*		
         <Res Name="NamePayment0" Value="Лева      " Type="Text" />
@@ -349,12 +381,26 @@ public class FPCTremol extends FPCBase {
         <Res Name="NamePayment10" Value="Резерв 2  " Type="Text" />
         <Res Name="NamePayment11" Value="Евро      " Type="Text" />
         <Res Name="ExchangeRate" Value="1.95583" Type="Decimal_with_format" Format="0000.00000" />
+        
+        Old models
+        <Res Name="NamePayment0" Value="Лева      " Type="Text" />
+        <Res Name="NamePayment1" Value="Карта     " Type="Text" />
+        <Res Name="NamePayment2" Value="Чек     " Type="Text" />
+        <Res Name="NamePayment3" Value="Талон     " Type="Text" />
+        <Res Name="NamePayment4" Value="Евро      " Type="Text" />
+        <Res Name="ExchangeRate" Value="1.95583" Type="Decimal_with_format" Format="0000.00000" />
+        ...
+        
         */        
         OptionPaymentType pc = OptionPaymentType.Payment_0;
         switch (payType) {
-            case CASH : pc = OptionPaymentType.Payment_0; break;
+            case CASH : 
+                pc = paymentNumToOptionPaymentType(params.getInt("PMCache", 0), OptionPaymentType.Payment_0);
+                break;
             case CREDIT : pc = OptionPaymentType.Payment_3; break;
-            case DEBIT_CARD : pc = OptionPaymentType.Payment_7; break;
+            case CARD : 
+                pc = paymentNumToOptionPaymentType(params.getInt("PMCard", 7), OptionPaymentType.Payment_7);
+                break;
             case CHECK : pc = OptionPaymentType.Payment_1; break;
             case CUSTOM1 : pc = OptionPaymentType.Payment_2; break;
             case CUSTOM2 : pc = OptionPaymentType.Payment_3; break;
@@ -376,13 +422,6 @@ public class FPCTremol extends FPCBase {
                 break;
         }
         return rt;
-    }
-    
-    protected String dailyReportTypeToChar(dailyReportType drType) {
-        if (dailyReportType.Z == drType)
-            return "0";
-        else
-            return "2";
     }
     
     protected FPException createException() {
@@ -681,6 +720,10 @@ FWDT=23NOV18 1000
                     , ""
                 );
             }
+            try {
+                dtAfterOpenFiscalCheck = getDateTime();
+            } catch (Exception e) {
+            }
         } catch (Exception ex) {
             throw createException(ex);
         }
@@ -727,6 +770,10 @@ FWDT=23NOV18 1000
                     , UNS
                 );
             }
+            try {
+                dtAfterOpenFiscalCheck = getDateTime();
+            } catch (Exception e) {
+            }
         } catch (Exception ex) {
             throw createException(ex);       
         }
@@ -734,7 +781,7 @@ FWDT=23NOV18 1000
 
     @Override
     public void openFiscalCheckRev(String UNS, fiscalCheckRevType RevType, String RevDocNum, String RevUNS, Date RevDateTime, String RevFMNum, String RevReason, String RevInvNum, Date RevInvDate) throws FPException {
-        lastCommand = "openFiscalCheckUNS";
+        lastCommand = "openFiscalCheckRev";
         try {
             if (invoiceMode) {
                 OptionInvoiceCreditNotePrintType printType = OptionInvoiceCreditNotePrintType.Step_by_step_printing;
@@ -979,7 +1026,7 @@ FWDT=23NOV18 1000
             lastErrorMsg = ex.getMessage();
             throw createException();       
         }
-        
+        lastCurrentCheckInfo = res;
         return res;
     }
 
@@ -1034,7 +1081,27 @@ FWDT=23NOV18 1000
             qr = fp.ReadLastReceiptQRcodeData();
             res = new FiscalCheckQRCodeInfo(qr);
         } catch (Exception ex) {
-            logger.severe(ex.getMessage());
+            // Alternate method to get QRCode
+            if (!isOldDevice)
+                logger.severe(ex.getMessage());
+            logger.warning("Using alternate method to build QRCode.");
+            // Alternate method to create QRCode
+            CheckInfo ci = lastCurrentCheckInfo;
+            if (ci == null) {
+                try {
+                    ci = getCurrentCheckInfo();
+                } catch (FPException exx) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }    
+            if (ci != null) {
+                Date lastDocDate = null;
+//                try {
+//                    lastDocDate = FP.cmdLastFiscalCheckDate();
+//                } catch (IOException exx) {
+//                }
+                res = new FiscalCheckQRCodeInfo(devInfo.FMNum, ci.DocNum, (lastDocDate != null)?lastDocDate:dtAfterOpenFiscalCheck, ci.SellAmount);
+            }    
         }
         if (res == null)
             res = new FiscalCheckQRCodeInfo();
@@ -1071,7 +1138,21 @@ FWDT=23NOV18 1000
         lastCommand = "reportDaily";
         
         try {
-            fp.PrintDailyReport((reportType == dailyReportType.Z)?OptionZeroing.Zeroing:OptionZeroing.Without_zeroing);
+            switch(reportType) {
+                case ZD : 
+                    fp.PrintDepartmentReport(OptionZeroing.Zeroing); 
+                    break;
+                case X : 
+                    fp.PrintDailyReport(OptionZeroing.Without_zeroing); 
+                    break;
+                case XD : 
+                    fp.PrintDepartmentReport(OptionZeroing.Without_zeroing); 
+                    break;
+                case Z : 
+                default :
+                    fp.PrintDailyReport(OptionZeroing.Zeroing); 
+                    break;
+            }
         } catch (Exception ex) {
             throw createException(ex);
         }
@@ -1176,24 +1257,37 @@ FWDT=23NOV18 1000
             if (abs(ioSum) >= 0.01)
                 fp.ReceivedOnAccount_PaidOut(getParamDouble("OperatorCode"), getParam("OperatorPass"), ioSum, OptionPrintAvailability.Yes, "");
             Locale.setDefault(Locale.ROOT);
-            DailyAvailableAmountsRes da = fp.ReadDailyAvailableAmounts();
-            // number of payment for cache
-            int pn = paymenTypeToPaymentNum(paymentTypes.CASH);
             Double CashSum = 0d;
-            switch (pn) {
-                case 0 : CashSum = da.AmountPayment0; break;
-                case 1 : CashSum = da.AmountPayment1; break;
-                case 2 : CashSum = da.AmountPayment2; break;
-                case 3 : CashSum = da.AmountPayment3; break;
-                case 4 : CashSum = da.AmountPayment4; break;
-                case 5 : CashSum = da.AmountPayment5; break;
-                case 6 : CashSum = da.AmountPayment6; break;
-                case 7 : CashSum = da.AmountPayment7; break;
-                case 8 : CashSum = da.AmountPayment8; break;
-                case 9 : CashSum = da.AmountPayment9; break;
-                case 10 : CashSum = da.AmountPayment10; break;
-                case 11 : CashSum = da.AmountPayment11; break;
-            }
+            if (isOldDevice) {
+                DailyAvailableAmounts_OldRes da = fp.ReadDailyAvailableAmounts_Old();
+                // number of payment for cache
+                int pn = paymenTypeToPaymentNum(paymentTypes.CASH);
+                switch (pn) {
+                    case 0 : CashSum = da.AmountPayment0; break;
+                    case 1 : CashSum = da.AmountPayment1; break;
+                    case 2 : CashSum = da.AmountPayment2; break;
+                    case 3 : CashSum = da.AmountPayment3; break;
+                    case 4 : CashSum = da.AmountPayment4; break;
+                }
+            } else {
+                DailyAvailableAmountsRes da = fp.ReadDailyAvailableAmounts();
+                // number of payment for cache
+                int pn = paymenTypeToPaymentNum(paymentTypes.CASH);
+                switch (pn) {
+                    case 0 : CashSum = da.AmountPayment0; break;
+                    case 1 : CashSum = da.AmountPayment1; break;
+                    case 2 : CashSum = da.AmountPayment2; break;
+                    case 3 : CashSum = da.AmountPayment3; break;
+                    case 4 : CashSum = da.AmountPayment4; break;
+                    case 5 : CashSum = da.AmountPayment5; break;
+                    case 6 : CashSum = da.AmountPayment6; break;
+                    case 7 : CashSum = da.AmountPayment7; break;
+                    case 8 : CashSum = da.AmountPayment8; break;
+                    case 9 : CashSum = da.AmountPayment9; break;
+                    case 10 : CashSum = da.AmountPayment10; break;
+                    case 11 : CashSum = da.AmountPayment11; break;
+                }
+            }    
             res.put("CashSum", formatCurrency(CashSum));
             res.put("CashIn", "0");
             res.put("CashOut", "0");

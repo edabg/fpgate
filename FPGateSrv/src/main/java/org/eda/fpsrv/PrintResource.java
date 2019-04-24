@@ -374,6 +374,10 @@ public class PrintResource extends ServerResource {
                cmdList.add(cmdParams);
         }
 
+        if (!setOperatorCode.isEmpty()) {
+            FP.setParam("OperatorCode", setOperatorCode);
+            FP.setParam("OperatorPass", setOperatorPass);
+        }    
         if (setOperatorName.length() > 0) {
             execLog.msg("setOperator("+setOperatorCode+",*,"+setOperatorName+")");
             try {
