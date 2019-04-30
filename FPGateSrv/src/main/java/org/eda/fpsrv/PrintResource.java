@@ -448,8 +448,8 @@ public class PrintResource extends ServerResource {
                                 cmd[1]
                                 , FP.taxAbbrToGroup(cmd[2])
                                 , Double.parseDouble(cmd[3])
-                                , Double.parseDouble(cmd[4])
                                 , Double.parseDouble(cmd[5])
+                                , Double.parseDouble(cmd[4])
                             );
                         } else if (cmd.length == 5) {
                             // sell w/o Quantity
@@ -464,9 +464,19 @@ public class PrintResource extends ServerResource {
                         break;
                     case "SDP" : // STG\tText(48)\DeptCode([...])\tPrice\tPercent[\tQty] - Register Sell by department
                         if (cmd.length >=5)
-                           FP.sellDept(cmd[1], cmd[2], Double.parseDouble(cmd[3]), Double.parseDouble(cmd[4]), Double.parseDouble(cmd[5]));
+                           FP.sellDept(
+                                cmd[1]
+                                , cmd[2]
+                                , Double.parseDouble(cmd[3])
+                                , Double.parseDouble(cmd[5])
+                                , Double.parseDouble(cmd[4])
+                           );
                         else
-                           FP.sellDept(cmd[1], cmd[2], Double.parseDouble(cmd[3]));
+                           FP.sellDept(
+                                cmd[1]
+                                , cmd[2]
+                                , Double.parseDouble(cmd[3])
+                           );
                         break;
                     case "STL" : // STL[\tToPrint[\tToDisplay[\tPerc]]] - Subtotal
                         FP.subTotal(
