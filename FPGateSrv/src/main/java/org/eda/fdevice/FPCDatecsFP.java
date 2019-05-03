@@ -119,7 +119,9 @@ public class FPCDatecsFP extends FPCGeneralV10{
     public static FPParams getDefinedParams() throws Exception {
         FPParams params = FPCGeneralV10.getDefinedParams();
         params.getProperties().get("PMCash").setDefaultValue("P");
+        params.getProperties().get("PMCash").setValue("P");
         params.getProperties().get("PMCard").setDefaultValue("D");
+        params.getProperties().get("PMCard").setValue("D");
         params.getProperties().get("LWIDTH").setValue(46);
         params.getProperties().get("LWIDTHN").setValue(46);
         return params;
