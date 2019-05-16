@@ -329,23 +329,41 @@ public class PrintResource extends ServerResource {
                 } else if (cmdParams[0].equals("REV")) { // Is Reverse/Strono receipt
                     isRevision = true; 
                 } else if (cmdParams[0].equals("RTA")) { // Reverse/Storno type abbr
-                    RevType = FPCBase.fiscalCheckRevTypeAbbrToType(cmdParams[1]); 
+                    if (cmdParams.length > 1)
+                        RevType = FPCBase.fiscalCheckRevTypeAbbrToType(cmdParams[1]); 
+                    else
+                        throw new FPException("Не е посочен тип на сторно операцията!");
                 } else if (cmdParams[0].equals("RDN")) { // Reverse/Storno Doc Num
-                    RevDocNum = cmdParams[1]; 
+                    if (cmdParams.length > 1)
+                        RevDocNum = cmdParams[1]; 
+                    else
+                        throw new FPException("Не е посочен номер на документа за сторниране!");
                 } else if (cmdParams[0].equals("RUS")) { // Reverse/Storno UNS
-                    RevUNS = cmdParams[1]; 
+                    if (cmdParams.length > 1)
+                        RevUNS = cmdParams[1]; 
+                    else
+                        throw new FPException("Не е посочен УНП на документа за сторниране!");
                 } else if (cmdParams[0].equals("RDT")) { // Reverse/Storno date/time
-                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-                    RevDateTime = format.parse(cmdParams[1]);
+                    if (cmdParams.length > 1) {
+                        DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+                        RevDateTime = format.parse(cmdParams[1]);
+                    } else    
+                        throw new FPException("Не е посочена дата/час на документа за сторниране!");
                 } else if (cmdParams[0].equals("RFM")) { // Reverse/Storno Fiscal Memory Num
-                    RevFMNum = cmdParams[1];
+                    if (cmdParams.length > 1)
+                        RevFMNum = cmdParams[1];
+                    else
+                        throw new FPException("Не е посочен номер на фискалната памет на документа за сторниране!");
                 } else if (cmdParams[0].equals("RRR")) { // Reverse/Storno Reson text
                     RevReason = cmdParams[1];
                 } else if (cmdParams[0].equals("RIN")) { // Reverse/Storno Invoice num
                     RevInvoiceNum = cmdParams[1];
                 } else if (cmdParams[0].equals("RID")) { // Reverse/Storno Invoice date/time
-                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-                    RevInvoiceDate = format.parse(cmdParams[1]);
+                    if (cmdParams.length > 1) {
+                        DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+                        RevInvoiceDate = format.parse(cmdParams[1]);
+                    } else     
+                        throw new FPException("Не е посочен номер на фактура за сторниране!");
                 } else if (cmdParams[0].equals("INV")) {
                     isInvoice = true; 
                 } else if (cmdParams[0].equals("CRCP")) { // Customer Recipient
@@ -598,6 +616,16 @@ public class PrintResource extends ServerResource {
         } else {
             execLog.msg("getPrinterStatus report returns result!");
             response.getResultTable().putAll(res);
+            // Add information for current date/time
+            try {
+                Date dtFP = FP.getDateTime();
+                response.getResultTable().put("DateTime", new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dtFP));
+                Date dtNow = new Date();
+                long diffInSecs = (dtNow.getTime()-dtFP.getTime())/1000;
+                response.getResultTable().put("DateTimeDiffSecs", Long.toString(diffInSecs));
+            } catch (Exception ex) {
+                execLog.error(ex.getMessage());
+            }    
         }    
     }
 
@@ -910,8 +938,11 @@ public class PrintResource extends ServerResource {
             } catch (FPException e) {
                 response.setErrorCode(e.getErrorCode());
                 execLog.error("FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
+                e.printStackTrace();
             } catch (Exception e) {
                 execLog.error("Error:"+e.getMessage());
+                execLog.error("Error:"+Arrays.toString(e.getStackTrace()));
+                e.printStackTrace();
             } finally {
                 donePrinter();
             }    
