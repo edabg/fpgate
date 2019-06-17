@@ -56,7 +56,7 @@ public class Payments_OldRes {
     }
 
    /**
-    *10 symbols for exchange rate of payment type 4 in format: ####.#####
+    *Up to10 symbols for exchange rate of payment type 4 in format: ####.#####
     */
     public Double ExRate;
     public Double getExRate() {

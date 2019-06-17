@@ -1,7 +1,7 @@
 package TremolZFP;
 public class DailyPObyOperatorRes {
    /**
-    *Symbols from 1 to 20corresponding to operator's number
+    *Symbols from 1 to 20 corresponding to operator's number
     */
     public Double OperNum;
     public Double getOperNum() {

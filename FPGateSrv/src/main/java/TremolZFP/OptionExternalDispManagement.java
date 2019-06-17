@@ -1,7 +1,7 @@
 package TremolZFP;
     public enum OptionExternalDispManagement {
         Auto("0"),
-        Manuel("1");
+        Manual("1");
 
         private final String value;
         private OptionExternalDispManagement(String value) {

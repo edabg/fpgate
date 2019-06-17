@@ -50,9 +50,11 @@ import static java.lang.Math.abs;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,6 +79,14 @@ public class FPCTremol extends FPCBase {
     
     protected int CONST_TEXTLENGTH=32;
     protected boolean isOldDevice = false;
+
+    HashMap<String, String> statusDefs = new HashMap<>();
+    List<String> statusDefsError = new ArrayList<>();
+    List<String> statusDefsWarning = new ArrayList<>();
+    
+    // Errors and warnings collector
+    protected List<String> mErrors = new ArrayList<>();
+    protected List<String> mWarnings = new ArrayList<>();
     
     protected TremolZFP.FP fp = null;
 
@@ -175,7 +185,7 @@ public class FPCTremol extends FPCBase {
     @Override
     public void init() throws Exception, FPException {
         fp = new TremolZFP.FP();
-        logger.log(Level.INFO, "ZFPLabServer version defs:{0}", fp.getVersionDef());
+        logger.log(Level.INFO, "ZFPLabServer version defs:"+Integer.toString(fp.getVersionDef()));
         fp.setServerAddress(getParam("ServerURL"));
         if (getParam("LinkType").equals("TCP")) {
             fp.ServerSetDeviceTcpSettings(getParam("IPAddr"), getParamInt("IPPort"), getParam("IPPassword"));
@@ -190,6 +200,25 @@ public class FPCTremol extends FPCBase {
     @Override
     public void destroy() {
         fp = null;
+    }
+
+    protected void clearErrors() {
+        mErrors.clear();
+        mWarnings.clear();
+    }
+    
+    protected void err(String msg) {
+        mErrors.add(msg);
+        logger.severe("Error (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
+    }
+
+    protected void warn(String msg) {
+        mWarnings.add(msg);
+        logger.warning("Warning (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
+    }
+    
+    protected void debug(String msg) {
+        logger.fine("Debug (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
     }
     
     protected void readParameters() {
@@ -241,9 +270,17 @@ public class FPCTremol extends FPCBase {
             StatusRes status = fp.ReadStatus();
             di.IsFiscalized = status.FM_fiscalized;
             // TODO: Check for errors
+            checkStatus(status);
+//            err("Тестова грешка 1");
+//            err("Тестова грешка 2");
+//            warn("Тестовo предупреждение 1");
+//            warn("Тестовo предупреждение 2");
+            di.Errors = String.join("\t", mErrors);
+            di.Warnings = String.join("\t", mWarnings);
             di.IsReady = 
                 !status.Opened_Fiscal_Receipt
-                &&  !status.Opened_Non_fiscal_Receipt
+                && !status.Opened_Non_fiscal_Receipt
+                && (mErrors.size() == 0)
             ;
         } catch (Exception ex) {
             throw createException(ex);
@@ -448,12 +485,7 @@ public class FPCTremol extends FPCBase {
         return this.lastErrorMsg;
     }
     
-    
-    @Override
-    public StrTable getPrinterStatus() throws FPException {
-        LinkedHashMap<String, String> response = new LinkedHashMap();
-        StrTable res = new StrTable();
-        lastCommand = "getPrinterStatus";
+    protected void initStatusMap() {
 /*
 S0=10001000
 S1=10000000
@@ -525,7 +557,7 @@ FWDT=23NOV18 1000
 
         
         */   
-        HashMap<String, String> statusDefs = new HashMap<>();
+        statusDefs.clear();
         statusDefs.put("FM_Read_only","FM Read only");
         statusDefs.put("Power_down_in_opened_fiscal_receipt","Power down in opened fiscal receipt");
         statusDefs.put("Printer_not_ready_overheat","Printer not ready - overheat");
@@ -570,6 +602,60 @@ FWDT=23NOV18 1000
         statusDefs.put("No_GPRS_service","No GPRS service");
         statusDefs.put("Near_end_of_paper","Near end of paper");
         statusDefs.put("Unsent_data_for_24_hours","Unsent data for 24 hours");
+        
+        statusDefsError.clear();
+        statusDefsError.add("FM_Read_only");
+        statusDefsError.add("Printer_not_ready_overheat");
+        statusDefsError.add("DateTime_not_set");
+        statusDefsError.add("DateTime_wrong");
+        statusDefsError.add("Hardware_clock_error");
+        statusDefsError.add("Printer_not_ready_no_paper");
+        statusDefsError.add("Reports_registers_Overflow");
+        statusDefsError.add("No_FM_module");
+        statusDefsError.add("FM_error");
+        statusDefsError.add("FM_full");
+        statusDefsError.add("Wrong_SIM_card");
+        statusDefsError.add("Deregistered");
+        statusDefsError.add("No_SIM_card");
+        statusDefsError.add("No_GPRS_Modem");
+        
+        statusDefsWarning.clear();
+        statusDefsWarning.add("SD_card_near_full");
+        statusDefsWarning.add("FM_near_full");
+        statusDefsWarning.add("Blocking_3_days_without_mobile_operator");
+        statusDefsWarning.add("No_task_from_NRA");
+        statusDefsWarning.add("Near_end_of_paper");
+        statusDefsWarning.add("Unsent_data_for_24_hours");
+    }
+
+    protected StrTable checkStatus(StatusRes status) throws FPException {
+        StrTable res = new StrTable();
+        try {
+            clearErrors();
+            int i = 0;
+            for (String key : statusDefs.keySet()) {
+                Field fld = status.getClass().getField(key);
+                if ((fld != null) && fld.getType().getName().equals("boolean")) {
+                    if (fld.getBoolean(status)) {
+                        res.put("MSG_"+Integer.toString(++i), statusDefs.get(key));
+                        if (statusDefsError.contains(key))
+                            err(statusDefs.get(key));
+                        if (statusDefsWarning.contains(key))
+                            warn(statusDefs.get(key));
+                    }
+                }    
+            }    
+        } catch (Exception ex) {
+            throw createException(ex);
+        }
+        return res;
+    } 
+    
+    @Override
+    public StrTable getPrinterStatus() throws FPException {
+        LinkedHashMap<String, String> response = new LinkedHashMap();
+        StrTable res = new StrTable();
+        lastCommand = "getPrinterStatus";
 
         try {
             VersionRes ver = fp.ReadVersion();
@@ -593,16 +679,7 @@ FWDT=23NOV18 1000
             res.put("IsOpenFiscalCheck", status.Opened_Fiscal_Receipt?"1":"0");
             res.put("IsOpenFiscalCheckRev", "");
             res.put("IsOpenNonFiscalCheck", status.Opened_Non_fiscal_Receipt?"1":"0");
-            int i = 0;
-            for (String key : statusDefs.keySet()) {
-                
-                Field fld = status.getClass().getField(key);
-                if ((fld != null) && fld.getType().getName().equals("boolean")) {
-                    if (fld.getBoolean(status)) {
-                        res.put("MSG_"+Integer.toString(++i), statusDefs.get(key));
-                    }
-                }    
-            }    
+            res.putAll(checkStatus(status));
         } catch (Exception ex) {
             throw createException(ex);
         }

@@ -1,7 +1,7 @@
 package TremolZFP;
 public class DailyRAbyOperator_OldRes {
    /**
-    *Symbols from 1 to 20corresponding to operator's number
+    *Symbols from 1 to 20 corresponding to operator's number
     */
     public Double OperNum;
     public Double getOperNum() {
@@ -67,13 +67,13 @@ public class DailyRAbyOperator_OldRes {
     }
 
    /**
-    *5 symbols for the total number of operations
+    *Up to 5 symbols for the total number of operations
     */
-    public String NoRA;
-    public String getNoRA() {
+    public Double NoRA;
+    public Double getNoRA() {
        return NoRA;
     }
-    protected void setNoRA(String value) {
+    protected void setNoRA(Double value) {
        NoRA = value;
     }
 }

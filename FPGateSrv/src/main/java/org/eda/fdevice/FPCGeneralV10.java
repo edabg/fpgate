@@ -186,10 +186,13 @@ public class FPCGeneralV10 extends FPCBase {
         di.SerialNum = FP.getSerialNum();
         di.FMNum = FP.getFMNum();
         di.IsFiscalized = FP.isFiscalized();
+        di.Errors = String.join("\t", FP.getErrors());
+        di.Warnings = String.join("\t", FP.getWarnings());
         di.IsReady = 
             !FP.isOpenFiscalCheck()
             && !FP.isOpenNonFiscalCheck()
-            && !FP.isOpenFiscalCheckRev();
+            && !FP.isOpenFiscalCheckRev()
+            && !FP.haveErrors();
         return di;
     }
     

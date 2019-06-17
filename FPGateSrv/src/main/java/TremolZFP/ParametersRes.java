@@ -52,7 +52,7 @@ public class ParametersRes {
 
    /**
     *(External Display Management) 1 symbol of value: 
-    * - '1' - Manuel 
+    * - '1' - Manual 
     * - '0' - Auto
     */
     public OptionExternalDispManagement OptionExternalDispManagement;

@@ -616,6 +616,10 @@ public class PrintResource extends ServerResource {
         } else {
             execLog.msg("getPrinterStatus report returns result!");
             response.getResultTable().putAll(res);
+            response.getResultTable().put("FPGate_Version", FPServer.application.getVersion());
+            response.getResultTable().put("FPGate_Build", FPServer.application.getBuildNumber());
+            // Add DeviceInfo
+            response.getResultTable().putAll(FP.getDeviceInfo().toStrTable("DI_"));
             // Add information for current date/time
             try {
                 Date dtFP = FP.getDateTime();

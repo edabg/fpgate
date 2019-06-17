@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class FP extends FPcore {
      public FP(){
-        this.setVersionDef(1903211145);
+        this.setVersionDef(1906120933);
     }
 
     /**
@@ -72,7 +72,7 @@ public class FP extends FPcore {
      *  - '0' - No
      * @param  optionExternalDispManagement
      *         1 symbol of value: 
-     *  - '1' - Manuel 
+     *  - '1' - Manual 
      *  - '0' - Auto
      * @param  optionArticleReportType
      *         1 symbol of value: 
@@ -146,6 +146,40 @@ public class FP extends FPcore {
      */
      public DepartmentRes ReadDepartment(Double depNum) throws Exception {
              return CreateRes(Do("ReadDepartment", "DepNum", depNum), DepartmentRes.class);
+     }
+
+    /**
+     *Opens an electronic fiscal invoice receipt with 1 minute timeout assigned to the specified operator number and operator password with free info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
+     * @param  operNum
+     *         Symbol from 1 to 20 corresponding to operator's number
+     * @param  operPass
+     *         6 symbols for operator's password
+     * @param  recipient
+     *         26 symbols for Invoice recipient
+     * @param  buyer
+     *         16 symbols for Invoice buyer
+     * @param  vATNumber
+     *         13 symbols for customer Fiscal number
+     * @param  uIC
+     *         13 symbols for customer Unique Identification Code
+     * @param  address
+     *         30 symbols for Address
+     * @param  optionUICType
+     *         1 symbol for type of Unique Identification Code:  
+     *  - '0' - Bulstat 
+     *  - '1' - EGN 
+     *  - '2' - Foreigner Number 
+     *  - '3' - NRA Official Number
+     * @param  uniqueReceiptNumber
+     *         Up to 24 symbols for unique receipt number. 
+     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
+     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
+     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
+     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
+     * @throws java.lang.Exception
+     */
+     public void OpenElectronicInvoiceWithFreeCustomerData(Double operNum, String operPass, String recipient, String buyer, String vATNumber, String uIC, String address, OptionUICType optionUICType, String uniqueReceiptNumber) throws Exception {
+             Do("OpenElectronicInvoiceWithFreeCustomerData", "OperNum", operNum, "OperPass", operPass, "Recipient", recipient, "Buyer", buyer, "VATNumber", vATNumber, "UIC", uIC, "Address", address, "OptionUICType", optionUICType, "UniqueReceiptNumber", uniqueReceiptNumber);
      }
 
     /**
@@ -264,10 +298,8 @@ public class FP extends FPcore {
      * @param  name
      *         10 symbols for payment type name
      * @param  rate
-     *         10 symbols for exchange rate in format: ####.#####  
-     * of the 4
-     * th
-     *  payment type, maximal value 0420.00000
+     *         Up to 10 symbols for exchange rate in format: ####.##### 
+     * of the 4th payment type, maximal value 0420.00000
      * @param  optionCodePayment
      *         1 symbol for code payment type with name: 
      *  - '1' - Check  
@@ -416,7 +448,7 @@ public class FP extends FPcore {
      *Register the sell (for correction use minus sign in the price field) of article belonging to department with specified name, price, quantity and/or discount/addition on the transaction. The VAT of article got from department to which article belongs.
      * @param  namePLU
      *         36 symbols for article's name. 34 symbols are printed on paper. 
-     * Symbo 0x7C '|' is new line separator.
+     * Symbol 0x7C '|' is new line separator.
      * @param  price
      *         Up to 10 symbols for article's price. Use minus sign '-' for correction
      * @param  quantity
@@ -596,6 +628,45 @@ public class FP extends FPcore {
      }
 
     /**
+     *Open an electronic fiscal storno receipt with 1 minute timeout assigned to the specified operator number and operator password, parameters for receipt format, print VAT, printing type and parameters for the related storno receipt.
+     * @param  operNum
+     *         Symbols from 1 to 20 corresponding to operator's 
+     * number
+     * @param  operPass
+     *         6 symbols for operator's password
+     * @param  optionReceiptFormat
+     *         1 symbol with value: 
+     *  - '1' - Detailed 
+     *  - '0' - Brief
+     * @param  optionPrintVAT
+     *         1 symbol with value:  
+     *  - '1' - Yes 
+     *  - '0' - No
+     * @param  optionStornoReason
+     *         1 symbol for reason of storno operation with value:  
+     * - '0' - Operator error  
+     * - '1' - Goods Claim or Goods return  
+     * - '2' - Tax relief
+     * @param  relatedToRcpNum
+     *         Up to 6 symbols for issued receipt number
+     * @param  relatedToRcpDateTime
+     *         17 symbols for Date and Time of the issued receipt 
+     * in format DD-MM-YY HH:MM:SS
+     * @param  fMNum
+     *         8 symbols for number of the Fiscal Memory
+     * @param  relatedToURN
+     *         Up to 24 symbols for the issed receipt unique receipt number. 
+     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
+     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
+     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
+     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
+     * @throws java.lang.Exception
+     */
+     public void OpenElectronicStornoReceipt(Double operNum, String operPass, OptionReceiptFormat optionReceiptFormat, OptionPrintVAT optionPrintVAT, OptionStornoReason optionStornoReason, Double relatedToRcpNum, Date relatedToRcpDateTime, String fMNum, String relatedToURN) throws Exception {
+             Do("OpenElectronicStornoReceipt", "OperNum", operNum, "OperPass", operPass, "OptionReceiptFormat", optionReceiptFormat, "OptionPrintVAT", optionPrintVAT, "OptionStornoReason", optionStornoReason, "RelatedToRcpNum", relatedToRcpNum, "RelatedToRcpDateTime", relatedToRcpDateTime, "FMNum", fMNum, "RelatedToURN", relatedToURN);
+     }
+
+    /**
      *Executes the direct command .
      * @param  input
      *         Raw request to FP
@@ -738,7 +809,7 @@ public class FP extends FPcore {
      *Register the sell (for correction use minus sign in the price field) of article with specified name, price, quantity, VAT class and/or discount/addition on the transaction.
      * @param  namePLU
      *         36 symbols for article's name. 34 symbols are printed on paper. 
-     * Symbo 0x7C '|' is new line separator.
+     * Symbol 0x7C '|' is new line separator.
      * @param  optionVATClass
      *         1 character for VAT class: 
      *  - 'А' - VAT Class 0 
@@ -872,7 +943,7 @@ public class FP extends FPcore {
      *Register the sell (for correction use minus sign in the price field) of article with specified name, price, fractional quantity, VAT class and/or discount/addition on the transaction.
      * @param  namePLU
      *         36 symbols for article's name. 34 symbols are printed on paper. 
-     * Symbo 0x7C '|' is new line separator.
+     * Symbol 0x7C '|' is new line separator.
      * @param  optionVATClass
      *         1 character for VAT class: 
      *  - 'А' - VAT Class 0 
@@ -912,6 +983,32 @@ public class FP extends FPcore {
      }
 
     /**
+     *Opens an postponed electronic fiscal receipt with 1 minute timeout assigned to the specified operator number and operator password, parameters for receipt format, print VAT, printing type and unique receipt number.
+     * @param  operNum
+     *         Symbols from 1 to 20 corresponding to operator's number
+     * @param  operPass
+     *         6 symbols for operator's password
+     * @param  optionReceiptFormat
+     *         1 symbol with value: 
+     *  - '1' - Detailed 
+     *  - '0' - Brief
+     * @param  optionPrintVAT
+     *         1 symbol with value:  
+     *  - '1' - Yes 
+     *  - '0' - No
+     * @param  uniqueReceiptNumber
+     *         Up to 24 symbols for unique receipt number. 
+     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
+     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
+     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
+     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
+     * @throws java.lang.Exception
+     */
+     public void OpenElectronicReceipt(Double operNum, String operPass, OptionReceiptFormat optionReceiptFormat, OptionPrintVAT optionPrintVAT, String uniqueReceiptNumber) throws Exception {
+             Do("OpenElectronicReceipt", "OperNum", operNum, "OperPass", operPass, "OptionReceiptFormat", optionReceiptFormat, "OptionPrintVAT", optionPrintVAT, "UniqueReceiptNumber", uniqueReceiptNumber);
+     }
+
+    /**
      *Program the content of the header UIC prefix.
      * @param  headerUICprefix
      *         12 symbols for header UIC prefix
@@ -936,6 +1033,17 @@ public class FP extends FPcore {
      */
      public void ProgPLUprice(Double pLUNum, Double price, OptionPrice optionPrice) throws Exception {
              Do("ProgPLUprice", "PLUNum", pLUNum, "Price", price, "OptionPrice", optionPrice);
+     }
+
+    /**
+     *Provides information about the QR code data in specified number issued receipt.
+     * @param  rcpNum
+     *         6 symbols with format ######
+     * @return String
+     * @throws java.lang.Exception
+     */
+     public String ReadReceiptNumQRcodeData(Double rcpNum) throws Exception {
+             return CreateRes(Do("ReadReceiptNumQRcodeData", "RcpNum", rcpNum), String.class);
      }
 
     /**
@@ -1103,7 +1211,7 @@ public class FP extends FPcore {
      *Registers the sell (for correction use minus sign in the price field)  of article with specified department, name, price, quantity and/or discount/addition on  the transaction.
      * @param  namePLU
      *         36 symbols for name of sale. 34 symbols are printed on 
-     * paper. Symbo 0x7C '|' is new line separator.
+     * paper. Symbol 0x7C '|' is new line separator.
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner: DepNum[HEX] + 80h 
@@ -1329,7 +1437,7 @@ public class FP extends FPcore {
     /**
      *Read the RA by type of payment and the total number of operations by specified operator.
      * @param  operNum
-     *         Symbols from 1 to 20corresponding to operator's number
+     *         Symbols from 1 to 20 corresponding to operator's number
      * @return DailyRAbyOperatorRes
      * @throws java.lang.Exception
      */
@@ -1428,7 +1536,7 @@ public class FP extends FPcore {
      *Register the sell (for correction use minus sign in the price field) of article with specified VAT. If department is present the relevant accumulations are perfomed in its registers.
      * @param  namePLU
      *         36 symbols for article's name. 34 symbols are printed on paper. 
-     * Symbo 0x7C '|' is new line separator.
+     * Symbol 0x7C '|' is new line separator.
      * @param  optionVATClass
      *         1 character for VAT class: 
      *  - 'А' - VAT Class 0 
@@ -1660,7 +1768,7 @@ public class FP extends FPcore {
      *  - 'Z' - Zeroing 
      *  - 'X' - Without zeroing
      * @param  number
-     *         Symbols from 0 to 20corresponding to operator's number 
+     *         Symbols from 0 to 20 corresponding to operator's number 
      * ,0 for all operators
      * @throws java.lang.Exception
      */
@@ -1712,14 +1820,14 @@ public class FP extends FPcore {
      *Read or Store Electronic Journal Report by number of Z report blocks, CSV format option and document content. If CSV format is set the content can includes only fiscal receipts. FlagsReceipts is a char with bits representing the receipt types. FlagsReports is a char with bits representing the report type.
      * @param  optionStorageReport
      *         1 character with value 
-     *  - 'j0' - To PC 
+     *  - 'j0' - To PC  
+     * 
+     * 
      *  - 'j2' - To USB Flash Drive 
      *  - 'j4' - To SD card
      * @param  optionCSVformat
      *         1 symbol with value: 
-     *  - 'C' - Yes  
-     * 
-     * 
+     *  - 'C' - Yes 
      *  - 'X' - No
      * @param  flagsReceipts
      *         1 symbol for Receipts included in EJ: 
@@ -1773,6 +1881,55 @@ public class FP extends FPcore {
      */
      public void ProgDecimalPointPosition(String password, OptionDecimalPointPosition optionDecimalPointPosition) throws Exception {
              Do("ProgDecimalPointPosition", "Password", password, "OptionDecimalPointPosition", optionDecimalPointPosition);
+     }
+
+    /**
+     *Opens an electronic fiscal invoice credit note receipt with 1 minute timeout assigned to the specified operator number and operator password with free info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
+     * @param  operNum
+     *         Symbol from 1 to 20 corresponding to operator's 
+     * number
+     * @param  operPass
+     *         6 symbols for operator's password
+     * @param  recipient
+     *         26 symbols for Invoice recipient
+     * @param  buyer
+     *         16 symbols for Invoice buyer
+     * @param  vATNumber
+     *         13 symbols for customer Fiscal number
+     * @param  uIC
+     *         13 symbols for customer Unique Identification Code
+     * @param  address
+     *         30 symbols for Address
+     * @param  optionUICType
+     *         1 symbol for type of Unique Identification Code:  
+     *  - '0' - Bulstat 
+     *  - '1' - EGN 
+     *  - '2' - Foreigner Number 
+     *  - '3' - NRA Official Number
+     * @param  optionStornoReason
+     *         1 symbol for reason of storno operation with value:  
+     * - '0' - Operator error  
+     * - '1' - Goods Claim or Goods return  
+     * - '2' - Tax relief
+     * @param  relatedToInvoiceNum
+     *         10 symbols for issued invoice number
+     * @param  relatedToInvoiceDateTime
+     *         17 symbols for issued invoice date and time in format
+     * @param  relatedToRcpNum
+     *         Up to 6 symbols for issued receipt number
+     * @param  fMNum
+     *         8 symbols for number of the Fiscal Memory
+     * @param  relatedToURN
+     *         Up to 24 symbols for the issed invoice receipt unique receipt number. 
+     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
+     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device 
+     * number, 
+     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
+     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
+     * @throws java.lang.Exception
+     */
+     public void OpenElectronicCreditNoteWithFreeCustomerData(Double operNum, String operPass, String recipient, String buyer, String vATNumber, String uIC, String address, OptionUICType optionUICType, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
+             Do("OpenElectronicCreditNoteWithFreeCustomerData", "OperNum", operNum, "OperPass", operPass, "Recipient", recipient, "Buyer", buyer, "VATNumber", vATNumber, "UIC", uIC, "Address", address, "OptionUICType", optionUICType, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
      }
 
     /**
@@ -1850,7 +2007,7 @@ public class FP extends FPcore {
      *Register the sell (for correction use minus sign in the price field) of article with specified VAT. If department is present the relevant accumulations are perfomed in its registers.
      * @param  namePLU
      *         36 symbols for article's name. 34 symbols are printed on paper. 
-     * Symbo 0x7C '|' is new line separator.
+     * Symbol 0x7C '|' is new line separator.
      * @param  optionVATClass
      *         1 character for VAT class: 
      *  - 'А' - VAT Class 0 
@@ -1892,7 +2049,7 @@ public class FP extends FPcore {
      * @param  name
      *         10 symbols for payment type name
      * @param  rate
-     *         10 symbols for exchange rate in format: ####.#####  
+     *         Up to 10 symbols for exchange rate in format: ####.#####  
      * of the 11th payment type, maximal value 0420.00000
      * @throws java.lang.Exception
      */
@@ -2014,7 +2171,7 @@ public class FP extends FPcore {
      * @param  flagsReceipts
      *         1 symbol for Receipts included in EJ: 
      * Flags.7=0 
-     * Flags.6=1 
+     * Flags.6=1, 0=w 
      * Flags.5=1 Yes, Flags.5=0 No (Include PO) 
      * Flags.4=1 Yes, Flags.4=0 No (Include RA) 
      * Flags.3=1 Yes, Flags.3=0 No (Include Credit Note) 
@@ -2024,8 +2181,8 @@ public class FP extends FPcore {
      * @param  flagsReports
      *         1 symbol for Reports included in EJ: 
      * Flags.7=0 
-     * Flags.6=1 
-     * Flags.5=0 
+     * Flags.6=1, 0=w 
+     * Flags.5=1, 0=w 
      * Flags.4=1 Yes, Flags.4=0 No (Include FM reports) 
      * Flags.3=1 Yes, Flags.3=0 No (Include Other reports) 
      * Flags.2=1 Yes, Flags.2=0 No (Include Daily X) 
@@ -2167,7 +2324,7 @@ public class FP extends FPcore {
     /**
      *Read the RA by type of payment and the total number of operations by specified operator. Command works for KL version 2 devices.
      * @param  operNum
-     *         Symbols from 1 to 20corresponding to operator's number
+     *         Symbols from 1 to 20 corresponding to operator's number
      * @return DailyRAbyOperator_OldRes
      * @throws java.lang.Exception
      */
@@ -2273,6 +2430,16 @@ public class FP extends FPcore {
      }
 
     /**
+     *Starts session for read specified number electronic receipt data from EJ with its QR data.
+     * @param  rcpNum
+     *         6 symbols with format ######
+     * @throws java.lang.Exception
+     */
+     public void ReadElectronicReceiptDataFromEJ(Double rcpNum) throws Exception {
+             Do("ReadElectronicReceiptDataFromEJ", "RcpNum", rcpNum);
+     }
+
+    /**
      *Provides information about the RA amounts by type of payment and the total number of operations.
      * @return DailyRARes
      * @throws java.lang.Exception
@@ -2326,10 +2493,32 @@ public class FP extends FPcore {
      }
 
     /**
+     *Opens an electronic fiscal invoice receipt with 1 minute timeout assigned to the specified operator number and operator password with internal DB info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
+     * @param  operNum
+     *         Symbol from 1 to 20 corresponding to operator's 
+     * number
+     * @param  operPass
+     *         6 symbols for operator's password
+     * @param  customerNum
+     *         Symbol '#' and following up to 4 symbols for related customer ID number 
+     * corresponding to the FD database
+     * @param  uniqueReceiptNumber
+     *         Up to 24 symbols for unique receipt number. 
+     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
+     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
+     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
+     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
+     * @throws java.lang.Exception
+     */
+     public void OpenElectronicInvoiceWithFDCustomerDB(Double operNum, String operPass, String customerNum, String uniqueReceiptNumber) throws Exception {
+             Do("OpenElectronicInvoiceWithFDCustomerDB", "OperNum", operNum, "OperPass", operPass, "CustomerNum", customerNum, "UniqueReceiptNumber", uniqueReceiptNumber);
+     }
+
+    /**
      *Register the sell (for correction use minus sign in the price field) of article belonging to department with specified name, price, fractional quantity and/or discount/addition on the transaction. The VAT of article got from department to which article belongs.
      * @param  namePLU
      *         36 symbols for article's name. 34 symbols are printed on paper. 
-     * Symbo 0x7C '|' is new line separator.
+     * Symbol 0x7C '|' is new line separator.
      * @param  price
      *         Up to 10 symbols for article's price. Use minus sign '-' for correction
      * @param  quantity
@@ -2382,7 +2571,7 @@ public class FP extends FPcore {
      *Register the sell (for correction use minus sign in the price field) of article  with specified department. If VAT is present the relevant accumulations are perfomed in its  registers.
      * @param  namePLU
      *         36 symbols for name of sale. 34 symbols are printed on 
-     * paper. Symbo 0x7C '|' is new line separator.
+     * paper. Symbol 0x7C '|' is new line separator.
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner: DepNum[HEX] + 80h 
@@ -2443,6 +2632,41 @@ public class FP extends FPcore {
      }
 
     /**
+     *Opens an electronic fiscal invoice credit note receipt with 1 minute timeout assigned to the specified operator number and operator password with internal DB info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
+     * @param  operNum
+     *         Symbol from 1 to 20 corresponding to operator's 
+     * number
+     * @param  operPass
+     *         6 symbols for operator's password
+     * @param  customerNum
+     *         Symbol '#' and following up to 4 symbols for related customer ID 
+     * number corresponding to the FD database
+     * @param  optionStornoReason
+     *         1 symbol for reason of storno operation with value:  
+     * - '0' - Operator error  
+     * - '1' - Goods Claim or Goods return  
+     * - '2' - Tax relief
+     * @param  relatedToInvoiceNum
+     *         10 symbols for issued invoice number
+     * @param  relatedToInvoiceDateTime
+     *         17 symbols for issued invoice date and time in format
+     * @param  relatedToRcpNum
+     *         Up to 6 symbols for issued receipt number
+     * @param  fMNum
+     *         8 symbols for number of the Fiscal Memory
+     * @param  relatedToURN
+     *         Up to 24 symbols for the issed invoice receipt unique receipt number. 
+     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
+     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
+     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
+     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
+     * @throws java.lang.Exception
+     */
+     public void OpenElectronicCreditNoteWithFDCustomerDB(Double operNum, String operPass, String customerNum, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
+             Do("OpenElectronicCreditNoteWithFDCustomerDB", "OperNum", operNum, "OperPass", operPass, "CustomerNum", customerNum, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
+     }
+
+    /**
      *Read or Store Electronic Journal Report from receipt number to receipt number, CSV format option and document content. If CSV format is set the content can includes only fiscal receipts. FlagsReceipts is a char with bits representing the receipt types. FlagsReports is a char with bits representing the report type.
      * @param  optionStorageReport
      *         1 character with value 
@@ -2451,12 +2675,12 @@ public class FP extends FPcore {
      *  - 'j4' - To SD card
      * @param  optionCSVformat
      *         1 symbol with value: 
-     *  - 'C' - Yes 
+     *  - 'C' - Yes  
+     * 
+     * 
      *  - 'X' - No
      * @param  flagsReceipts
-     *         1 symbol for Receipts included in EJ:  
-     * 
-     * 
+     *         1 symbol for Receipts included in EJ: 
      * Flags.7=0 
      * Flags.6=1 
      * Flags.5=1 Yes, Flags.5=0 No (Include PO) 
