@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractProtocol {
 
-    protected static final Logger logger = Logger.getLogger(AbstractProtocol.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(AbstractProtocol.class.getName());
     
     protected EncodingType mEncoding; 
     protected final FiscalSocket mSocket;
@@ -72,6 +72,11 @@ public abstract class AbstractProtocol {
         this(socket, EncodingType.CP_1251);
     }
 
+    public static Logger getLogger() {
+        return LOGGER;
+    }
+    
+    
     public static void toAnsi(String str, byte[] data, int offset, EncodingType encoding) {
         if (str != null) {
             for (int s = 0; s < str.length(); s++) {

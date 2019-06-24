@@ -16,7 +16,6 @@
  */
 package org.eda.protocol;
 
-import com.fazecast.jSerialComm.SerialPort;
 import java.io.IOException;
 import static java.lang.Integer.min;
 import java.util.ArrayList;
@@ -25,9 +24,9 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.eda.fdevice.FPCBase;
 
 /**
  * Abstract Fiscal Device
@@ -35,7 +34,7 @@ import org.eda.fdevice.FPCBase;
  */
 public abstract class AbstractFiscalDevice {
 
-    protected static final Logger logger = Logger.getLogger(AbstractFiscalDevice.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(AbstractFiscalDevice.class.getName());
 
     protected AbstractProtocol protocol;
     
@@ -67,8 +66,41 @@ public abstract class AbstractFiscalDevice {
     protected LinkedHashMap<String, byte[]> errorStatusBits;
 
     // Errors and warnings collector
-    protected List<String> mErrors = new ArrayList<>();;
-    protected List<String> mWarnings = new ArrayList<>();;
+    protected List<String> mErrors = new ArrayList<>();
+    protected List<String> mWarnings = new ArrayList<>();
+
+    protected static final Handler ProtocolLogHandler;
+
+    static {
+        ProtocolLogHandler = new LogHandlerAbstractProtocol();
+        AbstractProtocol.getLogger().addHandler(ProtocolLogHandler);
+    }
+    
+    // Catch logs from AbstractProtocol
+    private static class LogHandlerAbstractProtocol extends Handler {
+//        private ControlPanel panel;
+
+        public LogHandlerAbstractProtocol() {}
+
+//        public LogHandler(ControlPanel panel) {
+//            this.panel = panel;
+//        }
+
+        @Override
+        public void publish(LogRecord lr) {
+            LOGGER.log(lr);
+        }
+
+        @Override
+        public void flush() {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public void close() throws SecurityException {
+//            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
 
     /**
      * Create device to user externally created protocol
@@ -85,7 +117,7 @@ public abstract class AbstractFiscalDevice {
     }
 
     public static Logger getLogger() {
-        return logger;
+        return LOGGER;
     }
     
     public void open() throws IOException {
@@ -287,16 +319,16 @@ public abstract class AbstractFiscalDevice {
     
     protected void err(String msg) {
         mErrors.add(msg);
-        logger.severe("Error (cmd:"+Integer.toString(mLastCmd)+"): "+msg);
+        LOGGER.severe("Error (cmd:"+Integer.toString(mLastCmd)+"): "+msg);
     }
 
     protected void warn(String msg) {
         mWarnings.add(msg);
-        logger.warning("Warning (cmd:"+Integer.toString(mLastCmd)+"): "+msg);
+        LOGGER.warning("Warning (cmd:"+Integer.toString(mLastCmd)+"): "+msg);
     }
     
     protected void debug(String msg) {
-        logger.fine("Debug (cmd:"+Integer.toString(mLastCmd)+"): "+msg);
+        LOGGER.fine("Debug (cmd:"+Integer.toString(mLastCmd)+"): "+msg);
     }
     
     /**

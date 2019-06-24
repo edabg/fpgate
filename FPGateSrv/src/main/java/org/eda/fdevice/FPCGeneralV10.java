@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.eda.protocol.AbstractProtocol;
 import org.restlet.engine.util.DateUtils;
 
 /**
@@ -49,9 +50,10 @@ public class FPCGeneralV10 extends FPCBase {
     
     protected CheckInfo lastCurrentCheckInfo = null;
     protected Date dtAfterOpenFiscalCheck = null;
-    
+    protected static final Handler FDLogHandler;
     static {
-        AbstractFiscalDevice.getLogger().addHandler(new LogHandler());
+        FDLogHandler = new LogHandlerFiscalDevice();
+        AbstractFiscalDevice.getLogger().addHandler(FDLogHandler);
     }
     
     /**
@@ -69,10 +71,10 @@ public class FPCGeneralV10 extends FPCBase {
     }
 
     // Catch logs from AbstractFiscalDevice
-    private static class LogHandler extends Handler {
+    private static class LogHandlerFiscalDevice extends Handler {
 //        private ControlPanel panel;
 
-        public LogHandler() {}
+        public LogHandlerFiscalDevice() {}
 
 //        public LogHandler(ControlPanel panel) {
 //            this.panel = panel;
@@ -80,9 +82,7 @@ public class FPCGeneralV10 extends FPCBase {
 
         @Override
         public void publish(LogRecord lr) {
-            if ((lr.getLevel() == Level.WARNING) || (lr.getLevel() == Level.SEVERE)) {
-                logger.log(lr);
-            }
+            LOGGER.log(lr);
         }
 
         @Override
@@ -173,7 +173,7 @@ public class FPCGeneralV10 extends FPCBase {
             if (FP != null)
                 FP.close();
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         FP = null;
     }
@@ -365,7 +365,7 @@ public class FPCGeneralV10 extends FPCBase {
                 try {
                     FP.cmdCancelFiscalCheck();
                 } catch (Exception ex) {
-                    logger.warning(ex.getMessage());
+                    LOGGER.warning(ex.getMessage());
                 }
                 // if it is continue to be open try to pay rest amount and close
                 if (FP.isOpenFiscalCheck() || FP.isOpenFiscalCheckRev()) {
@@ -373,12 +373,12 @@ public class FPCGeneralV10 extends FPCBase {
                         FP.cmdPrintFiscalText("АВАРИЙНО ЗАТВАРЯНЕ!");
                         FP.cmdTotal("Аварийно плащане", "", 0, "");
                     } catch (Exception ex) {
-                        logger.warning(ex.getMessage());
+                        LOGGER.warning(ex.getMessage());
                     }
                     try {
                         FP.cmdCloseFiscalCheck();
                     } catch (Exception ex) {
-                        logger.warning(ex.getMessage());
+                        LOGGER.warning(ex.getMessage());
                     }
                 }
             }
@@ -655,7 +655,7 @@ public class FPCGeneralV10 extends FPCBase {
                 }
                 res.DocNum = DocNum;
             } catch (Exception ex) {
-                logger.severe(ex.getMessage());
+                LOGGER.severe(ex.getMessage());
             }
         } catch (IOException ex) {
             lastErrorCode = -1;
@@ -672,7 +672,7 @@ public class FPCGeneralV10 extends FPCBase {
         try {
             QR = FP.cmdLastFiscalCheckQRCode();
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            LOGGER.info(e.getMessage());
         }
         FiscalCheckQRCodeInfo QRInfo = null;
         if (QR.length() > 0)
@@ -684,7 +684,7 @@ public class FPCGeneralV10 extends FPCBase {
                 try {
                     ci = getCurrentCheckInfo();
                 } catch (FPException ex) {
-                    logger.log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
                 }
             }    
             if (ci != null) {
@@ -724,7 +724,7 @@ public class FPCGeneralV10 extends FPCBase {
             try {
                 res.DocDate = fmt.parse(docDate);
             } catch (ParseException ex) {
-                logger.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
             }
 //            res.DocDate = DateUtils.parse(response.get("DocDate"), Arrays.asList("yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd"));
             res.TaxA = parseDouble(response.get("TaxA"));

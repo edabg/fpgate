@@ -294,7 +294,7 @@ public class AppVersionDlg extends javax.swing.JFrame {
 //            jpDownload.setVisible(false);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-//            Logger.getLogger(AppVersionDlg.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(AppVersionDlg.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
     

@@ -1460,6 +1460,7 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
         X: Не изчаква ФУ.
             Sn Статус байт N.        
         */
+LOGGER.fine("Test");
         LinkedHashMap<String, String> response = new LinkedHashMap();
         String res = cmdCustom(74, "X");
         byte[] bytes = res.getBytes();

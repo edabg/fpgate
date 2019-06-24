@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import javax.swing.JOptionPane;
+import org.eda.fdevice.FPPrinterPool;
 import org.eda.protocol.AbstractFiscalDevice;
 import org.eda.protocol.AbstractProtocol;
 import org.restlet.Application;
@@ -255,6 +256,9 @@ public class FPServer extends Application {
         defaultProperties.setProperty("SSLKeyStorePassword", "FPGate"); // 
         defaultProperties.setProperty("SSLKeyPassword", "FPGate"); // 
 
+        defaultProperties.setProperty("PoolEnabled", "1");
+        defaultProperties.setProperty("PoolDeadtime", "5"); // 5min
+        
         defaultProperties.setProperty("LLProtocol", Level.WARNING.getName()); // 
         defaultProperties.setProperty("LLDevice", Level.WARNING.getName()); // 
         defaultProperties.setProperty("LLFPCBase", Level.WARNING.getName()); // 
@@ -279,6 +283,7 @@ public class FPServer extends Application {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        adjustPrinterPool();
 //        String libPathProperty = System.getProperty("java.library.path");
 //        System.out.println(libPathProperty);  
 //        System.out.println(File.pathSeparator);
@@ -291,12 +296,23 @@ public class FPServer extends Application {
             String pfile = appBasePath+"/FPGateSrv.properties";
             this.appProperties.store(new FileOutputStream(pfile), "EDA FPGate Properties");
             userGuard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
+            adjustPrinterPool();
             adjustLogLevels();
         } catch (IOException E) {
             E.printStackTrace();
         }
     }
 
+    public void adjustPrinterPool() {
+        FPPrinterPool.setPoolEnabled(getAppProperties().getProperty("PoolEnabled", "1").equals("1"));
+        long poolDeadtime = 5;
+        try {
+            poolDeadtime = Integer.parseInt(getAppProperties().getProperty("PoolDeadtime", "5"));
+        } finally {
+            FPPrinterPool.setPrinterDeadTime(poolDeadtime*60*1000);// convert in miliseconds
+        }    
+    }
+    
     public String getDocumentRoot() {
         return getAppBasePath()+"/public_html";
     }
@@ -398,6 +414,7 @@ public class FPServer extends Application {
         List<ConverterHelper> chl = Engine.getInstance().getRegisteredConverters();
         // Attach the application to the component and start it
         mainComponent.getDefaultHost().attachDefault(application);
+        // TODO: Move in constructor of FPServer
         application.initLogs();
         // Create a component
         ControlPanel cp = new ControlPanel();
@@ -419,12 +436,12 @@ public class FPServer extends Application {
 //                        setFormatter(new org.restlet.engine.log.AccessLogFormatter());
                         setFormatter(new SimpleFormatter());
                     }};
-            // Resltlet framework logger
+            // Resltlet framework LOGGER
             mainComponent.getLogger().addHandler(logfile);
 
             // The handler is over whole package
-            loggerProtocolPackage = Logger.getLogger(AbstractFiscalDevice.class.getPackage().getName());
-            loggerProtocolPackage.addHandler(logfile);
+//            loggerProtocolPackage = Logger.getLogger(AbstractFiscalDevice.class.getPackage().getName());
+//            loggerProtocolPackage.addHandler(logfile);
             // Log levels for protocol package are separated for protocol and device
             loggerProtocol = Logger.getLogger(AbstractProtocol.class.getName());
             loggerProtocolDevice = Logger.getLogger(AbstractFiscalDevice.class.getName());
@@ -441,9 +458,9 @@ public class FPServer extends Application {
             
         } catch (IOException ex) {
             ex.printStackTrace();
-//            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         } catch (SecurityException ex) {
-//            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
+//            Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             ex.printStackTrace();
         }
     }
@@ -457,11 +474,11 @@ public class FPServer extends Application {
     
     public static void addLogHandler(Handler h) {
         mainComponent.getLogger().addHandler(h);
-        loggerProtocolPackage.addHandler(h);
-        loggerTremolFPCore.addHandler(h);
+//        loggerProtocolPackage.addHandler(h);
+//        loggerTremolFPCore.addHandler(h);
         loggerFPCBase.addHandler(h);
     }
-    
+  
     public void addSSL() {
         if (!appProperties.getProperty("UseSSL", "0").equals("1")) return;
         String keyFileName = appBasePath+"/"+appProperties.getProperty("SSLKeyFile", "ssl/fpgate.jks");

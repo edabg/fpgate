@@ -144,13 +144,13 @@ public class ProtocolV10D extends ProtocolV10 {
         nextSEQ();
         mSocket.clear();
 
-        logger.finest(String.format("> (%d) %s", new Object[]{Integer.valueOf(command), data}));
+        LOGGER.finest(String.format("> (%d) %s", new Object[]{Integer.valueOf(command), data}));
         StopWatch go = new StopWatch();
         sendPacketReceiveStream(command, data);
 
         String result = receiveStream();
 
-        logger.finest(String.format("< (%d) \"%s\" in %dms", new Object[]{Integer.valueOf(command), result, Integer.valueOf((int) go.getElapsedTime())}));
+        LOGGER.finest(String.format("< (%d) \"%s\" in %dms", new Object[]{Integer.valueOf(command), result, Integer.valueOf((int) go.getElapsedTime())}));
         return result;
     }
     

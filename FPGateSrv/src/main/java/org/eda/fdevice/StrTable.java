@@ -99,7 +99,7 @@ public class StrTable extends LinkedHashMap<String,String> {
                 }
             }
         } catch (IOException ex) {    
-            Logger.getLogger(StrTable.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(StrTable.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 

@@ -120,10 +120,10 @@ public class AdminResource extends ServerResource {
                 tpl.process(responseData, out);
             } catch (TemplateException ex) {
                 getResponse().setStatus(Status.SERVER_ERROR_INTERNAL, ex.getMessage());
-                getLogger().log(Level.SEVERE, null, ex);
+                getLogger().log(Level.SEVERE, ex.getMessage(), ex);
             } catch (IOException ex) {
                 getResponse().setStatus(Status.SERVER_ERROR_INTERNAL, ex.getMessage());
-                getLogger().log(Level.SEVERE, null, ex);
+                getLogger().log(Level.SEVERE, ex.getMessage(), ex);
             }
         } else {
             getResponse().setStatus(Status.SERVER_ERROR_NOT_IMPLEMENTED, "Can't find template "+tplName);
@@ -319,7 +319,7 @@ public class AdminResource extends ServerResource {
                 }
         } catch (Exception ex) {
             responseError(ex.getMessage());
-            getLogger().log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, ex.getMessage(), ex);
         }    
         return processTemplate("printer-test");
     }
@@ -336,7 +336,7 @@ public class AdminResource extends ServerResource {
             responseData.put("UserCountValid", db.getUserCountValid());
         } catch (SQLException ex) {
             responseError(ex.getMessage());
-            getLogger().log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, ex.getMessage(), ex);
         }
         return processTemplate("index");
     }
@@ -365,7 +365,7 @@ public class AdminResource extends ServerResource {
             }
         } catch (Exception ex) {
             responseError(ex.getMessage());
-            getLogger().log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, ex.getMessage(), ex);
         }    
         return processTemplate("printers");
     }
@@ -501,12 +501,12 @@ public class AdminResource extends ServerResource {
                     }
                 } catch (Exception ex) {
                     responseError(ex.getMessage());
-                    getLogger().log(Level.SEVERE, null, ex);
+                    getLogger().log(Level.SEVERE, ex.getMessage(), ex);
                 }
             }});
         } catch (Exception ex) {
             responseError(ex.getMessage());
-            getLogger().log(Level.SEVERE, null, ex);
+            getLogger().log(Level.SEVERE, ex.getMessage(), ex);
         }    
         return processTemplate("printer-edit");
     }

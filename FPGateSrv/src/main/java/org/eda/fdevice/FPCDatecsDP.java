@@ -17,8 +17,8 @@
 package org.eda.fdevice;
 
 import java.util.Date;
-import static org.eda.fdevice.FPCBase.logger;
 import org.eda.protocol.DeviceDatecsDPV1;
+import static org.eda.fdevice.FPCBase.LOGGER;
 
 /**
  *

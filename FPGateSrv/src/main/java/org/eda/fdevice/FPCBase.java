@@ -18,6 +18,7 @@ package org.eda.fdevice;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -26,6 +27,9 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 import org.reflections.Reflections;
 
@@ -35,14 +39,40 @@ import org.reflections.Reflections;
  */
 public class FPCBase {
 
-    protected static final Logger logger = Logger.getLogger(FPCBase.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(FPCBase.class.getName());
 
     public static Logger getLogger() {
-        return logger;
+        return LOGGER;
     }
+
+    private final long lockTimeout = 10; // in seconds
+    private final ReentrantLock lock = new ReentrantLock();    
     
     protected final FPParams params;
     private static FPCBaseClassList FPCList = null;
+
+    private static FPDatabase FPDB = null;
+
+    protected static FPDatabase getDB() throws SQLException {
+        if (FPDB == null) FPDB = new FPDatabase();
+        return FPDB;
+    }
+    
+    
+    protected String UID = "";
+    private long timeInitialized = 0;
+
+    public long getTimeInitialized() {
+        return timeInitialized;
+    }
+    
+    public long getLifetime() {
+        return System.currentTimeMillis() - timeInitialized;
+    }
+    
+    public void prolongLifetime() {
+        timeInitialized = System.currentTimeMillis();
+    }
     
     // Extended Fiscal Check (invoice) mode/info
     protected boolean invoiceMode = false;
@@ -76,13 +106,13 @@ public class FPCBase {
                 try {
                     DocDateTime = fmt.parse(qr_parts[2] + " " + qr_parts[3]);
                 } catch (Exception ex) {
-                    logger.severe(ex.getMessage());
+                    LOGGER.severe(ex.getMessage());
                 }
                 try {
                     Sum = Double.parseDouble(qr_parts[4]);
                     isNative = true;
                 } catch (Exception ex) {
-                    logger.severe(ex.getMessage());
+                    LOGGER.severe(ex.getMessage());
                 }
             }
         }
@@ -131,7 +161,7 @@ public class FPCBase {
             else if (sUICType.equals("NRA"))
                 UICType = UICTypes.NRA;
             else {
-                logger.severe("Unknown UICType("+sUICType+"). Valid values: BULSTAT, EGN, FOREIGN, NRA. BULSTAT will be used!");
+                LOGGER.severe("Unknown UICType("+sUICType+"). Valid values: BULSTAT, EGN, FOREIGN, NRA. BULSTAT will be used!");
                 UICType = UICTypes.BULSTAT;
             }    
         }
@@ -347,6 +377,7 @@ public class FPCBase {
     }
     
     public FPCBase() throws Exception {
+        timeInitialized = System.currentTimeMillis();
         this.params = getDefinedParams(this.getClass());
     }
     
@@ -421,6 +452,77 @@ public class FPCBase {
         return FPCBase.getFPCObject(FPCBase.getDerivedClasses().get(FPCClassName));
     }
 
+    public void lock() throws Exception {
+        LOGGER.fine(Thread.currentThread().getId()+": Trying to lock printer ...");
+        
+        boolean ok;
+        long lc = lockTimeout;
+        do {
+            ok = lock.tryLock();
+            if (!ok && lc > 0)
+                Thread.sleep(1000);
+            lc--;
+        } while (!ok && lc > 0);
+        if (!ok)
+            throw new Exception("Lock timeout! Can't lock printer!");
+        
+//        if (!lock.tryLock(lockTimeout, TimeUnit.SECONDS))
+//            throw new Exception("Lock timeout! Can't lock printer!");
+        LOGGER.fine(Thread.currentThread().getId()+": Lock success ...");
+    }
+    
+    public void unLock() {
+        LOGGER.fine(Thread.currentThread().getId()+": Unlock printer ...");
+        if (lock.isHeldByCurrentThread())
+            lock.unlock();
+    }
+    
+    public boolean isLocked() {
+        return lock.isLocked();
+    }
+    
+    public void setUID(String UID) {
+        this.UID = UID;
+    }
+    
+    public String getUID() {
+        return this.UID;
+    }
+    
+    public static final FPCBase getFPCObjectByParams(String ID, String Model, HashMap<String, String> Params) throws Exception {
+        FPCBase FP = null;
+        try {
+            if (ID.length() > 0) {
+                FPrinter fp_ = getDB().getPrinterByRefId(ID);
+                if (fp_ == null)
+                    throw new Exception(ID+": Can't find the printer!");
+                if (fp_.getIsActive() == 0)
+                    throw new Exception(ID+": Printer is not active!");
+                LOGGER.info(ID+": Printer found. Requesting Printer by Model:"+fp_.getModelID());
+                FP = getFPCObject(fp_.getModelID());
+                LOGGER.info("Setting printer parameters:");
+                FP.setParams(fp_.getProperties());
+            } else {
+                LOGGER.info("Requesting Printer by Model:"+Model);
+                FP = getFPCObject(Model);
+                LOGGER.info("Setting printer parameters:");
+                for (HashMap.Entry<?, ?> pEntry : Params.entrySet()) {
+                    String key = pEntry.getKey().toString();
+                    String value = pEntry.getValue().toString();
+                    LOGGER.info(key+"="+value);
+                }    
+                FP.setParams(Params);
+            }    
+        } catch (Exception E) {
+            if (FP != null)
+               FP = null;
+            LOGGER.severe("Exception:"+E.getMessage());
+            E.printStackTrace();
+            throw E;
+        }
+        return FP;
+    }
+    
     public void setParams(String jsonString) throws IOException {
         params.setFromJSONString(jsonString);
     }

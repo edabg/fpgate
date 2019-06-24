@@ -17,11 +17,8 @@
 package org.eda.fpsrv;
 
 import org.eda.fdevice.StrTable;
-import org.eda.fdevice.FPrinter;
-import org.eda.fdevice.FPDatabase;
 import org.eda.fdevice.FPException;
 import org.eda.fdevice.FPCBase;
-import com.google.common.util.concurrent.Striped;
 import java.io.IOException;
 import static java.lang.System.currentTimeMillis;
 import java.text.DateFormat;
@@ -31,13 +28,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import org.restlet.resource.ServerResource;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import org.eda.fdevice.FPPrinterPool;
 import org.restlet.data.Form;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
@@ -51,13 +46,12 @@ public class PrintResource extends ServerResource {
     private FPCBase FP;
     private PrintResponse response;
     private PrintRequest pRequest;
-    private FPDatabase FPDB;
     private localExecutionLog execLog;
     private FPCLogHandler fpcLogHandler = null;
 
     public PrintResource() {
         super();
-        execLog = this.new localExecutionLog();
+        execLog = new localExecutionLog();
     }
     
     // Catch logs from AbstractFiscalDevice
@@ -75,7 +69,7 @@ public class PrintResource extends ServerResource {
         @Override
         public void publish(LogRecord lr) {
             if (this.execLog != null)
-                this.execLog.log(lr.getLevel(), lr.getMessage());
+                this.execLog.log(lr.getLevel(), lr.getLoggerName()+":"+lr.getMessage(), false); // add only to exec log
         }
 
         @Override
@@ -91,17 +85,23 @@ public class PrintResource extends ServerResource {
     
     private class localExecutionLog {
         public void log(Level level, String msg) {
-            getLogger().log(level, msg);
+            log(level, msg, true);
+        }
+        public void log(Level level, String msg, boolean logToComponentLogger) {
             String threadId = Long.toString(Thread.currentThread().getId());
+            if (logToComponentLogger)
+                getLogger().log(level, msg);
             String time = Long.toString(currentTimeMillis());
             msg = time+" : "+threadId+" : "+msg;
             if (response != null) {
+                response.getLog().add(msg);
                 if (level.intValue() >= Level.WARNING.intValue()) {
-                    response.getLog().add(msg);
+//                    response.getLog().add(msg);
                     response.getErrors().add(msg);
                 } else if ((level.intValue() >= Level.CONFIG.intValue()) 
-                        || (FPServer.application.getAppProperties().getProperty("DebugMode", "0") != "0"))
-                    response.getLog().add(msg);
+                        || (FPServer.application.getAppProperties().getProperty("DebugMode", "0") != "0")) {
+//                    response.getLog().add(msg);
+                }    
             }
         }
         
@@ -121,95 +121,31 @@ public class PrintResource extends ServerResource {
             log(Level.FINER, msg);
         }
     }
-    
-    protected static Striped<Semaphore> printerSemaphores = Striped.semaphore(20,1);
-    protected Semaphore printerSemaphore;
-    protected String printerRefID = ""; 
-    
-    protected void acquirePrinterSemaphore(String printerRefID) throws Exception {
-        releasePrinterSemaphore(); // if already taken
-        execLog.msg("Requesting Printer by RefId:"+printerRefID);
-        printerSemaphore  = printerSemaphores.get(printerRefID);
-        if (!printerSemaphore.tryAcquire(10, TimeUnit.SECONDS)) {
-            printerSemaphore = null;
-            throw new FPException((long)-1, "Printer "+printerRefID+" is busy!");
-        }
+
+    protected void attachExecLogHandler() {
+        fpcLogHandler = new FPCLogHandler(execLog);
+        FPCBase.getLogger().addHandler(fpcLogHandler);
     }
     
-    protected void releasePrinterSemaphore() {
-        if (printerSemaphore != null) {
-            printerSemaphore.release();
-            printerSemaphore = null;
+    protected void detachExecLogHandler() {
+        if (fpcLogHandler != null) {
+            FPCBase.getLogger().removeHandler(fpcLogHandler);
         }    
-    }
-    
-    
-    protected void initPrinter() throws FPException, Exception {
-        FP = null;
-        printerRefID = pRequest.getPrinter().getID();
         fpcLogHandler = null;
-        if (printerRefID.length() > 0) {
-            acquirePrinterSemaphore(printerRefID);
-            try {
-                if (FPDB == null) FPDB = new FPDatabase();
-                FPrinter fp_ = FPDB.getPrinterByRefId(printerRefID);
-                if (fp_ == null)
-                    throw new FPException((long)-1, "Can't find the printer!");
-                if (fp_.getIsActive() == 0)
-                    throw new FPException((long)-1, "Printer is not active!");
-                execLog.msg("Printer found. Requesting Printer by Model:"+fp_.getModelID());
-                FP = FPCBase.getFPCObject(fp_.getModelID());
-                execLog.msg("Setting printer parameters:");
-                FP.setParams(fp_.getProperties());
-                execLog.msg("Initializing printer");
-                fpcLogHandler = new FPCLogHandler(execLog);
-                FPCBase.getLogger().addHandler(fpcLogHandler);
-                FP.init();
-            } catch (Exception E) {
-                releasePrinterSemaphore();
-                execLog.msg("Exception:"+E.getMessage());
-                E.printStackTrace();
-                throw new FPException((long)-1, E.getMessage());
-            }
-        } else {
-            acquirePrinterSemaphore(pRequest.getPrinter().getModel());
-            try {
-                execLog.msg("Requesting Printer by Model:"+pRequest.getPrinter().getModel());
-                FP = FPCBase.getFPCObject(pRequest.getPrinter().getModel());
-                execLog.msg("Setting printer parameters:");
-                for (HashMap.Entry<?, ?> pEntry : pRequest.getPrinter().getParams().entrySet()) {
-                    String key = pEntry.getKey().toString();
-                    String value = pEntry.getValue().toString();
-                    execLog.msg(key+"="+value);
-                }    
-                FP.setParams(pRequest.getPrinter().getParams());
-                execLog.msg("Initializing printer");
-                fpcLogHandler = new FPCLogHandler(execLog);
-                FPCBase.getLogger().addHandler(fpcLogHandler);
-                FP.init();
-            } catch (Exception E) {
-                releasePrinterSemaphore();
-                execLog.msg("Exception:"+E.getMessage());
-                E.printStackTrace();
-                throw new FPException((long)-1, E.getMessage());
-            }
-        }    
+    }
+    protected void initPrinter() throws FPException, Exception {
+        FP = FPPrinterPool.requestPrinter(pRequest.getPrinter().getID(), pRequest.getPrinter().getModel(), pRequest.getPrinter().getParams());
+        if (FP == null) {
+            throw new FPException("Can't initialize printer!");
+        }
+        FP.lock();
     }
     
     protected void donePrinter() {
-        if (fpcLogHandler != null) {
-            FPCBase.getLogger().removeHandler(fpcLogHandler);
-            fpcLogHandler = null;
-        }    
-            
-        if (FP != null) 
-            FP.destroy();
+        if (FP != null)
+            FP.unLock();
+        FPPrinterPool.releasePrinter(FP);
         FP = null;
-        releasePrinterSemaphore();
-        if (printerSemaphore != null) {
-            printerSemaphore.release();
-            printerSemaphore = null;
-        }    
     }
 
     public void abnormalComplete() throws FPException{
@@ -631,6 +567,20 @@ public class PrintResource extends ServerResource {
                 execLog.error(ex.getMessage());
             }    
         }    
+// dump loggers
+//Enumeration<String> logNames = LogManager.getLogManager().getLoggerNames();
+//while (logNames.hasMoreElements()){
+//    System.out.println(logNames.nextElement());
+//}
+/*
+        FPCBase.getLogger().info(Thread.currentThread().getId()+": Sleeping ...");
+        try {
+            Thread.currentThread().sleep(5*1000);
+        } catch (InterruptedException ex) {
+            FPCBase.getLogger().log(Level.SEVERE, ex.getMessage(), ex);
+        }
+        FPCBase.getLogger().info(Thread.currentThread().getId()+": Wakeup ...");
+*/
     }
 
     public void getDiagnosticInfo() throws FPException {
@@ -867,6 +817,7 @@ public class PrintResource extends ServerResource {
         pRequest = request;
         response = new PrintResponse();
         response.setId(request.getId());
+        attachExecLogHandler();
         try {
             execLog.msg("Request command:"+pRequest.getCommand());
             initPrinter();
@@ -956,6 +907,7 @@ public class PrintResource extends ServerResource {
         } catch (Exception  e) {
             execLog.error("Error:"+e.getMessage());
         }
+        detachExecLogHandler();
         return response;
     }
 

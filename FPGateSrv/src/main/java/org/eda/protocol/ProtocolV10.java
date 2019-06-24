@@ -149,13 +149,13 @@ public class ProtocolV10 extends AbstractProtocol {
         nextSEQ();
         mSocket.clear();
 
-        logger.finest(String.format("> (%d) %s", new Object[]{Integer.valueOf(command), data}));
+        LOGGER.finest(String.format("> (%d) %s", new Object[]{Integer.valueOf(command), data}));
         StopWatch go = new StopWatch();
         sendPacket(command, data);
 
         String result = receivePacket();
 
-        logger.finest(String.format("< (%d) \"%s\" in %dms", new Object[]{Integer.valueOf(command), result, Integer.valueOf((int) go.getElapsedTime())}));
+        LOGGER.finest(String.format("< (%d) \"%s\" in %dms", new Object[]{Integer.valueOf(command), result, Integer.valueOf((int) go.getElapsedTime())}));
         return result;
     }
 

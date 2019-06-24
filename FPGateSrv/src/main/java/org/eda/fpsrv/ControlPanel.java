@@ -41,6 +41,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
+import org.eda.fdevice.FPPrinterPool;
 import org.restlet.ext.crypto.DigestUtils;
 
 /**
@@ -94,7 +95,10 @@ public class ControlPanel extends javax.swing.JFrame {
 
         @Override
         public void publish(LogRecord lr) {
-            panel.jtaLog.append(lr.getMessage() + "\n");
+            String threadId = Long.toString(Thread.currentThread().getId());
+            String msg = threadId+":"+lr.getMessage();
+
+            panel.jtaLog.append(msg + "\n");
             panel.adjustTextAreaToCapacity(panel.jtaLog);
             panel.jtaLog.setCaretPosition(panel.jtaLog.getDocument().getLength());
             
@@ -179,6 +183,10 @@ public class ControlPanel extends javax.swing.JFrame {
         jcbStartMinimized = new javax.swing.JCheckBox();
         jcbCheckVersionAtStartup = new javax.swing.JCheckBox();
         jbCheckVersion = new javax.swing.JButton();
+        jcbPoolEnable = new javax.swing.JCheckBox();
+        jtPoolDeadtime = new javax.swing.JTextField();
+        jLabel9 = new javax.swing.JLabel();
+        jbClearPool = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jtaLicense = new javax.swing.JTextArea();
 
@@ -338,6 +346,26 @@ public class ControlPanel extends javax.swing.JFrame {
             }
         });
 
+        jcbPoolEnable.setText("Enable printer pool");
+
+        jtPoolDeadtime.setText("5");
+        jtPoolDeadtime.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jtPoolDeadtimeActionPerformed(evt);
+            }
+        });
+
+        jLabel9.setLabelFor(jtPoolDeadtime);
+        jLabel9.setText("Pool deadtime, min");
+        jLabel9.setNextFocusableComponent(jtPoolDeadtime);
+
+        jbClearPool.setText("Clear pool");
+        jbClearPool.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbClearPoolActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jpSettingsLayout = new javax.swing.GroupLayout(jpSettings);
         jpSettings.setLayout(jpSettingsLayout);
         jpSettingsLayout.setHorizontalGroup(
@@ -392,9 +420,19 @@ public class ControlPanel extends javax.swing.JFrame {
                             .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jcbPoolEnable))
+                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(24, 24, 24)
+                                .addComponent(jLabel9)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jtPoolDeadtime, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jbClearPool)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -437,16 +475,20 @@ public class ControlPanel extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
-                    .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jcbPoolEnable))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
-                    .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jtPoolDeadtime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel9)
+                    .addComponent(jbClearPool))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 63, Short.MAX_VALUE)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jbSave)
                     .addComponent(jbCancel))
@@ -554,7 +596,8 @@ public class ControlPanel extends javax.swing.JFrame {
         jcbUseSSL.setSelected(prop.getProperty("UseSSL").equals("1"));
         jcbStartMinimized.setSelected(prop.getProperty("StartMinimized").equals("1"));
         jcbCheckVersionAtStartup.setSelected(prop.getProperty("CheckVersionAtStartup").equals("1"));
-        
+        jcbPoolEnable.setSelected(prop.getProperty("PoolEnabled").equals("1"));
+        jtPoolDeadtime.setText(prop.getProperty("PoolDeadtime"));
         
         String[] levels = new String[] {
             Level.OFF.getName()
@@ -601,6 +644,8 @@ public class ControlPanel extends javax.swing.JFrame {
         prop.setProperty("LLDevice", (String)jComboBoxLLDevice.getSelectedItem());
         prop.setProperty("LLProtocol", (String)jComboBoxLLProtocol.getSelectedItem());
         prop.setProperty("LLFPCBase", (String)jComboBoxLLFPCBase.getSelectedItem());
+        prop.setProperty("PoolEnabled", jcbPoolEnable.isSelected()?"1":"0");
+        prop.setProperty("PoolDeadtime", jtPoolDeadtime.getText());
         FPServer.application.updateProperties();
     }//GEN-LAST:event_jbSaveActionPerformed
 
@@ -646,6 +691,15 @@ public class ControlPanel extends javax.swing.JFrame {
         FPServer.application.checkAppVersion(true);
     }//GEN-LAST:event_jbCheckVersionActionPerformed
 
+    private void jtPoolDeadtimeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtPoolDeadtimeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jtPoolDeadtimeActionPerformed
+
+    private void jbClearPoolActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbClearPoolActionPerformed
+        // TODO add your handling code here:
+        FPPrinterPool.clear();
+    }//GEN-LAST:event_jbClearPoolActionPerformed
+
     
     public void notifyChange() {
         adjustControls();
@@ -671,7 +725,7 @@ public class ControlPanel extends javax.swing.JFrame {
             imagePrinterOn = ImageIO.read(getClass().getResource("/images/printer-on-512.png"));
             imagePrinterOff = ImageIO.read(getClass().getResource("/images/printer-off-512.png"));
         } catch (IOException ex) {
-            Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
         }
         if(SystemTray.isSupported()){
             System.out.println("System tray supported");
@@ -802,6 +856,7 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
@@ -810,11 +865,13 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JButton jbCancel;
     private javax.swing.JButton jbCheckVersion;
+    private javax.swing.JButton jbClearPool;
     private javax.swing.JButton jbSave;
     private javax.swing.JButton jbStart;
     private javax.swing.JButton jbStop;
     private javax.swing.JCheckBox jcbCheckVersionAtStartup;
     private javax.swing.JCheckBox jcbDisableAnonymousPrint;
+    private javax.swing.JCheckBox jcbPoolEnable;
     private javax.swing.JCheckBox jcbStartMinimized;
     private javax.swing.JCheckBox jcbUseSSL;
     private javax.swing.JLabel jlAppName;
@@ -825,6 +882,7 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JTextField jtAdminName;
     private javax.swing.JPasswordField jtAdminPassword;
     private javax.swing.JPasswordField jtAdminPassword2;
+    private javax.swing.JTextField jtPoolDeadtime;
     private javax.swing.JTextField jtServerAddr;
     private javax.swing.JTextField jtServerPort;
     private javax.swing.JTextField jtServerPortSSL;

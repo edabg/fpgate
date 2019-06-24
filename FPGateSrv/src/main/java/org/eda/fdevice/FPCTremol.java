@@ -60,8 +60,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static org.eda.fdevice.FPCBase.logger;
 import org.eda.protocol.FDException;
+import static org.eda.fdevice.FPCBase.LOGGER;
 
 /**
  *
@@ -185,7 +185,7 @@ public class FPCTremol extends FPCBase {
     @Override
     public void init() throws Exception, FPException {
         fp = new TremolZFP.FP();
-        logger.log(Level.INFO, "ZFPLabServer version defs:"+Integer.toString(fp.getVersionDef()));
+        LOGGER.log(Level.INFO, "ZFPLabServer version defs:"+Integer.toString(fp.getVersionDef()));
         fp.setServerAddress(getParam("ServerURL"));
         if (getParam("LinkType").equals("TCP")) {
             fp.ServerSetDeviceTcpSettings(getParam("IPAddr"), getParamInt("IPPort"), getParam("IPPassword"));
@@ -209,16 +209,16 @@ public class FPCTremol extends FPCBase {
     
     protected void err(String msg) {
         mErrors.add(msg);
-        logger.severe("Error (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
+        LOGGER.severe("Error (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
     }
 
     protected void warn(String msg) {
         mWarnings.add(msg);
-        logger.warning("Warning (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
+        LOGGER.warning("Warning (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
     }
     
     protected void debug(String msg) {
-        logger.fine("Debug (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
+        LOGGER.fine("Debug (cmd:"+((lastCommand != null)?lastCommand:"n/a")+"): "+msg);
     }
     
     protected void readParameters() {
@@ -226,9 +226,9 @@ public class FPCTremol extends FPCBase {
             devInfo = getDeviceInfo();
             try {
                 isOldDevice = devInfo.Model.matches("^.+V2$");
-                logger.info(isOldDevice?"Old Device V2 detected":"New device model detected");
+                LOGGER.info(isOldDevice?"Old Device V2 detected":"New device model detected");
             } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
             }
             
             CONST_TEXTLENGTH = getParamInt("LWIDTH");
@@ -244,7 +244,7 @@ public class FPCTremol extends FPCBase {
                 }
             }
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
     }
 
@@ -256,14 +256,14 @@ public class FPCTremol extends FPCBase {
             di.Model = ver.Model;
             di.Firmware = ver.Version;
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         try {
             SerialAndFiscalNumsRes si = fp.ReadSerialAndFiscalNums();
             di.SerialNum = si.SerialNumber;
             di.FMNum = si.FMNumber;
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         
         try {
@@ -663,14 +663,14 @@ FWDT=23NOV18 1000
             res.put("FWRev", ver.Version);
             res.put("CertNum", ver.CertificateNum);
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         try {
             SerialAndFiscalNumsRes si = fp.ReadSerialAndFiscalNums();
             res.put("SerialNum", si.SerialNumber);
             res.put("FMNum", si.FMNumber);
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         
         try {
@@ -691,7 +691,7 @@ FWDT=23NOV18 1000
             res.put("NRARegistrationNumber",dateFormat.format(ri.NRARegistrationDate));
             res.put("UIC",ri.UIC);
         } catch (Exception ex) {
-            logger.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
         res.put("LastDocNum", getLastPrintDoc());
         return res;
@@ -1088,7 +1088,7 @@ FWDT=23NOV18 1000
                     +pay.Payment4Amount+pay.Payment5Amount+pay.Payment6Amount+pay.Payment7Amount
                     +pay.Payment8Amount+pay.Payment9Amount+pay.Payment10Amount+pay.Payment11Amount;
             } catch (Exception e) {
-                logger.severe("ReadCurrentOrLastReceiptPaymentAmounts:"+e.getMessage());
+                LOGGER.severe("ReadCurrentOrLastReceiptPaymentAmounts:"+e.getMessage());
             }
             res.PayAmount = payAmount;
             if (res.IsInvoice) {
@@ -1160,15 +1160,15 @@ FWDT=23NOV18 1000
         } catch (Exception ex) {
             // Alternate method to get QRCode
             if (!isOldDevice)
-                logger.severe(ex.getMessage());
-            logger.warning("Using alternate method to build QRCode.");
+                LOGGER.severe(ex.getMessage());
+            LOGGER.warning("Using alternate method to build QRCode.");
             // Alternate method to create QRCode
             CheckInfo ci = lastCurrentCheckInfo;
             if (ci == null) {
                 try {
                     ci = getCurrentCheckInfo();
                 } catch (FPException exx) {
-                    logger.log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
                 }
             }    
             if (ci != null) {
