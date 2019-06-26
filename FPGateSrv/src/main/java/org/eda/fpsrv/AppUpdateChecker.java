@@ -161,6 +161,7 @@ public class AppUpdateChecker {
         VersionInformation vi = new VersionInformation();
         vi.localVersion = localVersion;
         vi.localBuild = localBuild;
+
         int compare = 0;
         try {
             logger.info("Checking for new app version (current:"+localVersion+")");
@@ -221,7 +222,7 @@ public class AppUpdateChecker {
                     logger.info("Remote build is older than local one.");
                     vi.state = VersionState.OLD_BUILD;
                 }
-            } if (compare < 0) {
+            } else if (compare < 0) {
                 logger.info("There is new version.");
                 vi.state = VersionState.NEW_VERSION;
             } else {
