@@ -291,9 +291,11 @@ public class PrintResource extends ServerResource {
                     else
                         throw new FPException("Не е посочен номер на фискалната памет на документа за сторниране!");
                 } else if (cmdParams[0].equals("RRR")) { // Reverse/Storno Reson text
-                    RevReason = cmdParams[1];
+                    if (cmdParams.length > 1)
+                        RevReason = cmdParams[1];
                 } else if (cmdParams[0].equals("RIN")) { // Reverse/Storno Invoice num
-                    RevInvoiceNum = cmdParams[1];
+                    if (cmdParams.length > 1)
+                        RevInvoiceNum = cmdParams[1];
                 } else if (cmdParams[0].equals("RID")) { // Reverse/Storno Invoice date/time
                     if (cmdParams.length > 1) {
                         DateFormat format = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);

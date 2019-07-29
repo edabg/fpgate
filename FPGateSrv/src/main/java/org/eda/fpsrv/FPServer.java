@@ -258,6 +258,8 @@ public class FPServer extends Application {
 
         defaultProperties.setProperty("PoolEnabled", "1");
         defaultProperties.setProperty("PoolDeadtime", "5"); // 5min
+
+        defaultProperties.setProperty("ZFPLabServerAutoStart", "0");
         
         defaultProperties.setProperty("LLProtocol", Level.WARNING.getName()); // 
         defaultProperties.setProperty("LLDevice", Level.WARNING.getName()); // 
@@ -393,11 +395,16 @@ public class FPServer extends Application {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+//TODO: Enable global restlet DEBUG Logging        
+//Engine.setLogLevel(Level.FINEST);
+//Engine.setRestletLogLevel(Level.FINEST);        
 
         // Create an application
         application = new FPServer();
 
         mainComponent = new Component();
+//        mainComponent.getLogger().setLevel(Level.FINEST);
+                
 //        System.out.println(mainComponent.getLogService().getLoggerName());
 //        mainComponent.getLogService().setLoggerName("com.noelios.web.WebComponent.www");
 
@@ -414,6 +421,8 @@ public class FPServer extends Application {
         List<ConverterHelper> chl = Engine.getInstance().getRegisteredConverters();
         // Attach the application to the component and start it
         mainComponent.getDefaultHost().attachDefault(application);
+        // TODO: To enable RIAP on all components use this
+        mainComponent.getInternalRouter().attachDefault(application);
         // TODO: Move in constructor of FPServer
         application.initLogs();
         // Create a component
@@ -428,6 +437,8 @@ public class FPServer extends Application {
         // 
         if (application.appProperties.getProperty("CheckVersionAtStartup", "0").equals("1"))
             application.checkAppVersion(false);
+        if (application.appProperties.getProperty("ZFPLabServerAutoStart", "0").equals("1"))
+            ZFPLabServer.start();
     }
 
     protected void initLogs() {
@@ -466,10 +477,22 @@ public class FPServer extends Application {
     }
 
     public void adjustLogLevels() {
-        loggerProtocol.setLevel(Level.parse(this.appProperties.getProperty("LLProtocol")));
-        loggerProtocolDevice.setLevel(Level.parse(this.appProperties.getProperty("LLDevice")));
-        loggerTremolFPCore.setLevel(Level.parse(this.appProperties.getProperty("LLDevice")));
-        loggerFPCBase.setLevel(Level.parse(this.appProperties.getProperty("LLFPCBase")));
+        try {
+            loggerProtocol.setLevel(Level.parse(this.appProperties.getProperty("LLProtocol")));
+        } catch(Exception ex) {
+        }
+        try {
+            loggerProtocolDevice.setLevel(Level.parse(this.appProperties.getProperty("LLDevice")));
+        } catch(Exception ex) {
+        }
+        try {
+            loggerTremolFPCore.setLevel(Level.parse(this.appProperties.getProperty("LLDevice")));
+        } catch(Exception ex) {
+        }
+        try {
+            loggerFPCBase.setLevel(Level.parse(this.appProperties.getProperty("LLFPCBase")));
+        } catch(Exception ex) {
+        }
     }
     
     public static void addLogHandler(Handler h) {
@@ -511,6 +534,9 @@ public class FPServer extends Application {
             else
                 httpServer = new Server(Protocol.HTTP, application.getServerPort());
             mainComponent.getServers().add(httpServer);
+            // Enable RIAP
+            mainComponent.getServers().add(new Server(Protocol.RIAP));
+            // Check and add SSL
             addSSL();
             mainComponent.getClients().add(Protocol.FILE);
             mainComponent.start();
@@ -551,8 +577,8 @@ public class FPServer extends Application {
         userGuard.setNext(PrintResource.class);
         router.attach("/print/", userGuard);
         router.attach("/", RootResource.class);
-        
-        
+        // TODO: To Enable RIAP only on this component use this
+//        mainComponent.getInternalRouter().attach("/print/", PrintResource.class);
         // Return the root router
         return router;
     }

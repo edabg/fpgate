@@ -996,6 +996,13 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
             String[] rData = res.split(",");
             response.put("AllReceipt", rData[0]);
             response.put("StrReceipt", rData[1]);
+            if (RevReason.length() > 0) {
+                try {
+                    cmdPrintFiscalText(RevReason);
+                } catch (Exception ex) {
+                    err("Грешка при печат на фискален текст с причнина за сторно ("+ex.getMessage()+")!");
+                }
+            }
         } else {    
             err("Грешка при отваряне на сторно фискален бон ("+res+")!");
             throw new FDException(mErrors.toString());

@@ -871,6 +871,8 @@ FWDT=23NOV18 1000
                         , printType
                         , customer.recipient, customer.buyer, customer.VATNumber, customer.UIC, customer.address, OptionUICType.Bulstat
                         , revTypeToStornoReason(RevType), RevInvNum, RevInvDate, Double.parseDouble(RevDocNum), RevFMNum, RevUNS);
+                if (RevReason.length() > 0)
+                    printFiscalText(RevReason);
                 
             } else {
                 OptionStornoRcpPrintType printType = OptionStornoRcpPrintType.Step_by_step_printing;
@@ -886,6 +888,8 @@ FWDT=23NOV18 1000
                     , Double.parseDouble(RevDocNum), RevDateTime
                     , RevFMNum, RevUNS
                 );
+                if (RevReason.length() > 0)
+                    printFiscalText(RevReason);
 /*
                 SimpleDateFormat fmt = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     //             Do("OpenStornoReceipt", "OperNum", operNum, "OperPass", operPass, "OptionReceiptFormat", optionReceiptFormat, "OptionPrintVAT", optionPrintVAT, "OptionStornoRcpPrintType", optionStornoRcpPrintType, "OptionStornoReason", optionStornoReason, "RelatedToRcpNum", relatedToRcpNum, "RelatedToRcpDateTime", relatedToRcpDateTime, "FMNum", fMNum, "RelatedToURN", relatedToURN);

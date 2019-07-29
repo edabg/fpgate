@@ -120,6 +120,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
             <singlefile src="@{izpack.staging}/FPGateSrv.cmd" target="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
             <parsable targetfile="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
 <!--            <fileset dir="@{project.fpgatesrv.target}/classes" includes="*.dll"  targetdir="$INSTALL_PATH/bin" override="true" />-->
+                <fileset dir="@{project.fpgatesrv.target}/../lib/tremol" excludes="HttpServerSettings.xml" targetdir="$INSTALL_PATH/lib/tremol" override="true" />
+                <singlefile src="@{project.fpgatesrv.target}/../lib/tremol/HttpServerSettings.xml" target="$INSTALL_PATH/lib/tremol/HttpServerSettings.xml" override="false" />
 <!--            <fileset dir="@{project.fpgatesrv.target}/../lib/" includes="*.dll"  targetdir="$INSTALL_PATH/lib" override="true" />-->
 <!--            <fileset dir="@{project.fpgatesrv.target}/../lib/x86/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x86" override="true" />-->
 <!--            <fileset dir="@{project.fpgatesrv.target}/../lib/x64/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x64" override="true" />-->

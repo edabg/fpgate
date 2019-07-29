@@ -42,7 +42,12 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
 import org.eda.fdevice.FPPrinterPool;
+import org.restlet.Context;
+import org.restlet.data.LocalReference;
+import org.restlet.data.MediaType;
 import org.restlet.ext.crypto.DigestUtils;
+import org.restlet.representation.Representation;
+import org.restlet.resource.ClientResource;
 
 /**
  *
@@ -102,7 +107,7 @@ public class ControlPanel extends javax.swing.JFrame {
             panel.adjustTextAreaToCapacity(panel.jtaLog);
             panel.jtaLog.setCaretPosition(panel.jtaLog.getDocument().getLength());
             
-            panel.adjustControls();
+            panel.adjustStartStopControls();
         }
 
         @Override
@@ -187,6 +192,9 @@ public class ControlPanel extends javax.swing.JFrame {
         jtPoolDeadtime = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
         jbClearPool = new javax.swing.JButton();
+        jcbZFPLabServerAutoStart = new javax.swing.JCheckBox();
+        jbZFPStart = new javax.swing.JButton();
+        jbZFPStop = new javax.swing.JButton();
         jScrollPane3 = new javax.swing.JScrollPane();
         jtaLicense = new javax.swing.JTextArea();
 
@@ -366,6 +374,27 @@ public class ControlPanel extends javax.swing.JFrame {
             }
         });
 
+        jcbZFPLabServerAutoStart.setText("ZFPLabServer auto start");
+        jcbZFPLabServerAutoStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcbZFPLabServerAutoStartActionPerformed(evt);
+            }
+        });
+
+        jbZFPStart.setText("Start");
+        jbZFPStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbZFPStartActionPerformed(evt);
+            }
+        });
+
+        jbZFPStop.setText("Stop");
+        jbZFPStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbZFPStopActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jpSettingsLayout = new javax.swing.GroupLayout(jpSettings);
         jpSettings.setLayout(jpSettingsLayout);
         jpSettingsLayout.setHorizontalGroup(
@@ -402,7 +431,7 @@ public class ControlPanel extends javax.swing.JFrame {
                                 .addComponent(jcbUseSSL)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jtServerPortSSL, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 80, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                 .addComponent(jlGoAdmin))
                             .addGroup(jpSettingsLayout.createSequentialGroup()
                                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -420,7 +449,6 @@ public class ControlPanel extends javax.swing.JFrame {
                             .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jpSettingsLayout.createSequentialGroup()
                                 .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -432,8 +460,15 @@ public class ControlPanel extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jtPoolDeadtime, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jbClearPool)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                                .addComponent(jbClearPool))
+                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jcbZFPLabServerAutoStart)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jbZFPStart)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jbZFPStop)))))
                 .addContainerGap())
         );
 
@@ -487,8 +522,11 @@ public class ControlPanel extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
-                    .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 63, Short.MAX_VALUE)
+                    .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jcbZFPLabServerAutoStart)
+                    .addComponent(jbZFPStart)
+                    .addComponent(jbZFPStop))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jbSave)
                     .addComponent(jbCancel))
@@ -513,7 +551,7 @@ public class ControlPanel extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSeparator1)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(419, 419, 419)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jbStart)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jbStop)
@@ -522,10 +560,12 @@ public class ControlPanel extends javax.swing.JFrame {
                 .addGap(78, 78, 78)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jlBuildInfo)
-                    .addComponent(jlAppVersion)))
+                    .addComponent(jlAppVersion))
+                .addGap(0, 0, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
                 .addGap(36, 36, 36)
-                .addComponent(jlAppName))
+                .addComponent(jlAppName)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addComponent(jTabbedPane1)
         );
         layout.setVerticalGroup(
@@ -552,20 +592,36 @@ public class ControlPanel extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     
-    private void adjustControls() {
+    private void adjustStartStopControls() {
         jbStart.setEnabled(FPServer.mainComponent.isStopped());
         jbStop.setEnabled(FPServer.mainComponent.isStarted());
+        jbZFPStart.setEnabled(!ZFPLabServer.isStarted());
+        jbZFPStop.setEnabled(ZFPLabServer.isStarted());
         adjustSysTray();
+    }
+    
+    private void startZFPServer() {
+        try {
+            ZFPLabServer.start();
+        } catch (Exception ex) {
+            Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        adjustStartStopControls();
+    }
+
+    private void stopZFPServer() {
+        ZFPLabServer.stop();
+        adjustStartStopControls();
     }
     
     private void startServer() {
         FPServer.application.startServer();
-        adjustControls();
+        adjustStartStopControls();
     }
     
     private void stopServer() {
         FPServer.application.stopServer();
-        adjustControls();
+        adjustStartStopControls();
     }
     
     private void jbStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbStartActionPerformed
@@ -585,42 +641,7 @@ public class ControlPanel extends javax.swing.JFrame {
     }//GEN-LAST:event_jtAdminNameActionPerformed
 
     private void jTabbedPane1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jTabbedPane1FocusGained
-        Properties prop = FPServer.application.getAppProperties();
-        jtServerPort.setText(prop.getProperty("ServerPort"));
-        jtServerPortSSL.setText(prop.getProperty("ServerPortSSL"));
-        jtServerAddr.setText(prop.getProperty("ServerAddr"));
-        jtAdminName.setText(prop.getProperty("AdminUser"));
-        jtAdminPassword.setText("");
-        jtAdminPassword2.setText("");
-        jcbDisableAnonymousPrint.setSelected(prop.getProperty("DisableAnonymous").equals("1"));
-        jcbUseSSL.setSelected(prop.getProperty("UseSSL").equals("1"));
-        jcbStartMinimized.setSelected(prop.getProperty("StartMinimized").equals("1"));
-        jcbCheckVersionAtStartup.setSelected(prop.getProperty("CheckVersionAtStartup").equals("1"));
-        jcbPoolEnable.setSelected(prop.getProperty("PoolEnabled").equals("1"));
-        jtPoolDeadtime.setText(prop.getProperty("PoolDeadtime"));
-        
-        String[] levels = new String[] {
-            Level.OFF.getName()
-            , Level.SEVERE.getName()
-            , Level.WARNING.getName()
-            , Level.INFO.getName()
-            , Level.CONFIG.getName()
-            , Level.FINE.getName()
-            , Level.FINEST.getName()
-            , Level.ALL.getName()
-        };
-        jComboBoxLLDevice.removeAllItems();
-        jComboBoxLLProtocol.removeAllItems();
-        jComboBoxLLFPCBase.removeAllItems();
-        for (int i =0; i < levels.length; i++) {
-            jComboBoxLLDevice.addItem(levels[i]);
-            jComboBoxLLProtocol.addItem(levels[i]);
-            jComboBoxLLFPCBase.addItem(levels[i]);
-        }
-        
-        jComboBoxLLDevice.setSelectedItem(prop.getProperty("LLDevice"));
-        jComboBoxLLProtocol.setSelectedItem(prop.getProperty("LLProtocol"));
-        jComboBoxLLFPCBase.setSelectedItem(prop.getProperty("LLFPCBase"));
+        adjustSettingsControls();
     }//GEN-LAST:event_jTabbedPane1FocusGained
 
     private void jbSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSaveActionPerformed
@@ -645,6 +666,7 @@ public class ControlPanel extends javax.swing.JFrame {
         prop.setProperty("LLProtocol", (String)jComboBoxLLProtocol.getSelectedItem());
         prop.setProperty("LLFPCBase", (String)jComboBoxLLFPCBase.getSelectedItem());
         prop.setProperty("PoolEnabled", jcbPoolEnable.isSelected()?"1":"0");
+        prop.setProperty("ZFPLabServerAutoStart", jcbZFPLabServerAutoStart.isSelected()?"1":"0");
         prop.setProperty("PoolDeadtime", jtPoolDeadtime.getText());
         FPServer.application.updateProperties();
     }//GEN-LAST:event_jbSaveActionPerformed
@@ -700,9 +722,88 @@ public class ControlPanel extends javax.swing.JFrame {
         FPPrinterPool.clear();
     }//GEN-LAST:event_jbClearPoolActionPerformed
 
+    private void jcbZFPLabServerAutoStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbZFPLabServerAutoStartActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jcbZFPLabServerAutoStartActionPerformed
+
+    private void jbZFPStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbZFPStartActionPerformed
+        // TODO add your handling code here:
+        startZFPServer();
+    }//GEN-LAST:event_jbZFPStartActionPerformed
+
+    private void jbZFPStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbZFPStopActionPerformed
+        // TODO add your handling code here:
+        stopZFPServer();
+    }//GEN-LAST:event_jbZFPStopActionPerformed
+
+    private void testRIAP() {
+//        Context context;
+//        FPServer.mainComponent.getContext().getClientDispatcher().get("riap://print/");
+
+/*
+    ClientResource cr = new ClientResource("riap://component/");
+    Representation repr = cr.get();
+        try {
+            System.out.println(repr.getText());
+        } catch (IOException ex) {
+            Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+*/
+        ClientResource res = new ClientResource(LocalReference.createRiapReference(LocalReference.RIAP_COMPONENT, "/print/"));
+        try {
+            Representation repr = res.get(MediaType.ALL); 
+            if (repr != null)
+                System.out.println(repr.getText());
+        } catch (IOException ex) {
+            Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        res.release();
+    }
+    
+    private void adjustSettingsControls() {
+        Properties prop = FPServer.application.getAppProperties();
+        jtServerPort.setText(prop.getProperty("ServerPort"));
+        jtServerPortSSL.setText(prop.getProperty("ServerPortSSL"));
+        jtServerAddr.setText(prop.getProperty("ServerAddr"));
+        jtAdminName.setText(prop.getProperty("AdminUser"));
+        jtAdminPassword.setText("");
+        jtAdminPassword2.setText("");
+        jcbDisableAnonymousPrint.setSelected(prop.getProperty("DisableAnonymous").equals("1"));
+        jcbUseSSL.setSelected(prop.getProperty("UseSSL").equals("1"));
+        jcbStartMinimized.setSelected(prop.getProperty("StartMinimized").equals("1"));
+        jcbCheckVersionAtStartup.setSelected(prop.getProperty("CheckVersionAtStartup").equals("1"));
+        jcbPoolEnable.setSelected(prop.getProperty("PoolEnabled").equals("1"));
+        jtPoolDeadtime.setText(prop.getProperty("PoolDeadtime"));
+
+        jcbZFPLabServerAutoStart.setSelected(prop.getProperty("ZFPLabServerAutoStart").equals("1"));
+        
+        String[] levels = new String[] {
+            Level.OFF.getName()
+            , Level.SEVERE.getName()
+            , Level.WARNING.getName()
+            , Level.INFO.getName()
+            , Level.CONFIG.getName()
+            , Level.FINE.getName()
+            , Level.FINEST.getName()
+            , Level.ALL.getName()
+        };
+        jComboBoxLLDevice.removeAllItems();
+        jComboBoxLLProtocol.removeAllItems();
+        jComboBoxLLFPCBase.removeAllItems();
+        for (int i =0; i < levels.length; i++) {
+            jComboBoxLLDevice.addItem(levels[i]);
+            jComboBoxLLProtocol.addItem(levels[i]);
+            jComboBoxLLFPCBase.addItem(levels[i]);
+        }
+        
+        jComboBoxLLDevice.setSelectedItem(prop.getProperty("LLDevice"));
+        jComboBoxLLProtocol.setSelectedItem(prop.getProperty("LLProtocol"));
+        jComboBoxLLFPCBase.setSelectedItem(prop.getProperty("LLFPCBase"));
+    }
+    
     
     public void notifyChange() {
-        adjustControls();
+        adjustStartStopControls();
     }
     
     TrayIcon trayIcon;
@@ -869,11 +970,14 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JButton jbSave;
     private javax.swing.JButton jbStart;
     private javax.swing.JButton jbStop;
+    private javax.swing.JButton jbZFPStart;
+    private javax.swing.JButton jbZFPStop;
     private javax.swing.JCheckBox jcbCheckVersionAtStartup;
     private javax.swing.JCheckBox jcbDisableAnonymousPrint;
     private javax.swing.JCheckBox jcbPoolEnable;
     private javax.swing.JCheckBox jcbStartMinimized;
     private javax.swing.JCheckBox jcbUseSSL;
+    private javax.swing.JCheckBox jcbZFPLabServerAutoStart;
     private javax.swing.JLabel jlAppName;
     private javax.swing.JLabel jlAppVersion;
     private javax.swing.JLabel jlBuildInfo;

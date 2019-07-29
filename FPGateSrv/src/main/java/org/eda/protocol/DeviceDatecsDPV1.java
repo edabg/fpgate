@@ -996,12 +996,14 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
         SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMyyHHmm");
         
         params = opCode+","+opPasswd+","+UNS+","+wpNum+","+RevType+","+RevDocNum+","+dateFormat.format(RevDateTime)+","+RevFMNum;
+        boolean reasonPrinted = false;
         if (invoice) {
             if (!RevInvNum.matches("^\\d{1,10}$")) 
                 throw new FDException("Невалиден номер на фактура, по която е сторно операцията '"+RevDocNum+"' трябва да е число 1 - 9999999999!");
             if (RevReason.length() > 42)
                 RevReason = RevReason.substring(0, 42);
             params = params + ",I,"+RevInvNum+","+RevReason;
+            reasonPrinted = true;
         }
         
         String res = cmdCustom(46, params);
@@ -1009,6 +1011,13 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
             String[] rData = res.split(",");
             response.put("AllReceipt", rData[0]);
             response.put("StrReceipt", rData[1]);
+            if (!reasonPrinted && (RevReason.length() > 0)) {
+                try {
+                    cmdPrintFiscalText(RevReason);
+                } catch (Exception ex) {
+                    err("Грешка при печат на фискален текст с причнина за сторно ("+ex.getMessage()+")!");
+                }
+            }
         } else {    
             err("Грешка при отваряне на сторно фискален бон ("+res+")!");
             throw new FDException(mErrors.toString());
