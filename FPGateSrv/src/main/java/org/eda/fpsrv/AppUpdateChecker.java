@@ -164,7 +164,7 @@ public class AppUpdateChecker {
 
         int compare = 0;
         try {
-            logger.info("Checking for new app version (current:"+localVersion+")");
+            logger.info("Проверка за нова версия (текуща:"+localVersion+")");
     //        Client client = new Client(Protocol.HTTPS);
             Reference apiUri = new Reference(APIURL+"releases/latest");
             ClientResource cr = new ClientResource(apiUri);
@@ -208,25 +208,25 @@ public class AppUpdateChecker {
             VersionComparator vc = new VersionComparator();
             compare = vc.compare(vi.localVersion, vi.remoteVersion);
             if (compare == 0) {
-                logger.info("There is no new version.");
+                logger.info("Няма по-нова версия.");
                 vi.state = VersionState.MATCH;
                 BuildComparator bc = new BuildComparator();
                 compare = bc.compare(vi.localBuild, vi.remoteBuild);
                 if (compare == 0) {
-                    logger.info("There is no new build.");
+                    logger.info("Няма по-нов билд.");
                     // vi.state = VersionState.MATCH;
                 } else if (compare < 0) {
-                    logger.info("There is new build.");
+                    logger.info("Наличен е по-нов билд.");
                     vi.state = VersionState.NEW_BUILD;
                 } else {
-                    logger.info("Remote build is older than local one.");
+                    logger.info("Отдалеченият билд е по-стар от локалния.");
                     vi.state = VersionState.OLD_BUILD;
                 }
             } else if (compare < 0) {
-                logger.info("There is new version.");
+                logger.info("Налична е по-нова версия.");
                 vi.state = VersionState.NEW_VERSION;
             } else {
-                logger.info("Remote version is older than local one.");
+                logger.info("Отдалечената версия е по-стара от локалната.");
                 vi.state = VersionState.OLD_VERSION;
             }
         } catch (Exception ex) {

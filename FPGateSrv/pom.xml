@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eda</groupId>
     <artifactId>FPGateSrv</artifactId>
-    <version>2.0.5-b</version>
+    <version>2.0.6-b</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -127,6 +127,18 @@
                 </includes>
                
             </resource>
+<!--            
+            <resource>
+                <targetPath>${project.build.outputDirectory}/locale</targetPath>
+                <filtering>false</filtering>
+                <directory>${basedir}/src/main/resources/locale</directory>
+               
+                <includes>
+                    <include>**/*.*</include>
+                </includes>
+               
+            </resource>
+-->                        
         </resources>
         <plugins>
             <plugin>

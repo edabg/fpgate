@@ -144,11 +144,16 @@
                     </execution>
                 </executions>
                 <dependencies>
-                   <dependency>
-                      <groupId>org.codehaus.izpack</groupId>
-                      <artifactId>izpack-panel</artifactId>
-                      <version>${izpack.version}</version>
-                   </dependency>
+                    <dependency>
+                       <groupId>org.codehaus.izpack</groupId>
+                       <artifactId>izpack-panel</artifactId>
+                       <version>${izpack.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eda</groupId>
+                        <artifactId>izpackbgr</artifactId>
+                        <version>1.0-SNAPSHOT</version>
+                    </dependency>
                 </dependencies>
              </plugin>
         </plugins>

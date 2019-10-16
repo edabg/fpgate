@@ -43,7 +43,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </guiprefs>
 
     <locale>
-        <langpack iso3="eng"/>
+        <langpack iso3="bgr"/>
+<!--        <langpack iso3="eng"/> -->
     </locale>
 
     <variables>
@@ -80,7 +81,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <res id="Win_shortcutSpec.xml" src="@{izpack.staging}/Win_shortcutSpec.xml" />
         <res id="LicencePanel.licence" src="@{izpack.staging}/license.txt"/>
         <res id="ProcessPanel.Spec.xml" src="@{izpack.staging}/ProcessPanel.Spec.xml" />
-        <res id="userInputSpec.xml" src="@{izpack.staging}/userInputSpec.xml" parse="yes" type="xml"/>        
+        <res id="userInputSpec.xml" src="@{izpack.staging}/userInputSpec.xml" />        
+<!--        <res id="userInputSpec.xml" src="@{izpack.staging}/userInputSpec.xml" parse="yes" type="xml"/> -->
 <!--      
         <res src="@{izpack.staging}/common_resources/img/install-sidebar.png" id="Installer.image"/>
         <res src="hello.html" id="HTMLHelloPanel.info"/>

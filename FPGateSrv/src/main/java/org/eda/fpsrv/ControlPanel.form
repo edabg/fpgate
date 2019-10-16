@@ -88,7 +88,7 @@
     </Component>
     <Component class="javax.swing.JLabel" name="jlAppVersion">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Version: 1.0.0"/>
+        <Property name="text" type="java.lang.String" value="&#x412;&#x435;&#x440;&#x441;&#x438;&#x44f;: 1.0.0"/>
         <Property name="toolTipText" type="java.lang.String" value=""/>
       </Properties>
     </Component>
@@ -97,14 +97,14 @@
         <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
           <Color blue="99" green="99" red="99" type="rgb"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="build ..."/>
+        <Property name="text" type="java.lang.String" value="&#x411;&#x438;&#x43b;&#x434; ..."/>
       </Properties>
     </Component>
     <Component class="javax.swing.JSeparator" name="jSeparator1">
     </Component>
     <Component class="javax.swing.JButton" name="jbStart">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Start"/>
+        <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x430;&#x440;&#x442;"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbStartActionPerformed"/>
@@ -112,13 +112,16 @@
     </Component>
     <Component class="javax.swing.JButton" name="jbStop">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Stop"/>
+        <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x43e;&#x43f;"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbStopActionPerformed"/>
       </Events>
     </Component>
     <Container class="javax.swing.JTabbedPane" name="jTabbedPane1">
+      <AccessibilityProperties>
+        <Property name="AccessibleContext.accessibleName" type="java.lang.String" value="&#x41b;&#x43e;&#x433; &#x43d;&#x430; &#x434;&#x43e;&#x441;&#x442;&#x44a;&#x43f;&#x430;"/>
+      </AccessibilityProperties>
       <Events>
         <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="jTabbedPane1FocusGained"/>
       </Events>
@@ -131,8 +134,8 @@
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="Access Log">
-                <Property name="tabTitle" type="java.lang.String" value="Access Log"/>
+              <JTabbedPaneConstraints tabName="&#x41b;&#x43e;&#x433; &#x43d;&#x430; &#x434;&#x43e;&#x441;&#x442;&#x44a;&#x43f;&#x430;">
+                <Property name="tabTitle" type="java.lang.String" value="&#x41b;&#x43e;&#x433; &#x43d;&#x430; &#x434;&#x43e;&#x441;&#x442;&#x44a;&#x43f;&#x430;"/>
               </JTabbedPaneConstraints>
             </Constraint>
           </Constraints>
@@ -164,8 +167,8 @@
           </AuxValues>
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="System Out">
-                <Property name="tabTitle" type="java.lang.String" value="System Out"/>
+              <JTabbedPaneConstraints tabName="&#x421;&#x438;&#x441;&#x442;&#x435;&#x43c;&#x435;&#x43d; &#x43b;&#x43e;&#x433;">
+                <Property name="tabTitle" type="java.lang.String" value="&#x421;&#x438;&#x441;&#x442;&#x435;&#x43c;&#x435;&#x43d; &#x43b;&#x43e;&#x433;"/>
               </JTabbedPaneConstraints>
             </Constraint>
           </Constraints>
@@ -194,8 +197,8 @@
         <Container class="javax.swing.JPanel" name="jpSettings">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="Settings">
-                <Property name="tabTitle" type="java.lang.String" value="Settings"/>
+              <JTabbedPaneConstraints tabName="&#x41d;&#x430;&#x441;&#x442;&#x440;&#x43e;&#x439;&#x43a;&#x438;">
+                <Property name="tabTitle" type="java.lang.String" value="&#x41d;&#x430;&#x441;&#x442;&#x440;&#x43e;&#x439;&#x43a;&#x438;"/>
               </JTabbedPaneConstraints>
             </Constraint>
           </Constraints>
@@ -372,7 +375,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtServerPort"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Server Port"/>
+                <Property name="text" type="java.lang.String" value="&#x421;&#x44a;&#x440;&#x432;&#x44a;&#x440; &#x43f;&#x43e;&#x440;&#x442;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="jtServerPort">
@@ -388,7 +391,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtAdminName"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Remote Admin Name"/>
+                <Property name="text" type="java.lang.String" value="&#x410;&#x434;&#x43c;&#x438;&#x43d;&#x438;&#x441;&#x442;&#x440;&#x430;&#x442;&#x43e;&#x440; &#x438;&#x43c;&#x435;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="jtAdminName">
@@ -404,7 +407,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtAdminPassword"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Remote Admin Password"/>
+                <Property name="text" type="java.lang.String" value="&#x410;&#x434;&#x43c;&#x438;&#x43d;&#x438;&#x441;&#x442;&#x440;&#x430;&#x442;&#x43e;&#x440; &#x43f;&#x430;&#x440;&#x43e;&#x43b;&#x430;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel4">
@@ -412,12 +415,12 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtAdminPassword2"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Confirm Password"/>
+                <Property name="text" type="java.lang.String" value="&#x41f;&#x43e;&#x442;&#x432;&#x44a;&#x440;&#x436;&#x434;&#x435;&#x43d;&#x438;&#x435; &#x43d;&#x430; &#x43f;&#x430;&#x440;&#x43e;&#x43b;&#x430;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JCheckBox" name="jcbDisableAnonymousPrint">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Disable anonymous printing"/>
+                <Property name="text" type="java.lang.String" value="&#x417;&#x430;&#x431;&#x440;&#x430;&#x43d;&#x430; &#x43d;&#x430; &#x430;&#x43d;&#x43e;&#x43d;&#x438;&#x43c;&#x435;&#x43d; &#x43f;&#x435;&#x447;&#x430;&#x442;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JSeparator" name="jSeparator2">
@@ -427,7 +430,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="jbSave">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Save"/>
+                <Property name="text" type="java.lang.String" value="&#x417;&#x430;&#x43f;&#x438;&#x441;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbSaveActionPerformed"/>
@@ -435,7 +438,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="jbCancel">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Cancel"/>
+                <Property name="text" type="java.lang.String" value="&#x41e;&#x442;&#x43a;&#x430;&#x437;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JPasswordField" name="jtAdminPassword">
@@ -455,7 +458,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtServerAddr"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Server Address"/>
+                <Property name="text" type="java.lang.String" value="&#x421;&#x44a;&#x440;&#x432;&#x44a;&#x440; &#x430;&#x434;&#x440;&#x435;&#x441;"/>
                 <Property name="toolTipText" type="java.lang.String" value="Leave empty to bind on all addresses."/>
               </Properties>
             </Component>
@@ -476,7 +479,7 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="jcbUseSSL">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Use SSL"/>
+                <Property name="text" type="java.lang.String" value="&#x418;&#x437;&#x43f;&#x43e;&#x43b;&#x437;&#x432;&#x430;&#x43d;&#x435; &#x43d;&#x430; SSL"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="jtServerPortSSL">
@@ -489,7 +492,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jComboBoxLLProtocol"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Log Level - protocol"/>
+                <Property name="text" type="java.lang.String" value="&#x41b;&#x43e;&#x433; &#x43d;&#x438;&#x432;&#x43e; - &#x43f;&#x440;&#x43e;&#x442;&#x43e;&#x43a;&#x43e;&#x43b;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel7">
@@ -497,7 +500,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jComboBoxLLDevice"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Log Level - device low"/>
+                <Property name="text" type="java.lang.String" value="&#x41b;&#x43e;&#x433; &#x43d;&#x438;&#x432;&#x43e; - &#x443;&#x441;&#x442;&#x440;&#x43e;&#x439;&#x441;&#x442;&#x432;&#x43e; &#x43d;&#x438;&#x441;&#x43a;&#x43e;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel8">
@@ -505,7 +508,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jComboBoxLLFPCBase"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Log Level - device user"/>
+                <Property name="text" type="java.lang.String" value="&#x41b;&#x43e;&#x433; &#x43d;&#x438;&#x432;&#x43e; - &#x443;&#x441;&#x442;&#x440;&#x438;&#x43e;&#x439;&#x441;&#x442;&#x432;&#x43e; &#x43f;&#x440;&#x438;&#x43b;&#x43e;&#x436;&#x43d;&#x43e;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JComboBox" name="jComboBoxLLProtocol">
@@ -555,7 +558,7 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="jcbStartMinimized">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Start Minimized"/>
+                <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x430;&#x440;&#x442;&#x438;&#x440;&#x430;&#x43d;&#x435; &#x43d;&#x430; &#x43c;&#x438;&#x43d;&#x438;&#x43c;&#x438;&#x437;&#x438;&#x440;&#x430;&#x43d; &#x43f;&#x440;&#x43e;&#x437;&#x43e;&#x440;&#x435;&#x446;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcbStartMinimizedActionPerformed"/>
@@ -563,12 +566,12 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="jcbCheckVersionAtStartup">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Check for new version at startup"/>
+                <Property name="text" type="java.lang.String" value="&#x41f;&#x440;&#x43e;&#x432;&#x435;&#x440;&#x43a;&#x430; &#x437;&#x430; &#x43d;&#x43e;&#x432;&#x438; &#x432;&#x435;&#x440;&#x441;&#x438;&#x438; &#x43f;&#x440;&#x438; &#x441;&#x442;&#x430;&#x440;&#x442;&#x438;&#x440;&#x430;&#x43d;&#x435;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JButton" name="jbCheckVersion">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Check now"/>
+                <Property name="text" type="java.lang.String" value="&#x41f;&#x440;&#x43e;&#x432;&#x435;&#x440;&#x438; &#x441;&#x435;&#x433;&#x430;"/>
                 <Property name="toolTipText" type="java.lang.String" value=""/>
               </Properties>
               <Events>
@@ -577,7 +580,7 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="jcbPoolEnable">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Enable printer pool"/>
+                <Property name="text" type="java.lang.String" value="&#x420;&#x430;&#x437;&#x440;&#x435;&#x448;&#x430;&#x432;&#x430;&#x43d; &#x43d;&#x430; &#x43f;&#x43e;&#x441;&#x442;&#x43e;&#x44f;&#x43d;&#x435;&#x43d; &#x43f;&#x443;&#x43b; &#x43e;&#x442; &#x43f;&#x440;&#x438;&#x43d;&#x442;&#x435;&#x440;&#x438;"/>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="jtPoolDeadtime">
@@ -593,7 +596,7 @@
                 <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtPoolDeadtime"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Pool deadtime, min"/>
+                <Property name="text" type="java.lang.String" value="&#x412;&#x440;&#x435;&#x43c;&#x435; &#x437;&#x430; &#x43f;&#x440;&#x435;&#x441;&#x442;&#x43e;&#x439; &#x432; &#x43f;&#x443;&#x43b;&#x430;, &#x43c;&#x438;&#x43d;"/>
                 <Property name="nextFocusableComponent" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
                   <ComponentRef name="jtPoolDeadtime"/>
                 </Property>
@@ -601,7 +604,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="jbClearPool">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Clear pool"/>
+                <Property name="text" type="java.lang.String" value="&#x418;&#x437;&#x447;&#x438;&#x441;&#x442;&#x432;&#x430;&#x43d;&#x435; &#x43d;&#x430; &#x43f;&#x443;&#x43b;&#x430;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbClearPoolActionPerformed"/>
@@ -609,7 +612,7 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="jcbZFPLabServerAutoStart">
               <Properties>
-                <Property name="text" type="java.lang.String" value="ZFPLabServer auto start"/>
+                <Property name="text" type="java.lang.String" value="ZFPLabServer &#x430;&#x432;&#x442;&#x43e;&#x43c;&#x430;&#x442;&#x438;&#x447;&#x435;&#x43d; &#x441;&#x442;&#x430;&#x440;&#x442;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jcbZFPLabServerAutoStartActionPerformed"/>
@@ -617,7 +620,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="jbZFPStart">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Start"/>
+                <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x430;&#x440;&#x442;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbZFPStartActionPerformed"/>
@@ -625,7 +628,7 @@
             </Component>
             <Component class="javax.swing.JButton" name="jbZFPStop">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Stop"/>
+                <Property name="text" type="java.lang.String" value="&#x421;&#x442;&#x43e;&#x43f;"/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbZFPStopActionPerformed"/>
@@ -636,8 +639,8 @@
         <Container class="javax.swing.JScrollPane" name="jScrollPane3">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
-              <JTabbedPaneConstraints tabName="License">
-                <Property name="tabTitle" type="java.lang.String" value="License"/>
+              <JTabbedPaneConstraints tabName="&#x41b;&#x438;&#x446;&#x435;&#x43d;&#x437;">
+                <Property name="tabTitle" type="java.lang.String" value="&#x41b;&#x438;&#x446;&#x435;&#x43d;&#x437;"/>
               </JTabbedPaneConstraints>
             </Constraint>
           </Constraints>

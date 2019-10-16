@@ -83,7 +83,7 @@ public class AppVersionDlg extends javax.swing.JFrame {
         jbAct = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Version Information");
+        setTitle("Информация за версията");
         setResizable(false);
         addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -109,7 +109,9 @@ public class AppVersionDlg extends javax.swing.JFrame {
         jlBuildInfoLast.setText("1.0.0");
         jlBuildInfoLast.setToolTipText("");
 
-        jbCancel.setText("Cancel");
+        jbCancel.setText("Отказ");
+        jbCancel.setActionCommand("Cancel");
+        jbCancel.setAutoscrolls(true);
         jbCancel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jbCancelMouseClicked(evt);
@@ -119,21 +121,22 @@ public class AppVersionDlg extends javax.swing.JFrame {
         jtaVersionInfo.setEditable(false);
         jtaVersionInfo.setColumns(20);
         jtaVersionInfo.setRows(5);
-        jtaVersionInfo.setText("Version Information");
+        jtaVersionInfo.setText("Информация за версията");
         jtaVersionInfo.setToolTipText("Version Information");
         jScrollPane1.setViewportView(jtaVersionInfo);
 
-        jLabel1.setText("Version");
+        jLabel1.setText("Версия");
 
-        jLabel2.setText("Build");
+        jLabel2.setText("Билд");
 
-        jLabel3.setText("Latest Version");
+        jLabel3.setText("Последна версия");
 
-        jLabel4.setText("Latest Build");
+        jLabel4.setText("Последен билд");
 
         jpDownload.setName(""); // NOI18N
 
-        jbAct.setText("Download");
+        jbAct.setText("Изтегляне");
+        jbAct.setActionCommand("Download");
         jbAct.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jbActMouseClicked(evt);
@@ -164,7 +167,7 @@ public class AppVersionDlg extends javax.swing.JFrame {
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jpDownload, javax.swing.GroupLayout.DEFAULT_SIZE, 432, Short.MAX_VALUE)
+                        .addComponent(jpDownload, javax.swing.GroupLayout.DEFAULT_SIZE, 434, Short.MAX_VALUE)
                         .addGap(18, 18, 18)
                         .addComponent(jbAct, javax.swing.GroupLayout.PREFERRED_SIZE, 180, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -235,7 +238,7 @@ public class AppVersionDlg extends javax.swing.JFrame {
                 public void run() {
                     jpDownload.setVisible(true);
                     jbAct.setEnabled(false);
-                    jbAct.setText("Downloading ...");
+                    jbAct.setText("Изтегляне ...");
                     String downloadURL = VersionInformation.remoteVersionDownloadURL;
                     BufferedInputStream  is = null;
                     BufferedOutputStream fos = null;
@@ -280,10 +283,10 @@ public class AppVersionDlg extends javax.swing.JFrame {
                         urlConn = null;
                     }    
                     if (downloadOK) {
-                        jbAct.setText("Install");
+                        jbAct.setText("Инсталиране");
                         jbAct.setActionCommand("Install");
                     } else {
-                        jbAct.setText("Download");
+                        jbAct.setText("Изтегляне");
                         jbAct.setActionCommand("Download");
                     }
                     jbAct.setEnabled(true);

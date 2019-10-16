@@ -349,7 +349,7 @@ public class FPServer extends Application {
             AppVersionDlg appv = new AppVersionDlg(VersionInformation);
             appv.setVisible(true);
         } else if (showDetail) {
-            JOptionPane.showMessageDialog(null, "There is no new version available.", "Version Information", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Не е налична нова версия.", "Информация за версията", JOptionPane.INFORMATION_MESSAGE);
         }
     }
     

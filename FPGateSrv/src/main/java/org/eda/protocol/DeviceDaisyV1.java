@@ -1766,10 +1766,13 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
 //        if (isFiscalized()) {
             String res = cmdCustom(116, "");
             if (res.substring(0, 1).equals("P")) {
-               if ((res.length() > 4) && res.substring(1, 2).equals("F")) {
-                   //PF,0,QR
-                   QRCode = res.substring(4);
-               }
+               //PF,0,QR
+               String[] commaParts = res.split(","); 
+               if (commaParts.length > 2)
+                   QRCode = commaParts[2];
+//               if ((res.length() > 4) && res.substring(1, 2).equals("F")) {
+//                   QRCode = res.substring(5);
+//               }
             } else
                 throw new FDException("Грешка при четене на информация за QRCode!");
 //        }    
