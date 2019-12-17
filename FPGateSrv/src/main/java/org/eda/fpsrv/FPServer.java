@@ -17,6 +17,7 @@
 package org.eda.fpsrv;
 
 import TremolZFP.FPcore;
+import java.io.ByteArrayInputStream;
 import org.eda.fdevice.FUser;
 import org.eda.fdevice.FPDatabase;
 import org.eda.fdevice.FPCBase;
@@ -24,24 +25,34 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import javax.swing.JOptionPane;
+import org.eda.cb.CBIOService;
 import org.eda.fdevice.FPPrinterPool;
 import org.eda.protocol.AbstractFiscalDevice;
 import org.eda.protocol.AbstractProtocol;
@@ -65,17 +76,20 @@ import org.restlet.security.SecretVerifier;
 import static org.restlet.security.Verifier.RESULT_INVALID;
 import static org.restlet.security.Verifier.RESULT_VALID;
 import org.restlet.util.Series;
+import sun.rmi.log.ReliableLog;
 /**
  *
  * @author Dimitar Angelov
  */
 public class FPServer extends Application {
 
+    private FileHandler logFileHandler;
     private static Logger loggerProtocolPackage;
     private static Logger loggerProtocol;
     private static Logger loggerProtocolDevice;
     private static Logger loggerTremolFPCore;
     private static Logger loggerFPCBase;
+    private static Logger loggerCBIOService;
 
     public static FPServer application;
     public static Component mainComponent;
@@ -257,13 +271,20 @@ public class FPServer extends Application {
         defaultProperties.setProperty("SSLKeyPassword", "FPGate"); // 
 
         defaultProperties.setProperty("PoolEnabled", "1");
-        defaultProperties.setProperty("PoolDeadtime", "5"); // 5min
+        defaultProperties.setProperty("PoolDeadtime", "30"); // 5min
 
         defaultProperties.setProperty("ZFPLabServerAutoStart", "0");
+        
+        // Colibri ERP Link
+        defaultProperties.setProperty("CoAutoStart", "0");
+        defaultProperties.setProperty("CoURL", "");
+        defaultProperties.setProperty("CoUser", "");
+        defaultProperties.setProperty("CoPass", "");
         
         defaultProperties.setProperty("LLProtocol", Level.WARNING.getName()); // 
         defaultProperties.setProperty("LLDevice", Level.WARNING.getName()); // 
         defaultProperties.setProperty("LLFPCBase", Level.WARNING.getName()); // 
+        defaultProperties.setProperty("LLCBIOService", Level.WARNING.getName()); // 
         
         this.appProperties = new Properties(defaultProperties);
         try {
@@ -294,7 +315,7 @@ public class FPServer extends Application {
     
     public void updateProperties() {
         try {
-            File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+//            File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
             String pfile = appBasePath+"/FPGateSrv.properties";
             this.appProperties.store(new FileOutputStream(pfile), "EDA FPGate Properties");
             userGuard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
@@ -386,7 +407,7 @@ public class FPServer extends Application {
     protected boolean getUseSSL() {
         return appProperties.getProperty("UseSSL", "0").equals("1");
     }
-    
+
     /**
      * Run as a standalone component.
      * 
@@ -430,7 +451,6 @@ public class FPServer extends Application {
         cp.setVisible(true);
         if (application.appProperties.getProperty("StartMinimized", "0").equals("1"))
             cp.setState(ControlPanel.ICONIFIED);
-        
 //        mainComponent.start();
         application.startServer();
         cp.notifyChange();
@@ -439,31 +459,103 @@ public class FPServer extends Application {
             application.checkAppVersion(false);
         if (application.appProperties.getProperty("ZFPLabServerAutoStart", "0").equals("1"))
             ZFPLabServer.start();
+        if (application.appProperties.getProperty("CoAutoStart", "0").equals("1"))
+            application.startCBIOService();
     }
 
+    public void startCBIOService() {
+        String CoURL = application.appProperties.getProperty("CoURL", "");
+        String user = application.appProperties.getProperty("CoUser", "");
+        // TODO: Decrypt password
+        String password = application.appProperties.getProperty("CoPass", "");
+        password = new String(Base64.getDecoder().decode(password));
+        CBIOService.startService(CoURL, user, password);
+    }
+    
+    public void stopCBIOService() {
+        CBIOService.stopService();
+    }
+    
+    public static class LogFormatter extends SimpleFormatter {
+        // %1$tb %1$td, %1$tY %1$tl:%1$tM:%1$tS %1$Tp %2$s%n%4$s: %5$s%6$s%n
+//        private static final String format = "[%1$tF %1$tT] [%2$-7s] %3$s %n";
+//        private static final String format = "[%1$tF %1$tT] %4$s %2$s: %5$s %6$s%n";
+        private static final String format = "[%1$tF %1$tT.%1$tL] %4$s: %5$s %6$s%n";
+        private final Date dat = new Date();
+
+        @Override
+        public synchronized String format(LogRecord record) {
+            dat.setTime(record.getMillis());
+            String source;
+            if (record.getSourceClassName() != null) {
+                source = record.getSourceClassName();
+                if (record.getSourceMethodName() != null) {
+                   source += " " + record.getSourceMethodName();
+                }
+            } else {
+                source = record.getLoggerName();
+            }
+            String message = formatMessage(record);
+            String throwable = "";
+            if (record.getThrown() != null) {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                pw.println();
+                record.getThrown().printStackTrace(pw);
+                pw.close();
+                throwable = sw.toString();
+            }
+            return String.format(
+                format
+                , dat                                   //1$
+                , source                                //2$
+                , record.getLoggerName()                //3$
+                , record.getLevel().getLocalizedName()  //4$
+                , message                               //5$
+                , throwable                             //6$
+            );
+        }
+        
+    }
+    
+    public FileHandler getLogFileHandler() {
+        return logFileHandler;
+    }
+    
+    public String getLogDir() {
+        return getAppBasePath()+"/logs";
+    }
+    
     protected void initLogs() {
         try {
-            FileHandler logfile = new FileHandler(application.getAppBasePath()+"/logs/"+application.getName()+"-access-%u-%g.log", 5*1024*1024, 10, true){{
+            logFileHandler = new FileHandler(getLogDir()+"/"+getName()+"-access-%u-%g.log", 2*1024*1024, 10, true){{
 //                        setFormatter(new org.restlet.engine.log.AccessLogFormatter());
-                        setFormatter(new SimpleFormatter());
+//                        setFormatter(new SimpleFormatter());
+                        setFormatter(new LogFormatter());
                     }};
             // Resltlet framework LOGGER
-            mainComponent.getLogger().addHandler(logfile);
+            mainComponent.getLogger().addHandler(logFileHandler);
 
             // The handler is over whole package
 //            loggerProtocolPackage = Logger.getLogger(AbstractFiscalDevice.class.getPackage().getName());
 //            loggerProtocolPackage.addHandler(logfile);
             // Log levels for protocol package are separated for protocol and device
             loggerProtocol = Logger.getLogger(AbstractProtocol.class.getName());
+            loggerProtocol.addHandler(logFileHandler);
             loggerProtocolDevice = Logger.getLogger(AbstractFiscalDevice.class.getName());
+            loggerProtocolDevice.addHandler(logFileHandler);
 
             // Tremol SDK
             loggerTremolFPCore = Logger.getLogger(FPcore.class.getName());
-            loggerTremolFPCore.addHandler(logfile);
+            loggerTremolFPCore.addHandler(logFileHandler);
             
             // FPCBase 
             loggerFPCBase =  Logger.getLogger(FPCBase.class.getName());
-            loggerFPCBase.addHandler(logfile);
+            loggerFPCBase.addHandler(logFileHandler);
+            
+            // CBIO Service
+            loggerCBIOService =  Logger.getLogger(CBIOService.class.getName());
+            loggerCBIOService.addHandler(logFileHandler);
             
             adjustLogLevels();
             
@@ -493,12 +585,17 @@ public class FPServer extends Application {
             loggerFPCBase.setLevel(Level.parse(this.appProperties.getProperty("LLFPCBase")));
         } catch(Exception ex) {
         }
+        try {
+            loggerCBIOService.setLevel(Level.parse(this.appProperties.getProperty("LLCBIOService")));
+        } catch(Exception ex) {
+        }
     }
     
     public static void addLogHandler(Handler h) {
         mainComponent.getLogger().addHandler(h);
 //        loggerProtocolPackage.addHandler(h);
 //        loggerTremolFPCore.addHandler(h);
+        loggerCBIOService.addHandler(h);
         loggerFPCBase.addHandler(h);
     }
   

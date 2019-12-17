@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<definitions xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:erpgate" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns="http://schemas.xmlsoap.org/wsdl/" targetNamespace="urn:erpgate">
+<types>
+<xsd:schema elementFormDefault="qualified" targetNamespace="urn:erpgate"
+>
+ <xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+ <xsd:import namespace="http://schemas.xmlsoap.org/wsdl/" />
+ <xsd:complexType name="erpSOAPServer..LoginRequestType">
+  <xsd:all>
+   <xsd:element name="username" type="xsd:string" form="unqualified"/>
+   <xsd:element name="password" type="xsd:string" form="unqualified"/>
+   <xsd:element name="cnum" type="xsd:string" form="unqualified"/>
+   <xsd:element name="db" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..LoginResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:decimal" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..LogoutRequestType"/>
+ <xsd:complexType name="erpSOAPServer..LogoutResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:decimal" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..CheckEncodingRequestType">
+  <xsd:all>
+   <xsd:element name="input" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..CheckEncodingResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..lastRowCountRequestType"/>
+ <xsd:complexType name="erpSOAPServer..lastRowCountResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:decimal" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..LoginByPAPRequestType">
+  <xsd:all>
+   <xsd:element name="PAPID" type="xsd:string" form="unqualified"/>
+   <xsd:element name="username" type="xsd:string" form="unqualified"/>
+   <xsd:element name="password" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..LoginByPAPResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:decimal" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="ExtPAPInfo">
+  <xsd:all>
+   <xsd:element name="token" type="xsd:string" form="unqualified"/>
+   <xsd:element name="URL" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..ExtAuthPAPRequestType">
+  <xsd:all>
+   <xsd:element name="partnercode" type="xsd:string" form="unqualified"/>
+   <xsd:element name="username" type="xsd:string" form="unqualified"/>
+   <xsd:element name="password" type="xsd:string" form="unqualified"/>
+   <xsd:element name="referrer" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPServer..ExtAuthPAPResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="tns:ExtPAPInfo" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="stringArray">
+  <xsd:sequence>
+   <xsd:element name="item" type="xsd:string" minOccurs="0" maxOccurs="unbounded" form="unqualified"/>
+  </xsd:sequence>
+ </xsd:complexType>
+ <xsd:complexType name="erpFilterRule">
+  <xsd:all>
+   <xsd:element name="field" type="xsd:string" doc="Field name" form="unqualified"/>
+   <xsd:element name="value" type="xsd:string" doc="Field value" form="unqualified"/>
+   <xsd:element name="oper" type="xsd:string" minOccurs="0" doc="Operation (use in extended filter only!)" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpFilter">
+  <xsd:sequence>
+   <xsd:element name="item" type="tns:erpFilterRule" minOccurs="0" maxOccurs="unbounded" form="unqualified"/>
+  </xsd:sequence>
+ </xsd:complexType>
+ <xsd:complexType name="erpSortRule">
+  <xsd:all>
+   <xsd:element name="field" type="xsd:string" doc="Field name" form="unqualified"/>
+   <xsd:element name="dir" type="xsd:string" doc="Sorting direction (|asc|desc)" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSort">
+  <xsd:sequence>
+   <xsd:element name="item" type="tns:erpSortRule" minOccurs="0" maxOccurs="unbounded" form="unqualified"/>
+  </xsd:sequence>
+ </xsd:complexType>
+ <xsd:complexType name="limitRange">
+  <xsd:all>
+   <xsd:element name="offset" type="xsd:long" form="unqualified"/>
+   <xsd:element name="count" type="xsd:long" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSetParam">
+  <xsd:all>
+   <xsd:element name="key" type="xsd:string" form="unqualified"/>
+   <xsd:element name="value" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSetParams">
+  <xsd:sequence>
+   <xsd:element name="item" type="tns:erpSetParam" minOccurs="0" maxOccurs="unbounded" form="unqualified"/>
+  </xsd:sequence>
+ </xsd:complexType>
+ <xsd:complexType name="erpFilterParams">
+  <xsd:all>
+   <xsd:element name="filter" type="tns:erpFilter" minOccurs="0" doc="Filter rule list, i.e. (field,value) pairs." form="unqualified"/>
+   <xsd:element name="ext_filter" type="tns:erpFilter" minOccurs="0" doc="Extended filter rule list, i.e. (field,value,oper) triplets." form="unqualified"/>
+   <xsd:element name="sort" type="tns:erpSort" minOccurs="0" doc="Sort rule list, i.e. (field,dir) pairs." form="unqualified"/>
+   <xsd:element name="set" type="tns:erpSetParams" minOccurs="0" doc="Setting parameters list, i.e. (key,value) pairs." form="unqualified"/>
+   <xsd:element name="limit" type="tns:limitRange" minOccurs="0" maxOccurs="1" doc="Result data set row limit, i.e. (offcet,count)." form="unqualified"/>
+   <xsd:element name="field_list" type="tns:stringArray" minOccurs="0" doc="Result data set row fields list to return." form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpInfo">
+  <xsd:all>
+   <xsd:element name="Name" type="xsd:string" form="unqualified"/>
+   <xsd:element name="Brand" type="xsd:string" form="unqualified"/>
+   <xsd:element name="Revision" type="xsd:string" form="unqualified"/>
+   <xsd:element name="BuildDate" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPBase..InfoRequestType"/>
+ <xsd:complexType name="erpSOAPBase..InfoResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="tns:erpInfo" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpFPGateAuthInfo">
+  <xsd:all>
+   <xsd:element name="SessionID" type="xsd:string" doc="SessionID" form="unqualified"/>
+   <xsd:element name="WSURI" type="xsd:string" doc="Crossbar IO Web Socket URI" form="unqualified"/>
+   <xsd:element name="Realm" type="xsd:string" doc="Crossbar IO Realm" form="unqualified"/>
+   <xsd:element name="ProcPrefix" type="xsd:string" doc="Registered procedures prefix" form="unqualified"/>
+   <xsd:element name="EncryptionMethod" type="xsd:string" doc="Method of encryption" form="unqualified"/>
+   <xsd:element name="EncryptionKey" type="xsd:string" doc="Method of encryption" form="unqualified"/>
+   <xsd:element name="TestPattern" type="xsd:string" doc="Test pattern in plain text" form="unqualified"/>
+   <xsd:element name="TestPatternEncrypted" type="xsd:string" doc="Test pattern encrypted" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPFPGate..getCrossbarIOAuthInfoRequestType">
+  <xsd:all>
+   <xsd:element name="FPGateID" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPFPGate..getCrossbarIOAuthInfoResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="tns:erpFPGateAuthInfo" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPFPGate..verifySessionRequestType">
+  <xsd:all>
+   <xsd:element name="PAPID" type="xsd:string" form="unqualified"/>
+   <xsd:element name="FPGateID" type="xsd:string" form="unqualified"/>
+   <xsd:element name="Ticket" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPFPGate..verifySessionResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:decimal" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPFPGate..doneSessionRequestType">
+  <xsd:all>
+   <xsd:element name="PAPID" type="xsd:string" form="unqualified"/>
+   <xsd:element name="FPGateID" type="xsd:string" form="unqualified"/>
+   <xsd:element name="Ticket" type="xsd:string" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:complexType name="erpSOAPFPGate..doneSessionResponseType">
+  <xsd:all>
+   <xsd:element name="return" type="xsd:decimal" form="unqualified"/>
+  </xsd:all>
+ </xsd:complexType>
+ <xsd:element name="erpSOAPServer..Login" type="tns:erpSOAPServer..LoginRequestType"/>
+ <xsd:element name="erpSOAPServer..LoginResponse" type="tns:erpSOAPServer..LoginResponseType"/>
+ <xsd:element name="erpSOAPServer..Logout" type="tns:erpSOAPServer..LogoutRequestType"/>
+ <xsd:element name="erpSOAPServer..LogoutResponse" type="tns:erpSOAPServer..LogoutResponseType"/>
+ <xsd:element name="erpSOAPServer..CheckEncoding" type="tns:erpSOAPServer..CheckEncodingRequestType"/>
+ <xsd:element name="erpSOAPServer..CheckEncodingResponse" type="tns:erpSOAPServer..CheckEncodingResponseType"/>
+ <xsd:element name="erpSOAPServer..lastRowCount" type="tns:erpSOAPServer..lastRowCountRequestType"/>
+ <xsd:element name="erpSOAPServer..lastRowCountResponse" type="tns:erpSOAPServer..lastRowCountResponseType"/>
+ <xsd:element name="erpSOAPServer..LoginByPAP" type="tns:erpSOAPServer..LoginByPAPRequestType"/>
+ <xsd:element name="erpSOAPServer..LoginByPAPResponse" type="tns:erpSOAPServer..LoginByPAPResponseType"/>
+ <xsd:element name="erpSOAPServer..ExtAuthPAP" type="tns:erpSOAPServer..ExtAuthPAPRequestType"/>
+ <xsd:element name="erpSOAPServer..ExtAuthPAPResponse" type="tns:erpSOAPServer..ExtAuthPAPResponseType"/>
+ <xsd:element name="erpSOAPBase..Info" type="tns:erpSOAPBase..InfoRequestType"/>
+ <xsd:element name="erpSOAPBase..InfoResponse" type="tns:erpSOAPBase..InfoResponseType"/>
+ <xsd:element name="erpSOAPFPGate..getCrossbarIOAuthInfo" type="tns:erpSOAPFPGate..getCrossbarIOAuthInfoRequestType"/>
+ <xsd:element name="erpSOAPFPGate..getCrossbarIOAuthInfoResponse" type="tns:erpSOAPFPGate..getCrossbarIOAuthInfoResponseType"/>
+ <xsd:element name="erpSOAPFPGate..verifySession" type="tns:erpSOAPFPGate..verifySessionRequestType"/>
+ <xsd:element name="erpSOAPFPGate..verifySessionResponse" type="tns:erpSOAPFPGate..verifySessionResponseType"/>
+ <xsd:element name="erpSOAPFPGate..doneSession" type="tns:erpSOAPFPGate..doneSessionRequestType"/>
+ <xsd:element name="erpSOAPFPGate..doneSessionResponse" type="tns:erpSOAPFPGate..doneSessionResponseType"/>
+</xsd:schema>
+</types>
+<message name="erpSOAPServer..LoginRequest">
+  <part name="parameters" element="tns:erpSOAPServer..Login" /></message>
+<message name="erpSOAPServer..LoginResponse">
+  <part name="parameters" element="tns:erpSOAPServer..LoginResponse" /></message>
+<message name="erpSOAPServer..LogoutRequest">
+  <part name="parameters" element="tns:erpSOAPServer..Logout" /></message>
+<message name="erpSOAPServer..LogoutResponse">
+  <part name="parameters" element="tns:erpSOAPServer..LogoutResponse" /></message>
+<message name="erpSOAPServer..CheckEncodingRequest">
+  <part name="parameters" element="tns:erpSOAPServer..CheckEncoding" /></message>
+<message name="erpSOAPServer..CheckEncodingResponse">
+  <part name="parameters" element="tns:erpSOAPServer..CheckEncodingResponse" /></message>
+<message name="erpSOAPServer..lastRowCountRequest">
+  <part name="parameters" element="tns:erpSOAPServer..lastRowCount" /></message>
+<message name="erpSOAPServer..lastRowCountResponse">
+  <part name="parameters" element="tns:erpSOAPServer..lastRowCountResponse" /></message>
+<message name="erpSOAPServer..LoginByPAPRequest">
+  <part name="parameters" element="tns:erpSOAPServer..LoginByPAP" /></message>
+<message name="erpSOAPServer..LoginByPAPResponse">
+  <part name="parameters" element="tns:erpSOAPServer..LoginByPAPResponse" /></message>
+<message name="erpSOAPServer..ExtAuthPAPRequest">
+  <part name="parameters" element="tns:erpSOAPServer..ExtAuthPAP" /></message>
+<message name="erpSOAPServer..ExtAuthPAPResponse">
+  <part name="parameters" element="tns:erpSOAPServer..ExtAuthPAPResponse" /></message>
+<message name="erpSOAPBase..InfoRequest">
+  <part name="parameters" element="tns:erpSOAPBase..Info" /></message>
+<message name="erpSOAPBase..InfoResponse">
+  <part name="parameters" element="tns:erpSOAPBase..InfoResponse" /></message>
+<message name="erpSOAPFPGate..getCrossbarIOAuthInfoRequest">
+  <part name="parameters" element="tns:erpSOAPFPGate..getCrossbarIOAuthInfo" /></message>
+<message name="erpSOAPFPGate..getCrossbarIOAuthInfoResponse">
+  <part name="parameters" element="tns:erpSOAPFPGate..getCrossbarIOAuthInfoResponse" /></message>
+<message name="erpSOAPFPGate..verifySessionRequest">
+  <part name="parameters" element="tns:erpSOAPFPGate..verifySession" /></message>
+<message name="erpSOAPFPGate..verifySessionResponse">
+  <part name="parameters" element="tns:erpSOAPFPGate..verifySessionResponse" /></message>
+<message name="erpSOAPFPGate..doneSessionRequest">
+  <part name="parameters" element="tns:erpSOAPFPGate..doneSession" /></message>
+<message name="erpSOAPFPGate..doneSessionResponse">
+  <part name="parameters" element="tns:erpSOAPFPGate..doneSessionResponse" /></message>
+<portType name="erpserverPortType">
+  <operation name="erpSOAPServer..Login">
+	<input message="tns:erpSOAPServer..LoginRequest"/>
+	<output message="tns:erpSOAPServer..LoginResponse"/>
+  </operation>
+  <operation name="erpSOAPServer..Logout">
+	<input message="tns:erpSOAPServer..LogoutRequest"/>
+	<output message="tns:erpSOAPServer..LogoutResponse"/>
+  </operation>
+  <operation name="erpSOAPServer..CheckEncoding">
+	<documentation>Check encoding between peers</documentation>
+	<input message="tns:erpSOAPServer..CheckEncodingRequest"/>
+	<output message="tns:erpSOAPServer..CheckEncodingResponse"/>
+  </operation>
+  <operation name="erpSOAPServer..lastRowCount">
+	<input message="tns:erpSOAPServer..lastRowCountRequest"/>
+	<output message="tns:erpSOAPServer..lastRowCountResponse"/>
+  </operation>
+  <operation name="erpSOAPServer..LoginByPAP">
+	<input message="tns:erpSOAPServer..LoginByPAPRequest"/>
+	<output message="tns:erpSOAPServer..LoginByPAPResponse"/>
+  </operation>
+  <operation name="erpSOAPServer..ExtAuthPAP">
+	<input message="tns:erpSOAPServer..ExtAuthPAPRequest"/>
+	<output message="tns:erpSOAPServer..ExtAuthPAPResponse"/>
+  </operation>
+  <operation name="erpSOAPBase..Info">
+	<documentation>Return system informattion</documentation>
+	<input message="tns:erpSOAPBase..InfoRequest"/>
+	<output message="tns:erpSOAPBase..InfoResponse"/>
+  </operation>
+  <operation name="erpSOAPFPGate..getCrossbarIOAuthInfo">
+	<documentation>Return FPGate crossbar authentication information.</documentation>
+	<input message="tns:erpSOAPFPGate..getCrossbarIOAuthInfoRequest"/>
+	<output message="tns:erpSOAPFPGate..getCrossbarIOAuthInfoResponse"/>
+  </operation>
+  <operation name="erpSOAPFPGate..verifySession">
+	<documentation>Verify FPGate session.</documentation>
+	<input message="tns:erpSOAPFPGate..verifySessionRequest"/>
+	<output message="tns:erpSOAPFPGate..verifySessionResponse"/>
+  </operation>
+  <operation name="erpSOAPFPGate..doneSession">
+	<documentation>Done/close FPGate session.</documentation>
+	<input message="tns:erpSOAPFPGate..doneSessionRequest"/>
+	<output message="tns:erpSOAPFPGate..doneSessionResponse"/>
+  </operation>
+</portType>
+<binding name="erpserverBinding" type="tns:erpserverPortType">
+  <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+  <operation name="erpSOAPServer..Login">
+	<soap:operation soapAction="urn:erpgate#erpSOAPServer..Login" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPServer..Logout">
+	<soap:operation soapAction="urn:erpgate#erpSOAPServer..Logout" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPServer..CheckEncoding">
+	<soap:operation soapAction="urn:erpgate#erpSOAPServer..CheckEncoding" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPServer..lastRowCount">
+	<soap:operation soapAction="urn:erpgate#erpSOAPServer..lastRowCount" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPServer..LoginByPAP">
+	<soap:operation soapAction="urn:erpgate#erpSOAPServer..LoginByPAP" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPServer..ExtAuthPAP">
+	<soap:operation soapAction="urn:erpgate#erpSOAPServer..ExtAuthPAP" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPBase..Info">
+	<soap:operation soapAction="urn:erpgate#erpSOAPBase..Info" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPFPGate..getCrossbarIOAuthInfo">
+	<soap:operation soapAction="urn:erpgate#erpSOAPFPGate..getCrossbarIOAuthInfo" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPFPGate..verifySession">
+	<soap:operation soapAction="urn:erpgate#erpSOAPFPGate..verifySession" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+  <operation name="erpSOAPFPGate..doneSession">
+	<soap:operation soapAction="urn:erpgate#erpSOAPFPGate..doneSession" style="document"/>
+	<input><soap:body use="literal"/></input>
+	<output><soap:body use="literal"/></output>
+  </operation>
+</binding>
+<service name="erpserver">
+  <port name="erpserverPort" binding="tns:erpserverBinding">
+	<soap:address location="https://dev3.edabg.com:443/erp/ws/wsbase-dl-fpg.php"/>
+  </port>
+</service>
+</definitions>

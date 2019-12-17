@@ -16,6 +16,7 @@
  */
 package org.eda.fpsrv;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.AWTException;
 import java.awt.Desktop;
 import java.awt.Font;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
+import java.util.Base64;
 import java.util.Properties;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -41,6 +43,8 @@ import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.text.BadLocationException;
+import org.eda.cb.CBIOService;
+import org.eda.cb.CBIOService.ConnectionState;
 import org.eda.fdevice.FPPrinterPool;
 import org.restlet.Context;
 import org.restlet.data.LocalReference;
@@ -190,11 +194,26 @@ public class ControlPanel extends javax.swing.JFrame {
         jbCheckVersion = new javax.swing.JButton();
         jcbPoolEnable = new javax.swing.JCheckBox();
         jtPoolDeadtime = new javax.swing.JTextField();
-        jLabel9 = new javax.swing.JLabel();
+        jlPoolDeadtime = new javax.swing.JLabel();
         jbClearPool = new javax.swing.JButton();
         jcbZFPLabServerAutoStart = new javax.swing.JCheckBox();
         jbZFPStart = new javax.swing.JButton();
         jbZFPStop = new javax.swing.JButton();
+        jSeparator3 = new javax.swing.JSeparator();
+        jlCoURL = new javax.swing.JLabel();
+        jtCoURL = new javax.swing.JTextField();
+        jcbCoAutoStart = new javax.swing.JCheckBox();
+        jlCoUser = new javax.swing.JLabel();
+        jtCoUser = new javax.swing.JTextField();
+        jlCoPass = new javax.swing.JLabel();
+        jtCoPass = new javax.swing.JPasswordField();
+        jbCBIOStart = new javax.swing.JButton();
+        jbCBIOStop = new javax.swing.JButton();
+        jlCBIOServiceState = new javax.swing.JLabel();
+        jtCBIOServiceState = new javax.swing.JTextField();
+        jlCBIOLogLevel = new javax.swing.JLabel();
+        jComboBoxLLCBIO = new javax.swing.JComboBox<>();
+        jSeparator4 = new javax.swing.JSeparator();
         jScrollPane3 = new javax.swing.JScrollPane();
         jtaLicense = new javax.swing.JTextArea();
 
@@ -209,6 +228,11 @@ public class ControlPanel extends javax.swing.JFrame {
         jlAppName.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jlAppName.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/logo_eda_s.gif")));
         jlAppName.setText("EDA Fiscal Printer Gateway");
+        jlAppName.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jlAppNameMouseClicked(evt);
+            }
+        });
 
         jlAppVersion.setText("Версия: 1.0.0");
         jlAppVersion.setToolTipText("");
@@ -329,7 +353,7 @@ public class ControlPanel extends javax.swing.JFrame {
         jLabel7.setText("Лог ниво - устройство ниско");
 
         jLabel8.setLabelFor(jComboBoxLLFPCBase);
-        jLabel8.setText("Лог ниво - устриойство приложно");
+        jLabel8.setText("Лог ниво - устройство приложно");
 
         jComboBoxLLProtocol.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
@@ -363,9 +387,9 @@ public class ControlPanel extends javax.swing.JFrame {
             }
         });
 
-        jLabel9.setLabelFor(jtPoolDeadtime);
-        jLabel9.setText("Време за престой в пула, мин");
-        jLabel9.setNextFocusableComponent(jtPoolDeadtime);
+        jlPoolDeadtime.setLabelFor(jtPoolDeadtime);
+        jlPoolDeadtime.setText("Време за престой в пула, мин");
+        jlPoolDeadtime.setNextFocusableComponent(jtPoolDeadtime);
 
         jbClearPool.setText("Изчистване на пула");
         jbClearPool.addActionListener(new java.awt.event.ActionListener() {
@@ -395,84 +419,153 @@ public class ControlPanel extends javax.swing.JFrame {
             }
         });
 
+        jlCoURL.setText("Колибри ERP WS URL");
+
+        jcbCoAutoStart.setText("Автоматичен старт");
+
+        jlCoUser.setText("Потребител");
+
+        jlCoPass.setText("Парола");
+
+        jbCBIOStart.setText("Старт");
+        jbCBIOStart.setToolTipText("");
+        jbCBIOStart.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbCBIOStartActionPerformed(evt);
+            }
+        });
+
+        jbCBIOStop.setText("Стоп");
+        jbCBIOStop.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbCBIOStopActionPerformed(evt);
+            }
+        });
+
+        jlCBIOServiceState.setText("Статус");
+
+        jtCBIOServiceState.setEditable(false);
+
+        jlCBIOLogLevel.setText("Лог ниво - Колибри ERP");
+
+        jComboBoxLLCBIO.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
         javax.swing.GroupLayout jpSettingsLayout = new javax.swing.GroupLayout(jpSettings);
         jpSettings.setLayout(jpSettingsLayout);
         jpSettingsLayout.setHorizontalGroup(
             jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jpSettingsLayout.createSequentialGroup()
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jSeparator2)
                     .addGroup(jpSettingsLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jbSave)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jbCancel)))
-                .addGap(6, 6, 6))
-            .addGroup(jpSettingsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                        .addContainerGap()
                         .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel1)
-                            .addComponent(jLabel3)
-                            .addComponent(jLabel4)
-                            .addComponent(jLabel5))
-                        .addGap(21, 21, 21)
-                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jtServerAddr)
-                            .addComponent(jtServerPort, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
-                            .addComponent(jtAdminName, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
-                            .addComponent(jtAdminPassword)
-                            .addComponent(jtAdminPassword2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jpSettingsLayout.createSequentialGroup()
-                                .addComponent(jcbUseSSL)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jtServerPortSSL, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jlGoAdmin))
                             .addGroup(jpSettingsLayout.createSequentialGroup()
                                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jcbDisableAnonymousPrint)
-                                    .addComponent(jcbStartMinimized))
-                                .addGap(0, 0, Short.MAX_VALUE))
+                                    .addComponent(jLabel2)
+                                    .addComponent(jLabel1)
+                                    .addComponent(jLabel3)
+                                    .addComponent(jLabel4)
+                                    .addComponent(jLabel5))
+                                .addGap(21, 21, 21)
+                                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jtServerAddr)
+                                    .addComponent(jtServerPort, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
+                                    .addComponent(jtAdminName, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
+                                    .addComponent(jtAdminPassword)
+                                    .addComponent(jtAdminPassword2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                                        .addComponent(jcbUseSSL)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jtServerPortSSL, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jlGoAdmin))
+                                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(jcbDisableAnonymousPrint)
+                                            .addComponent(jcbStartMinimized))
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                                        .addComponent(jcbCheckVersionAtStartup)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(jbCheckVersion))))
+                            .addComponent(jSeparator4, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator3)
                             .addGroup(jpSettingsLayout.createSequentialGroup()
-                                .addComponent(jcbCheckVersionAtStartup)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jbCheckVersion))))
+                                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jlCBIOLogLevel)
+                                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                                .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                .addComponent(jcbPoolEnable))
+                                            .addGroup(jpSettingsLayout.createSequentialGroup()
+                                                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                                    .addComponent(jComboBoxLLCBIO, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                                        .addComponent(jComboBoxLLFPCBase, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                        .addComponent(jComboBoxLLDevice, 0, 141, Short.MAX_VALUE)))
+                                                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                    .addGroup(jpSettingsLayout.createSequentialGroup()
+                                                        .addGap(24, 24, 24)
+                                                        .addComponent(jlPoolDeadtime)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(jtPoolDeadtime, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                        .addComponent(jbClearPool))
+                                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jpSettingsLayout.createSequentialGroup()
+                                                        .addGap(6, 6, 6)
+                                                        .addComponent(jcbZFPLabServerAutoStart)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                        .addComponent(jbZFPStart)
+                                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                        .addComponent(jbZFPStop))))))
+                                    .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                        .addGroup(jpSettingsLayout.createSequentialGroup()
+                                            .addComponent(jlCBIOServiceState)
+                                            .addGap(18, 18, 18)
+                                            .addComponent(jtCBIOServiceState, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addGroup(jpSettingsLayout.createSequentialGroup()
+                                            .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                                .addComponent(jlCoURL)
+                                                .addComponent(jlCoUser))
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                            .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addGroup(jpSettingsLayout.createSequentialGroup()
+                                                    .addComponent(jtCoUser, javax.swing.GroupLayout.PREFERRED_SIZE, 118, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(jlCoPass)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                                    .addComponent(jtCoPass, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                    .addComponent(jcbCoAutoStart)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(jbCBIOStart)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(jbCBIOStop))
+                                                .addComponent(jtCoURL, javax.swing.GroupLayout.PREFERRED_SIZE, 596, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                .addGap(0, 0, Short.MAX_VALUE))))
                     .addGroup(jpSettingsLayout.createSequentialGroup()
-                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGap(0, 4, Short.MAX_VALUE)
+                        .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jSeparator2, javax.swing.GroupLayout.PREFERRED_SIZE, 725, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jpSettingsLayout.createSequentialGroup()
-                                .addComponent(jComboBoxLLProtocol, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jbSave)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jcbPoolEnable))
-                            .addGroup(jpSettingsLayout.createSequentialGroup()
-                                .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(24, 24, 24)
-                                .addComponent(jLabel9)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jtPoolDeadtime, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jbClearPool))
-                            .addGroup(jpSettingsLayout.createSequentialGroup()
-                                .addComponent(jComboBoxLLFPCBase, javax.swing.GroupLayout.PREFERRED_SIZE, 141, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jcbZFPLabServerAutoStart)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jbZFPStart)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jbZFPStop)))))
-                .addContainerGap())
+                                .addComponent(jbCancel)))))
+                .addGap(6, 6, 6))
         );
 
         jpSettingsLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jtAdminName, jtServerPort});
+
+        jpSettingsLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jtCoPass, jtCoUser});
 
         jpSettingsLayout.setVerticalGroup(
             jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -517,7 +610,7 @@ public class ControlPanel extends javax.swing.JFrame {
                     .addComponent(jLabel7)
                     .addComponent(jComboBoxLLDevice, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jtPoolDeadtime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel9)
+                    .addComponent(jlPoolDeadtime)
                     .addComponent(jbClearPool))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -526,11 +619,36 @@ public class ControlPanel extends javax.swing.JFrame {
                     .addComponent(jcbZFPLabServerAutoStart)
                     .addComponent(jbZFPStart)
                     .addComponent(jbZFPStop))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 60, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jlCBIOLogLevel)
+                    .addComponent(jComboBoxLLCBIO, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(jSeparator3, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jlCoURL)
+                    .addComponent(jtCoURL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jlCoUser)
+                    .addComponent(jtCoUser, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jlCoPass)
+                    .addComponent(jtCoPass, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jcbCoAutoStart)
+                    .addComponent(jbCBIOStart)
+                    .addComponent(jbCBIOStop))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jlCBIOServiceState)
+                    .addComponent(jtCBIOServiceState, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(jSeparator4, javax.swing.GroupLayout.PREFERRED_SIZE, 2, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(22, 22, 22)
                 .addGroup(jpSettingsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jbSave)
                     .addComponent(jbCancel))
-                .addContainerGap())
+                .addGap(18, 18, 18))
         );
 
         jTabbedPane1.addTab("Настройки", jpSettings);
@@ -599,6 +717,8 @@ public class ControlPanel extends javax.swing.JFrame {
         jbStop.setEnabled(FPServer.mainComponent.isStarted());
         jbZFPStart.setEnabled(!ZFPLabServer.isStarted());
         jbZFPStop.setEnabled(ZFPLabServer.isStarted());
+        jbCBIOStart.setEnabled(!CBIOService.isStarted());
+        jbCBIOStop.setEnabled(CBIOService.isStarted());
         adjustSysTray();
     }
     
@@ -667,9 +787,21 @@ public class ControlPanel extends javax.swing.JFrame {
         prop.setProperty("LLDevice", (String)jComboBoxLLDevice.getSelectedItem());
         prop.setProperty("LLProtocol", (String)jComboBoxLLProtocol.getSelectedItem());
         prop.setProperty("LLFPCBase", (String)jComboBoxLLFPCBase.getSelectedItem());
+        prop.setProperty("LLCBIOService", (String)jComboBoxLLCBIO.getSelectedItem());
         prop.setProperty("PoolEnabled", jcbPoolEnable.isSelected()?"1":"0");
         prop.setProperty("ZFPLabServerAutoStart", jcbZFPLabServerAutoStart.isSelected()?"1":"0");
         prop.setProperty("PoolDeadtime", jtPoolDeadtime.getText());
+        
+        prop.setProperty("CoAutoStart", jcbCoAutoStart.isSelected()?"1":"0");
+        prop.setProperty("CoURL", jtCoURL.getText());
+        prop.setProperty("CoUser", jtCoUser.getText());
+        String coPass = String.copyValueOf(jtCoPass.getPassword());
+        if (coPass.length() > 0) {
+            // TODO: Encrypt
+            prop.setProperty("CoPass", Base64.getEncoder().encodeToString(coPass.getBytes()));
+        }
+
+        
         FPServer.application.updateProperties();
     }//GEN-LAST:event_jbSaveActionPerformed
 
@@ -698,6 +830,7 @@ public class ControlPanel extends javax.swing.JFrame {
         }     
         if (confirmed == JOptionPane.YES_OPTION) {
             ZFPLabServer.stop();
+            CBIOService.stopService();
             System.exit(0);
         }    
     }
@@ -740,6 +873,23 @@ public class ControlPanel extends javax.swing.JFrame {
         stopZFPServer();
     }//GEN-LAST:event_jbZFPStopActionPerformed
 
+    private void jlAppNameMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jlAppNameMouseClicked
+        // TODO add your handling code here:
+        testRIAP();
+    }//GEN-LAST:event_jlAppNameMouseClicked
+
+    private void jbCBIOStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCBIOStartActionPerformed
+        // TODO add your handling code here:
+        FPServer.application.startCBIOService();
+        adjustStartStopControls();
+    }//GEN-LAST:event_jbCBIOStartActionPerformed
+
+    private void jbCBIOStopActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCBIOStopActionPerformed
+        // TODO add your handling code here:
+        FPServer.application.stopCBIOService();
+        adjustStartStopControls();
+    }//GEN-LAST:event_jbCBIOStopActionPerformed
+
     private void testRIAP() {
 //        Context context;
 //        FPServer.mainComponent.getContext().getClientDispatcher().get("riap://print/");
@@ -753,15 +903,27 @@ public class ControlPanel extends javax.swing.JFrame {
             Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
 */
+        
         ClientResource res = new ClientResource(LocalReference.createRiapReference(LocalReference.RIAP_COMPONENT, "/print/"));
+        PrintRequest prequest = new PrintRequest();
+        ObjectMapper mapper = new ObjectMapper();
         try {
-            Representation repr = res.get(MediaType.ALL); 
+            String jsonRequest = "{\"method\":\"PrinterStatus\",\"params\":{\"arguments\":[\"\"],\"printer\":{\"ID\":\"DP150KL\",\"Model\":\"\",\"Params\":{}}},\"id\":\"\"}";
+            prequest = mapper.readValue(jsonRequest, PrintRequest.class);
+            Representation repr = res.post(prequest, MediaType.APPLICATION_JSON);
+//            PrintResponse response = res.type("application/json").post(PrintResponse.class, jsonRequest);
+            
+//            Representation repr = res.get(MediaType.ALL); 
             if (repr != null)
                 System.out.println(repr.getText());
         } catch (IOException ex) {
             Logger.getLogger(ControlPanel.class.getName()).log(Level.SEVERE, null, ex);
         }
         res.release();
+    }
+    synchronized public void OnCBIOStateChange(ConnectionState state) {
+        jtCBIOServiceState.setText(null);
+        jtCBIOServiceState.setText(CBIOService.getServiceState().toString());
     }
     
     private void adjustSettingsControls() {
@@ -780,7 +942,11 @@ public class ControlPanel extends javax.swing.JFrame {
         jtPoolDeadtime.setText(prop.getProperty("PoolDeadtime"));
 
         jcbZFPLabServerAutoStart.setSelected(prop.getProperty("ZFPLabServerAutoStart").equals("1"));
-        
+        jcbCoAutoStart.setSelected(prop.getProperty("CoAutoStart").equals("1"));
+        jtCoURL.setText(prop.getProperty("CoURL"));
+        jtCoUser.setText(prop.getProperty("CoUser"));
+        jtCBIOServiceState.setText(CBIOService.getServiceState().toString());
+        CBIOService.addOnStateChangeListener(this::OnCBIOStateChange);
         String[] levels = new String[] {
             Level.OFF.getName()
             , Level.SEVERE.getName()
@@ -794,15 +960,18 @@ public class ControlPanel extends javax.swing.JFrame {
         jComboBoxLLDevice.removeAllItems();
         jComboBoxLLProtocol.removeAllItems();
         jComboBoxLLFPCBase.removeAllItems();
+        jComboBoxLLCBIO.removeAllItems();
         for (int i =0; i < levels.length; i++) {
             jComboBoxLLDevice.addItem(levels[i]);
             jComboBoxLLProtocol.addItem(levels[i]);
             jComboBoxLLFPCBase.addItem(levels[i]);
+            jComboBoxLLCBIO.addItem(levels[i]);
         }
         
         jComboBoxLLDevice.setSelectedItem(prop.getProperty("LLDevice"));
         jComboBoxLLProtocol.setSelectedItem(prop.getProperty("LLProtocol"));
         jComboBoxLLFPCBase.setSelectedItem(prop.getProperty("LLFPCBase"));
+        jComboBoxLLCBIO.setSelectedItem(prop.getProperty("LLCBIOService"));
     }
     
     
@@ -950,6 +1119,7 @@ public class ControlPanel extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JComboBox<String> jComboBoxLLCBIO;
     private javax.swing.JComboBox<String> jComboBoxLLDevice;
     private javax.swing.JComboBox<String> jComboBoxLLFPCBase;
     private javax.swing.JComboBox<String> jComboBoxLLProtocol;
@@ -961,13 +1131,16 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
+    private javax.swing.JSeparator jSeparator3;
+    private javax.swing.JSeparator jSeparator4;
     private javax.swing.JTabbedPane jTabbedPane1;
+    private javax.swing.JButton jbCBIOStart;
+    private javax.swing.JButton jbCBIOStop;
     private javax.swing.JButton jbCancel;
     private javax.swing.JButton jbCheckVersion;
     private javax.swing.JButton jbClearPool;
@@ -977,6 +1150,7 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JButton jbZFPStart;
     private javax.swing.JButton jbZFPStop;
     private javax.swing.JCheckBox jcbCheckVersionAtStartup;
+    private javax.swing.JCheckBox jcbCoAutoStart;
     private javax.swing.JCheckBox jcbDisableAnonymousPrint;
     private javax.swing.JCheckBox jcbPoolEnable;
     private javax.swing.JCheckBox jcbStartMinimized;
@@ -985,11 +1159,21 @@ public class ControlPanel extends javax.swing.JFrame {
     private javax.swing.JLabel jlAppName;
     private javax.swing.JLabel jlAppVersion;
     private javax.swing.JLabel jlBuildInfo;
+    private javax.swing.JLabel jlCBIOLogLevel;
+    private javax.swing.JLabel jlCBIOServiceState;
+    private javax.swing.JLabel jlCoPass;
+    private javax.swing.JLabel jlCoURL;
+    private javax.swing.JLabel jlCoUser;
     private javax.swing.JLabel jlGoAdmin;
+    private javax.swing.JLabel jlPoolDeadtime;
     private javax.swing.JPanel jpSettings;
     private javax.swing.JTextField jtAdminName;
     private javax.swing.JPasswordField jtAdminPassword;
     private javax.swing.JPasswordField jtAdminPassword2;
+    private javax.swing.JTextField jtCBIOServiceState;
+    private javax.swing.JPasswordField jtCoPass;
+    private javax.swing.JTextField jtCoURL;
+    private javax.swing.JTextField jtCoUser;
     private javax.swing.JTextField jtPoolDeadtime;
     private javax.swing.JTextField jtServerAddr;
     private javax.swing.JTextField jtServerPort;

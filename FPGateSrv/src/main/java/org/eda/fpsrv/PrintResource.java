@@ -16,19 +16,28 @@
  */
 package org.eda.fpsrv;
 
+import com.fazecast.jSerialComm.SerialPort;
+import java.io.File;
+import java.io.FilenameFilter;
 import org.eda.fdevice.StrTable;
 import org.eda.fdevice.FPException;
 import org.eda.fdevice.FPCBase;
 import java.io.IOException;
 import static java.lang.System.currentTimeMillis;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.Comparator;
 import java.util.Date;
 import org.restlet.resource.ServerResource;
 import java.util.Locale;
+import java.util.StringJoiner;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -134,11 +143,13 @@ public class PrintResource extends ServerResource {
         fpcLogHandler = null;
     }
     protected void initPrinter() throws FPException, Exception {
-        FP = FPPrinterPool.requestPrinter(pRequest.getPrinter().getID(), pRequest.getPrinter().getModel(), pRequest.getPrinter().getParams());
-        if (FP == null) {
-            throw new FPException("Can't initialize printer!");
-        }
-        FP.lock();
+        if (pRequest.getPrinter() != null) {
+            FP = FPPrinterPool.requestPrinter(pRequest.getPrinter().getID(), pRequest.getPrinter().getModel(), pRequest.getPrinter().getParams());
+            if (FP == null) {
+                throw new FPException("Can't initialize printer!");
+            }
+            FP.lock();
+        }    
     }
     
     protected void donePrinter() {
@@ -811,6 +822,77 @@ public class PrintResource extends ServerResource {
             response.getResultTable().putAll(res);
         }    
     }
+
+    public void getCommPorts() throws ParseException, FPException {
+        execLog.msg("Request getComPortList");
+        StrTable res = new StrTable();
+        SerialPort[] ports = SerialPort.getCommPorts();
+        for (int i = 0; i < ports.length; i++) {
+            StringJoiner jstr = new StringJoiner(",");
+            jstr.add(ports[i].getDescriptivePortName());
+            jstr.add(Integer.toString(ports[i].getBaudRate()));
+            jstr.add(Integer.toString(ports[i].getNumDataBits()));
+            jstr.add(Integer.toString(ports[i].getParity()));
+            jstr.add(Integer.toString(ports[i].getNumStopBits()));
+            jstr.add(ports[i].isOpen()?"OPEN":"CLOSE");
+            res.put(ports[i].getSystemPortName(), jstr.toString());
+        }    
+        response.getResultTable().putAll(res);
+    }
+    
+    protected File[] getLogFiles() {
+        File directory = new File(FPServer.application.getLogDir());
+        File [] files = directory.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".log");
+            }
+        });
+        Arrays.sort(files, Comparator.comparingLong(File::lastModified));
+        return files;
+    }
+    
+    protected String readLogFile(String FileName) {
+        String fileContent = "";
+        try {
+            FileName = FPServer.application.getLogDir()+"/"+FileName;
+            fileContent = new String(Files.readAllBytes(Paths.get(FileName)));
+        } catch (Exception e) {
+            execLog.error(e.getMessage());
+        }
+        return fileContent;
+    }
+
+    protected void getLogFilesList() {
+        execLog.msg("Request getLogFilesList");
+        StrTable res = new StrTable();
+        File[] files = getLogFiles();
+        for (int i = 0; i < files.length; i++)
+            res.put(Integer.toString(i), files[i].getName());
+        response.getResultTable().putAll(res);
+    }
+    
+    protected void getLogFileContent() {
+        execLog.msg("Request getLogFileContent");
+        StrTable res = new StrTable();
+        StrTable namedArgs = pRequest.getNamedArguments();
+        String FileName = "";
+        if (namedArgs.containsKey("FileName")) {
+            FileName = namedArgs.get("FileName");
+        }
+        if (FileName.length() == 0) {
+            // Select last log file
+            File[] files = getLogFiles();
+            if (files.length > 0)
+                FileName = files[files.length-1].getName();
+        }    
+        if (FileName.length() > 0) {
+            // get relative file name
+            FileName = Paths.get(FileName).getFileName().toString();
+            res.put(FileName, Base64.getEncoder().encodeToString(readLogFile(FileName).getBytes(Charset.forName("UTF-8"))));
+        }
+        response.getResultTable().putAll(res);
+    }
     
     @Post("json:json")
     public PrintResponse processCommand(PrintRequest request) throws IOException {
@@ -884,6 +966,15 @@ public class PrintResource extends ServerResource {
                         break;
                     case "getversion" :
                         getVersion();
+                        break;
+                    case "getcomports" :
+                        getCommPorts();
+                        break;
+                    case "getlogfileslist" :
+                        getLogFilesList();
+                        break;
+                    case "getlogfile" :
+                        getLogFileContent();
                         break;
                     case "test" :
                         test();

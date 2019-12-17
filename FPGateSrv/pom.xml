@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.eda</groupId>
     <artifactId>FPGateSrv</artifactId>
-    <version>2.0.6-b</version>
+    <version>2.1.1-b</version>
     <packaging>jar</packaging>
     <repositories>
         <repository>
@@ -23,9 +23,9 @@
     </repositories>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.7</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <restlet-version>2.4.0</restlet-version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <restlet-version>2.4.2</restlet-version>
         <maven.build.timestamp.format>yyyyMMddHHmmss</maven.build.timestamp.format>
         <buildNumber>v.${project.version} build ${maven.build.timestamp}</buildNumber>        
     </properties>
@@ -56,6 +56,13 @@
             <artifactId>org.restlet.ext.crypto</artifactId>
             <version>${restlet-version}</version>
         </dependency>
+<!--        
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet.ext.jaxrs</artifactId>
+            <version>${restlet-version}</version>
+        </dependency>
+-->        
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections-maven</artifactId>
@@ -95,6 +102,11 @@
 <!--          <version>[1.3.11,2.0.0)</version>-->
           <version>[2.0.0,3.0.0)</version>
         </dependency>
+        <dependency>
+            <groupId>io.crossbar.autobahn</groupId>
+            <artifactId>autobahn-java</artifactId>
+            <version>19.3.1</version>
+        </dependency>    
     </dependencies>
     <build>
         <resources>
@@ -138,7 +150,18 @@
                 </includes>
                
             </resource>
--->                        
+-->
+            <resource>
+                <targetPath>META-INF</targetPath>
+                <directory>src</directory>
+                <includes>
+                    <include>jax-ws-catalog.xml</include>
+                    <include>wsdl/**</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
         </resources>
         <plugins>
             <plugin>
@@ -281,7 +304,46 @@
                           </configuration>
                     </execution>
                 </executions>
-            </plugin>            
+            </plugin>
+            <plugin>
+                <groupId>org.jvnet.jax-ws-commons</groupId>
+                <artifactId>jaxws-maven-plugin</artifactId>
+                <version>2.3.1-b20150201.1248</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>wsimport</goal>
+                        </goals>
+                        <configuration>
+                            <wsdlFiles>
+                                <wsdlFile>colibrierp-fpg.wsdl</wsdlFile>
+                            </wsdlFiles>
+                            <packageName>org.eda.coerp.soap</packageName>
+                            <vmArgs>
+                                <vmArg>-Djavax.xml.accessExternalSchema=all</vmArg>
+                            </vmArgs>
+                            <wsdlLocation>file:/W:/www%20-%20CO.edabg.com/Apps/fp3530/FPGateSrv/FPGateSrv/lib/coerp/colibrierp-fpg.wsdl</wsdlLocation>
+                            <staleFile>${project.build.directory}/jaxws/stale/colibrierp-fpg.stale</staleFile>
+                        </configuration>
+                        <id>wsimport-generate-colibrierp-fpg</id>
+                        <phase>generate-sources</phase>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>javax.xml</groupId>
+                        <artifactId>webservices-api</artifactId>
+                        <version>2.0</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <sourceDestDir>${project.build.directory}/generated-sources/jaxws-wsimport</sourceDestDir>
+                    <xnocompile>true</xnocompile>
+                    <verbose>true</verbose>
+                    <extension>true</extension>
+                    <catalog>${basedir}/src/jax-ws-catalog.xml</catalog>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <name>FPGateSrv</name>
