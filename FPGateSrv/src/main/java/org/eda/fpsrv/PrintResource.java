@@ -894,6 +894,13 @@ public class PrintResource extends ServerResource {
         response.getResultTable().putAll(res);
     }
     
+    protected void flushPrinterPool() {
+        execLog.msg("Request flushPrinterPool");
+        FPPrinterPool.clear();
+        execLog.msg("Printer pool was flushed.");
+        response.getResultTable().put("Result", "OK");
+    }
+    
     @Post("json:json")
     public PrintResponse processCommand(PrintRequest request) throws IOException {
 //        ObjectMapper mapper = new ObjectMapper();
@@ -975,6 +982,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "getlogfile" :
                         getLogFileContent();
+                        break;
+                    case "flushprinterpool" :
+                        flushPrinterPool();
                         break;
                     case "test" :
                         test();
