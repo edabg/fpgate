@@ -4,11 +4,11 @@ public class SentRcpInfoStatusRes {
    /**
     *Up to 6 symbols for the last sent receipt number to NRA server
     */
-    public String LastSentRcpNum;
-    public String getLastSentRcpNum() {
+    public Double LastSentRcpNum;
+    public Double getLastSentRcpNum() {
        return LastSentRcpNum;
     }
-    protected void setLastSentRcpNum(String value) {
+    protected void setLastSentRcpNum(Double value) {
        LastSentRcpNum = value;
     }
 
@@ -27,11 +27,11 @@ public class SentRcpInfoStatusRes {
    /**
     *Up to 6 symbols for the first unsent receipt number to NRA server
     */
-    public String FirstUnsentRcpNum;
-    public String getFirstUnsentRcpNum() {
+    public Double FirstUnsentRcpNum;
+    public Double getFirstUnsentRcpNum() {
        return FirstUnsentRcpNum;
     }
-    protected void setFirstUnsentRcpNum(String value) {
+    protected void setFirstUnsentRcpNum(Double value) {
        FirstUnsentRcpNum = value;
     }
 

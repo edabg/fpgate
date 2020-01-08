@@ -17,7 +17,6 @@
 package org.eda.fpsrv;
 
 import TremolZFP.FPcore;
-import java.io.ByteArrayInputStream;
 import org.eda.fdevice.FUser;
 import org.eda.fdevice.FPDatabase;
 import org.eda.fdevice.FPCBase;
@@ -25,9 +24,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import static java.lang.System.out;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -40,14 +39,13 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -76,7 +74,6 @@ import org.restlet.security.SecretVerifier;
 import static org.restlet.security.Verifier.RESULT_INVALID;
 import static org.restlet.security.Verifier.RESULT_VALID;
 import org.restlet.util.Series;
-import sun.rmi.log.ReliableLog;
 /**
  *
  * @author Dimitar Angelov
@@ -287,12 +284,17 @@ public class FPServer extends Application {
         defaultProperties.setProperty("LLCBIOService", Level.WARNING.getName()); // 
         
         this.appProperties = new Properties(defaultProperties);
+        Logger logger = getLogger();
+        logger.info("Default Locale:   " + Locale.getDefault());
+        logger.info("Default Charset:  " + Charset.defaultCharset());
+        logger.info("file.encoding;    " + System.getProperty("file.encoding"));
+        logger.info("sun.jnu.encoding: " + System.getProperty("sun.jnu.encoding"));
         try {
             File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
 //            String propertiesPath=jarPath.getParentFile().getAbsolutePath();
             appPath=jarPath.getParent();
             appBasePath=jarPath.getParentFile().getParent().replace("%20", " ").replace("\\", "/");
-            getLogger().log(Level.INFO, "Base Path:{0}", appBasePath);
+            logger.info("Base Path:"+appBasePath);
 //            System.out.println(" propertiesPath-"+appBasePath);
             String pfile = appBasePath+"/FPGateSrv.properties";
             if (new File(pfile).exists())
@@ -306,6 +308,7 @@ public class FPServer extends Application {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        
         adjustPrinterPool();
 //        String libPathProperty = System.getProperty("java.library.path");
 //        System.out.println(libPathProperty);  
@@ -416,9 +419,12 @@ public class FPServer extends Application {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+        System.setProperty("file.encoding", "UTF-8");
+        out.println("Ала бала портокала");
 //TODO: Enable global restlet DEBUG Logging        
 //Engine.setLogLevel(Level.FINEST);
 //Engine.setRestletLogLevel(Level.FINEST);        
+//        System.setProperty("file.encoding", "UTF-16");
 
         // Create an application
         application = new FPServer();
@@ -452,6 +458,12 @@ public class FPServer extends Application {
         if (application.appProperties.getProperty("StartMinimized", "0").equals("1"))
             cp.setState(ControlPanel.ICONIFIED);
 //        mainComponent.start();
+        Logger logger = application.getLogger();
+        logger.info("Default Locale:   " + Locale.getDefault());
+        logger.info("Default Charset:  " + Charset.defaultCharset());
+        logger.info("file.encoding;    " + System.getProperty("file.encoding"));
+        logger.info("sun.jnu.encoding: " + System.getProperty("sun.jnu.encoding"));
+
         application.startServer();
         cp.notifyChange();
         // 

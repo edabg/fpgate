@@ -69,20 +69,17 @@ public class LastDailyReportInfoRes {
 
    /**
     *(Receipt and Printing type) 1 symbol with value: 
-    * - '0' - Sales receipt printing step by step 
-    * - '2' - Sales receipt Postponed Printing 
-    * - '4' - Storno receipt printing step by step 
-    * - '6' - Storno receipt Postponed Printing 
-    * - '1' - Invoice sales receipt printing step by step 
-    * - '3' - Invoice sales receipt Postponed Printing 
-    * - '5' - Invoice Credit note receipt printing step by step 
-    * - '7' - Invoice Credit note receipt Postponed Printing
+    * - '0' - Sales receipt printing 
+    * - '2' - Non fiscal receipt  
+    * - '4' - Storno receipt 
+    * - '1' - Invoice sales receipt 
+    * - '5' - Invoice Credit note
     */
-    public OptionTypeReceipt OptionTypeReceipt;
-    public OptionTypeReceipt getOptionTypeReceipt() {
-       return OptionTypeReceipt;
+    public OptionLastReceiptType OptionLastReceiptType;
+    public OptionLastReceiptType getOptionLastReceiptType() {
+       return OptionLastReceiptType;
     }
-    protected void setOptionTypeReceipt(OptionTypeReceipt value) {
-       OptionTypeReceipt = value;
+    protected void setOptionLastReceiptType(OptionLastReceiptType value) {
+       OptionLastReceiptType = value;
     }
 }

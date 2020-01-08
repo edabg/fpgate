@@ -27,6 +27,7 @@ import static java.lang.System.currentTimeMillis;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -35,13 +36,16 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import org.restlet.resource.ServerResource;
 import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import org.eda.fdevice.FPDatabase;
 import org.eda.fdevice.FPPrinterPool;
+import org.eda.fdevice.FPrinter;
 import org.restlet.data.Form;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
@@ -872,6 +876,22 @@ public class PrintResource extends ServerResource {
         response.getResultTable().putAll(res);
     }
     
+    protected void getDefinedPrinters() {
+        execLog.msg("Request getDefinedPrinters");
+        try {
+            FPDatabase db = new FPDatabase();
+            List<FPrinter> printers = db.getPrinters();
+            StrTable res = new StrTable();
+            for (FPrinter fp : printers) {
+                res.put(fp.getRefId(), fp.getModelID()+"/"+fp.getName());
+//                fp.getParams().getList();
+            }
+            response.getResultTable().putAll(res);
+        } catch (SQLException ex) {
+            execLog.error(ex.getMessage());
+        }
+    }
+    
     protected void getLogFileContent() {
         execLog.msg("Request getLogFileContent");
         StrTable res = new StrTable();
@@ -982,6 +1002,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "getlogfile" :
                         getLogFileContent();
+                        break;
+                    case "getdefinedprinters" :
+                        getDefinedPrinters();
                         break;
                     case "flushprinterpool" :
                         flushPrinterPool();

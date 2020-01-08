@@ -204,8 +204,8 @@ public abstract class AbstractProtocol {
     public abstract boolean isStatusBitTriggered(int paramInt1, int paramInt2);
     public abstract byte[] getStatusBytes();
 
-    protected abstract void sendPacket(int paramInt, String paramString) throws IOException;
+//    protected abstract void sendPacket(int paramInt, String paramString) throws IOException;
 
-    protected abstract String receivePacket() throws IOException;
+//    protected abstract String receivePacket() throws IOException;
 
 }

@@ -159,7 +159,6 @@ public class ProtocolV10 extends AbstractProtocol {
         return result;
     }
 
-    @Override
     protected void sendPacket(int command, String data) throws IOException {
         for (int retry = 0; retry < sendRetryCount; retry++) {
             // <01><LEN><SEQ><CMD><DATA><05><BCC><03>
@@ -217,7 +216,6 @@ public class ProtocolV10 extends AbstractProtocol {
         throw new IOException("Cant communicate with the device! Max retry count reached");
     }
 
-    @Override
     protected String receivePacket() throws IOException {
         // <01><LEN><SEQ><CMD><DATA><04><STATUS><05><BCC><03>
         // First byte <01> is already read in sendPacket! 

@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class FP extends FPcore {
      public FP(){
-        this.setVersionDef(1906120933);
+        this.setVersionDef(1910211454);
     }
 
     /**
@@ -47,11 +47,21 @@ public class FP extends FPcore {
 
     /**
      *Provides information about the current (the last value stored into the FM) decimal point format.
-     * @return DecimalPoint
+     * @return OptionDecimalPointPosition
      * @throws java.lang.Exception
      */
-     public DecimalPoint ReadDecimalPoint() throws Exception {
-             return CreateRes(Do("ReadDecimalPoint"), DecimalPoint.class);
+     public OptionDecimalPointPosition ReadDecimalPoint() throws Exception {
+             return CreateRes(Do("ReadDecimalPoint"), OptionDecimalPointPosition.class);
+     }
+
+    /**
+     *Starts session for reading electronic receipt by number with Base64 encoded BMP QR code.
+     * @param  rcpNum
+     *         6 symbols with format ######
+     * @throws java.lang.Exception
+     */
+     public void ReadElectronicReceipt_QR_BMP(Double rcpNum) throws Exception {
+             Do("ReadElectronicReceipt_QR_BMP", "RcpNum", rcpNum);
      }
 
     /**
@@ -628,45 +638,6 @@ public class FP extends FPcore {
      }
 
     /**
-     *Open an electronic fiscal storno receipt with 1 minute timeout assigned to the specified operator number and operator password, parameters for receipt format, print VAT, printing type and parameters for the related storno receipt.
-     * @param  operNum
-     *         Symbols from 1 to 20 corresponding to operator's 
-     * number
-     * @param  operPass
-     *         6 symbols for operator's password
-     * @param  optionReceiptFormat
-     *         1 symbol with value: 
-     *  - '1' - Detailed 
-     *  - '0' - Brief
-     * @param  optionPrintVAT
-     *         1 symbol with value:  
-     *  - '1' - Yes 
-     *  - '0' - No
-     * @param  optionStornoReason
-     *         1 symbol for reason of storno operation with value:  
-     * - '0' - Operator error  
-     * - '1' - Goods Claim or Goods return  
-     * - '2' - Tax relief
-     * @param  relatedToRcpNum
-     *         Up to 6 symbols for issued receipt number
-     * @param  relatedToRcpDateTime
-     *         17 symbols for Date and Time of the issued receipt 
-     * in format DD-MM-YY HH:MM:SS
-     * @param  fMNum
-     *         8 symbols for number of the Fiscal Memory
-     * @param  relatedToURN
-     *         Up to 24 symbols for the issed receipt unique receipt number. 
-     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
-     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
-     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
-     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
-     * @throws java.lang.Exception
-     */
-     public void OpenElectronicStornoReceipt(Double operNum, String operPass, OptionReceiptFormat optionReceiptFormat, OptionPrintVAT optionPrintVAT, OptionStornoReason optionStornoReason, Double relatedToRcpNum, Date relatedToRcpDateTime, String fMNum, String relatedToURN) throws Exception {
-             Do("OpenElectronicStornoReceipt", "OperNum", operNum, "OperPass", operPass, "OptionReceiptFormat", optionReceiptFormat, "OptionPrintVAT", optionPrintVAT, "OptionStornoReason", optionStornoReason, "RelatedToRcpNum", relatedToRcpNum, "RelatedToRcpDateTime", relatedToRcpDateTime, "FMNum", fMNum, "RelatedToURN", relatedToURN);
-     }
-
-    /**
      *Executes the direct command .
      * @param  input
      *         Raw request to FP
@@ -972,6 +943,18 @@ public class FP extends FPcore {
      }
 
     /**
+     *Starts session for reading electronic receipt by number with specified ASCII symbol for QR code block.
+     * @param  rcpNum
+     *         6 symbols with format ######
+     * @param  qRSymbol
+     *         1 symbol for QR code drawing image
+     * @throws java.lang.Exception
+     */
+     public void ReadElectronicReceipt_QR_ASCII(Double rcpNum, String qRSymbol) throws Exception {
+             Do("ReadElectronicReceipt_QR_ASCII", "RcpNum", rcpNum, "QRSymbol", qRSymbol);
+     }
+
+    /**
      *Read the PO by type of payment and the total number of operations by specified operator
      * @param  operNum
      *         Symbols from 1 to 20 corresponding to operator's number
@@ -1033,17 +1016,6 @@ public class FP extends FPcore {
      */
      public void ProgPLUprice(Double pLUNum, Double price, OptionPrice optionPrice) throws Exception {
              Do("ProgPLUprice", "PLUNum", pLUNum, "Price", price, "OptionPrice", optionPrice);
-     }
-
-    /**
-     *Provides information about the QR code data in specified number issued receipt.
-     * @param  rcpNum
-     *         6 symbols with format ######
-     * @return String
-     * @throws java.lang.Exception
-     */
-     public String ReadReceiptNumQRcodeData(Double rcpNum) throws Exception {
-             return CreateRes(Do("ReadReceiptNumQRcodeData", "RcpNum", rcpNum), String.class);
      }
 
     /**
@@ -1208,6 +1180,17 @@ public class FP extends FPcore {
      }
 
     /**
+     *Provides information about the QR code data in specified number issued receipt.
+     * @param  rcpNum
+     *         6 symbols with format ######
+     * @return String
+     * @throws java.lang.Exception
+     */
+     public String ReadSpecifiedReceiptQRcodeData(Double rcpNum) throws Exception {
+             return CreateRes(Do("ReadSpecifiedReceiptQRcodeData", "RcpNum", rcpNum), String.class);
+     }
+
+    /**
      *Registers the sell (for correction use minus sign in the price field)  of article with specified department, name, price, quantity and/or discount/addition on  the transaction.
      * @param  namePLU
      *         36 symbols for name of sale. 34 symbols are printed on 
@@ -1287,7 +1270,7 @@ public class FP extends FPcore {
      }
 
     /**
-     *Prints barcode from type stated by CodeType and CodeLen and with data stated in CodeData field.
+     *Prints barcode from type stated by CodeType and CodeLen and with data stated in CodeData field. Command works only for fiscal printer devices. ECR does not support this command.
      * @param  optionCodeType
      *         1 symbol with possible values: 
      *  - '0' - UPC A 
@@ -1435,6 +1418,16 @@ public class FP extends FPcore {
      }
 
     /**
+     *Starts session for reading electronic receipt by number with its QR code data in the end.
+     * @param  rcpNum
+     *         6 symbols with format ######
+     * @throws java.lang.Exception
+     */
+     public void ReadElectronicReceipt_QR_Data(Double rcpNum) throws Exception {
+             Do("ReadElectronicReceipt_QR_Data", "RcpNum", rcpNum);
+     }
+
+    /**
      *Read the RA by type of payment and the total number of operations by specified operator.
      * @param  operNum
      *         Symbols from 1 to 20 corresponding to operator's number
@@ -1443,6 +1436,15 @@ public class FP extends FPcore {
      */
      public DailyRAbyOperatorRes ReadDailyRAbyOperator(Double operNum) throws Exception {
              return CreateRes(Do("ReadDailyRAbyOperator", "OperNum", operNum), DailyRAbyOperatorRes.class);
+     }
+
+    /**
+     *Provide information about daily report parameter. If the parameter is set to 0 the status flag 4.6 will become 1 and the device will block all sales operation until daily report is printed. If the parameter is set to 1 the report will be generated automaticly without printout
+     * @return OptionDailyReportSetting
+     * @throws java.lang.Exception
+     */
+     public OptionDailyReportSetting ReadDailyReportParameter() throws Exception {
+             return CreateRes(Do("ReadDailyReportParameter"), OptionDailyReportSetting.class);
      }
 
     /**
@@ -1881,55 +1883,6 @@ public class FP extends FPcore {
      */
      public void ProgDecimalPointPosition(String password, OptionDecimalPointPosition optionDecimalPointPosition) throws Exception {
              Do("ProgDecimalPointPosition", "Password", password, "OptionDecimalPointPosition", optionDecimalPointPosition);
-     }
-
-    /**
-     *Opens an electronic fiscal invoice credit note receipt with 1 minute timeout assigned to the specified operator number and operator password with free info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
-     * @param  operNum
-     *         Symbol from 1 to 20 corresponding to operator's 
-     * number
-     * @param  operPass
-     *         6 symbols for operator's password
-     * @param  recipient
-     *         26 symbols for Invoice recipient
-     * @param  buyer
-     *         16 symbols for Invoice buyer
-     * @param  vATNumber
-     *         13 symbols for customer Fiscal number
-     * @param  uIC
-     *         13 symbols for customer Unique Identification Code
-     * @param  address
-     *         30 symbols for Address
-     * @param  optionUICType
-     *         1 symbol for type of Unique Identification Code:  
-     *  - '0' - Bulstat 
-     *  - '1' - EGN 
-     *  - '2' - Foreigner Number 
-     *  - '3' - NRA Official Number
-     * @param  optionStornoReason
-     *         1 symbol for reason of storno operation with value:  
-     * - '0' - Operator error  
-     * - '1' - Goods Claim or Goods return  
-     * - '2' - Tax relief
-     * @param  relatedToInvoiceNum
-     *         10 symbols for issued invoice number
-     * @param  relatedToInvoiceDateTime
-     *         17 symbols for issued invoice date and time in format
-     * @param  relatedToRcpNum
-     *         Up to 6 symbols for issued receipt number
-     * @param  fMNum
-     *         8 symbols for number of the Fiscal Memory
-     * @param  relatedToURN
-     *         Up to 24 symbols for the issed invoice receipt unique receipt number. 
-     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
-     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device 
-     * number, 
-     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
-     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
-     * @throws java.lang.Exception
-     */
-     public void OpenElectronicCreditNoteWithFreeCustomerData(Double operNum, String operPass, String recipient, String buyer, String vATNumber, String uIC, String address, OptionUICType optionUICType, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
-             Do("OpenElectronicCreditNoteWithFreeCustomerData", "OperNum", operNum, "OperPass", operPass, "Recipient", recipient, "Buyer", buyer, "VATNumber", vATNumber, "UIC", uIC, "Address", address, "OptionUICType", optionUICType, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
      }
 
     /**
@@ -2430,16 +2383,6 @@ public class FP extends FPcore {
      }
 
     /**
-     *Starts session for read specified number electronic receipt data from EJ with its QR data.
-     * @param  rcpNum
-     *         6 symbols with format ######
-     * @throws java.lang.Exception
-     */
-     public void ReadElectronicReceiptDataFromEJ(Double rcpNum) throws Exception {
-             Do("ReadElectronicReceiptDataFromEJ", "RcpNum", rcpNum);
-     }
-
-    /**
      *Provides information about the RA amounts by type of payment and the total number of operations.
      * @return DailyRARes
      * @throws java.lang.Exception
@@ -2629,41 +2572,6 @@ public class FP extends FPcore {
      */
      public DailyReturnedChangeAmountsByOperatorRes ReadDailyReturnedChangeAmountsByOperator(Double operNum) throws Exception {
              return CreateRes(Do("ReadDailyReturnedChangeAmountsByOperator", "OperNum", operNum), DailyReturnedChangeAmountsByOperatorRes.class);
-     }
-
-    /**
-     *Opens an electronic fiscal invoice credit note receipt with 1 minute timeout assigned to the specified operator number and operator password with internal DB info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
-     * @param  operNum
-     *         Symbol from 1 to 20 corresponding to operator's 
-     * number
-     * @param  operPass
-     *         6 symbols for operator's password
-     * @param  customerNum
-     *         Symbol '#' and following up to 4 symbols for related customer ID 
-     * number corresponding to the FD database
-     * @param  optionStornoReason
-     *         1 symbol for reason of storno operation with value:  
-     * - '0' - Operator error  
-     * - '1' - Goods Claim or Goods return  
-     * - '2' - Tax relief
-     * @param  relatedToInvoiceNum
-     *         10 symbols for issued invoice number
-     * @param  relatedToInvoiceDateTime
-     *         17 symbols for issued invoice date and time in format
-     * @param  relatedToRcpNum
-     *         Up to 6 symbols for issued receipt number
-     * @param  fMNum
-     *         8 symbols for number of the Fiscal Memory
-     * @param  relatedToURN
-     *         Up to 24 symbols for the issed invoice receipt unique receipt number. 
-     * NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where: 
-     * * ХХХХХХXX - 8 symbols [A-Z, a-z, 0-9] for individual device number, 
-     * * ZZZZ - 4 symbols [A-Z, a-z, 0-9] for code of the operator, 
-     * * YYYYYYY - 7 symbols [0-9] for next number of the receipt
-     * @throws java.lang.Exception
-     */
-     public void OpenElectronicCreditNoteWithFDCustomerDB(Double operNum, String operPass, String customerNum, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
-             Do("OpenElectronicCreditNoteWithFDCustomerDB", "OperNum", operNum, "OperPass", operPass, "CustomerNum", customerNum, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
      }
 
     /**

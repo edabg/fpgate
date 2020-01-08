@@ -41,6 +41,7 @@ import TremolZFP.OptionStornoReason;
 import TremolZFP.OptionUICType;
 import TremolZFP.OptionVATClass;
 import TremolZFP.OptionZeroing;
+import TremolZFP.Payments_OldRes;
 import TremolZFP.RegistrationInfoRes;
 import TremolZFP.SerialAndFiscalNumsRes;
 import TremolZFP.StatusRes;
@@ -49,6 +50,7 @@ import java.io.IOException;
 import static java.lang.Math.abs;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -248,13 +250,22 @@ public class FPCTremol extends FPCBase {
         }
     }
 
+    protected String fixCharsetBug(String str) {
+        return str;
+//        if (!Charset.defaultCharset().name().equalsIgnoreCase("UTF-8")) {
+//            return new String(str.getBytes(Charset.defaultCharset()), Charset.forName("UTF-8"));
+//        } else
+//            return str;
+    }
+    
     @Override
     public DeviceInfo getDeviceInfo() throws FPException {
         DeviceInfo di = new DeviceInfo();
         try {
+            Payments_OldRes po = fp.ReadPayments_Old();
             VersionRes ver = fp.ReadVersion();
             di.Model = ver.Model;
-            di.Firmware = ver.Version;
+            di.Firmware = fixCharsetBug(ver.Version);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
         }
@@ -660,7 +671,7 @@ FWDT=23NOV18 1000
         try {
             VersionRes ver = fp.ReadVersion();
             res.put("Model", ver.Model);
-            res.put("FWRev", ver.Version);
+            res.put("FWRev", fixCharsetBug(ver.Version));
             res.put("CertNum", ver.CertificateNum);
         } catch (Exception ex) {
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
