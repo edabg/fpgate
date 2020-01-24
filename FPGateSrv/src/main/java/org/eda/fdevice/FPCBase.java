@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -712,7 +713,10 @@ public class FPCBase {
                 }
                 break;
             default :
-                res = PrintedStringUtils.splitInChnunks(str, width);
+                if (str.contains("\n")) { // keep new lines
+                    res = new ArrayList(Arrays.asList(str.split("\n")));
+                } else     
+                    res = PrintedStringUtils.splitInChnunks(str, width);
         }
         return res.toArray(new String[res.size()]);
     }
