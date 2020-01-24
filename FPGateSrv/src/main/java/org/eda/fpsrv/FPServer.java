@@ -330,13 +330,13 @@ public class FPServer extends Application {
     }
 
     public void adjustPrinterPool() {
-        FPPrinterPool.setPoolEnabled(getAppProperties().getProperty("PoolEnabled", "1").equals("1"));
         long poolDeadtime = 5;
         try {
             poolDeadtime = Integer.parseInt(getAppProperties().getProperty("PoolDeadtime", "5"));
         } finally {
             FPPrinterPool.setPrinterDeadTime(poolDeadtime*60*1000);// convert in miliseconds
         }    
+        FPPrinterPool.setPoolEnabled(getAppProperties().getProperty("PoolEnabled", "1").equals("1"));
     }
     
     public String getDocumentRoot() {

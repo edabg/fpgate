@@ -522,6 +522,9 @@
               <Properties>
                 <Property name="text" type="java.lang.String" value="&#x41e;&#x442;&#x43a;&#x430;&#x437;"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbCancelActionPerformed"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JPasswordField" name="jtAdminPassword">
             </Component>

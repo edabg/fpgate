@@ -94,22 +94,18 @@ Freemaker template, http://freemarker.org/
                     </div>
 
 <#list ParamGroups as PGroup>
-<#escape PGroup as PGroup?html>                        
                     <div class="row">
                         <div class="col s12">
                             <h2 class="section underline">${PGroup.Name}</h2>
                         </div>
 <#list PGroup.Properties as Prop>
-<#escape Prop as Prop?html>                        
                         <div class="input-field col s6">
 <#if Prop.RuleApply == '1'>
 <#if Prop.RuleListDefined == '1'>
                             <select name="Property[${Prop.ID}]" id="prop_${Prop.ID}">
 <#list Prop.RuleList?keys as lkey>
-<#escape lkey as lkey?html>                        
 <#if lkey == Prop.Value>selected="selected"<#assign selected='selected="selected"'><#else><#assign selected=''></#if>
                                 <option value="${lkey}" ${selected}>${Prop.RuleList[lkey]}</option>
-</#escape>
 </#list>
                             </select>
 <#else>
@@ -120,11 +116,9 @@ Freemaker template, http://freemarker.org/
 </#if>                        
                             <label for="prop_${Prop.ID}">${Prop.Name}</label>
                         </div>
-</#escape>
 </#list>
                         <p>&nbsp;</p>
                     </div>
-</#escape>
 </#list>
 
                     <div class="row">

@@ -164,6 +164,9 @@ public abstract class AbstractProtocol {
         return sb.toString();
     }
 
+    protected void clear() throws IOException {
+        mSocket.clear();
+    }
     protected int read() throws IOException {
         return mSocket.read(READ_TIMEOUT);
     }
@@ -199,9 +202,9 @@ public abstract class AbstractProtocol {
         return mSocket.isOpen();
     }
 
-    public abstract String customCommand(int paramInt, String paramString) throws IOException;
+    public abstract String customCommand(int command, String paramString) throws IOException;
 
-    public abstract boolean isStatusBitTriggered(int paramInt1, int paramInt2);
+    public abstract boolean isStatusBitTriggered(int byteIndex, int bitIndex);
     public abstract byte[] getStatusBytes();
 
 //    protected abstract void sendPacket(int paramInt, String paramString) throws IOException;

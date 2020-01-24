@@ -184,6 +184,14 @@ public class PrintResource extends ServerResource {
         FP.setOperator(opCode, opPass, opName);
     }
     
+    protected String splitSellText2(String text) {
+        String[] textLines = text.split("[~][~]", 2);
+        if (textLines.length > 1) {
+            return textLines[0]+"\n"+textLines[1];
+        } else
+            return text;
+    }
+    
     /**
      * Prints Fiscal/Non fiscal check<br>
      * Fiscal check contents is as items in pRequest.Arguments.<br>
@@ -231,6 +239,8 @@ public class PrintResource extends ServerResource {
      *  CMD\tCCC\tParams<br>
      * FTR - Print Text footer<br>
      *  FTR\tText<br>
+     * FDN - Fiscal Device Serial Number<br>
+     *  FDN\tSerialNum<br>
      * Notes:<br>
      * For fiscal check, there are must be at least 1 sell Row <br>
      * and at the end must be total<br>
@@ -262,6 +272,7 @@ public class PrintResource extends ServerResource {
         String RevFMNum = "";
         String RevReason = "";
         String RevInvoiceNum = "";
+        String FDSerialNum = "";
         Date RevInvoiceDate = null;
         ArrayList<String[]> footer = new ArrayList<>();
         for(String arg : pRequest.getArguments()) {
@@ -269,7 +280,10 @@ public class PrintResource extends ServerResource {
             cmdParams = arg.split("\\t");
             // Check for per open fiscal check command
             if ((cmdParams[0].length() > 1)) {
-                if (cmdParams[0].equals("SON")) {
+                if (cmdParams[0].equals("FDN")) {
+                    if (cmdParams.length > 1)
+                        FDSerialNum = cmdParams[1];
+                } else if (cmdParams[0].equals("SON")) {
                     setOperatorName = cmdParams[1];
                 } else if (cmdParams[0].equals("SOC")) {
                     setOperatorCode = cmdParams[1];
@@ -344,7 +358,12 @@ public class PrintResource extends ServerResource {
             } else
                cmdList.add(cmdParams);
         }
-
+        if (FDSerialNum.length() > 0) {
+            // Check if SerialNumber match
+            if (!FP.getDeviceInfo().SerialNum.equals(FDSerialNum)) {
+                throw new FPException("Серийният номер на ФУ е различен от заявения!");
+            }
+        }
         if (!setOperatorCode.isEmpty()) {
             FP.setParam("OperatorCode", setOperatorCode);
             FP.setParam("OperatorPass", setOperatorPass);
@@ -416,7 +435,7 @@ public class PrintResource extends ServerResource {
                         if (cmd.length > 5) {
                             // sell with Quantity
                             FP.sell(
-                                cmd[1]
+                                splitSellText2(cmd[1])
                                 , FP.taxAbbrToGroup(cmd[2])
                                 , Double.parseDouble(cmd[3])
                                 , Double.parseDouble(cmd[5])
@@ -425,7 +444,7 @@ public class PrintResource extends ServerResource {
                         } else if (cmd.length == 5) {
                             // sell w/o Quantity
                             FP.sell(
-                                cmd[1]
+                                splitSellText2(cmd[1])
                                 , FP.taxAbbrToGroup(cmd[2])
                                 , Double.parseDouble(cmd[3])
                                 , Double.parseDouble(cmd[4])
@@ -436,7 +455,7 @@ public class PrintResource extends ServerResource {
                     case "SDP" : // STG\tText(48)\DeptCode([...])\tPrice\tPercent[\tQty] - Register Sell by department
                         if (cmd.length >=5)
                            FP.sellDept(
-                                cmd[1]
+                                splitSellText2(cmd[1])
                                 , cmd[2]
                                 , Double.parseDouble(cmd[3])
                                 , Double.parseDouble(cmd[5])
@@ -444,7 +463,7 @@ public class PrintResource extends ServerResource {
                            );
                         else
                            FP.sellDept(
-                                cmd[1]
+                                splitSellText2(cmd[1])
                                 , cmd[2]
                                 , Double.parseDouble(cmd[3])
                            );
@@ -524,8 +543,29 @@ public class PrintResource extends ServerResource {
         FP.printLastCheckDuplicate();
     }
 
+    protected void checkDeviceSerialNum(boolean strict) throws FPException {
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("FDSerialNum")) {
+            String FDSerialNum = namedArgs.get("FDSerialNum");
+            if (FDSerialNum.length() > 0) {
+                // Check if SerialNumber match
+                if (!FP.getDeviceInfo().SerialNum.equals(FDSerialNum)) {
+                    if (strict)
+                        throw new FPException("Серийният номер на ФУ е различен от заявения!");
+                    else
+                        execLog.warning("Серийният номер на ФУ е различен от заявения!");
+                }
+            }
+        }
+    }
+
+    protected void checkDeviceSerialNum() throws FPException {
+        checkDeviceSerialNum(true);
+    }
+    
     public void printDuplicateCheckByDocNum() throws FPException {
         execLog.msg("Entering printDuplicateCheckByDocNum");
+        checkDeviceSerialNum();
         String docNum = "";
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("DocNum"))
@@ -536,6 +576,7 @@ public class PrintResource extends ServerResource {
     
     public void currentCheckInfo() throws FPException {
         execLog.msg("Entering currentCheckInfo");
+        checkDeviceSerialNum(false);
         StrTable res;
         res = FP.getCurrentCheckInfo().toStrTable();
         if (res == null) {
@@ -550,6 +591,7 @@ public class PrintResource extends ServerResource {
 
     public void lastFiscalRecordInfo() throws FPException {
         execLog.msg("Entering lastFiscalRecordInfo");
+        checkDeviceSerialNum(false);
         StrTable res;
         res = FP.getLastFiscalRecordInfo().toStrTable();
         if (res == null) {
@@ -562,6 +604,7 @@ public class PrintResource extends ServerResource {
     
     public void printerStatus() throws FPException {
         execLog.msg("Entering printerStatus");
+        checkDeviceSerialNum(false);
         StrTable res;
         res = FP.getPrinterStatus();
         if (res == null) {
@@ -602,6 +645,7 @@ public class PrintResource extends ServerResource {
 
     public void getDiagnosticInfo() throws FPException {
         execLog.msg("Entering getDiagnosticInfo");
+        checkDeviceSerialNum(false);
         StrTable res;
         execLog.msg("Calling daily getDiagnosticInfo");
         res = FP.getDiagnosticInfo();
@@ -615,6 +659,7 @@ public class PrintResource extends ServerResource {
     
     public void reportDaily() throws FPException {
         execLog.msg("Entering daily report");
+        checkDeviceSerialNum();
         String reportTypeAbbr = "X";
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("ReportType"))
@@ -633,6 +678,7 @@ public class PrintResource extends ServerResource {
     
     public void reportByDates() throws ParseException, FPException {
         execLog.msg("Entering reportByDates");
+        checkDeviceSerialNum();
         String reportTypeAbbr = "DETAILED";
         String fromDateStr = "";
         String toDateStr = "";
@@ -672,6 +718,7 @@ public class PrintResource extends ServerResource {
 
     public void getDateTime() throws FPException {
         execLog.msg("Entering getDateTime");
+        checkDeviceSerialNum(false);
         execLog.msg("Calling getDateTime");
         Date dateTime;
         dateTime = FP.getDateTime();
@@ -680,6 +727,7 @@ public class PrintResource extends ServerResource {
 
     public void setDateTime() throws ParseException, FPException {
         execLog.msg("Request setDateTime");
+        checkDeviceSerialNum();
         String dateTimeStr = "";
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("DateTime"))
@@ -699,6 +747,7 @@ public class PrintResource extends ServerResource {
     
     public void customCommand() throws FPException {
         execLog.msg("Request custom command");
+        checkDeviceSerialNum();
         String command = "";
         String args = "";
         StrTable namedArgs = pRequest.getNamedArguments();
@@ -715,7 +764,7 @@ public class PrintResource extends ServerResource {
     
     public void getJournalInfo() throws FPException {
         execLog.msg("Entering getJournalInfo");
-        
+        checkDeviceSerialNum(false);
         StrTable res;
         execLog.msg("Calling daily getJournalInfo()");
         res = FP.getJournalInfo();
@@ -729,6 +778,7 @@ public class PrintResource extends ServerResource {
 
     public void getJournal() throws FPException {
         execLog.msg("Entering getJournal");
+        checkDeviceSerialNum(false);
         StrTable res = null;
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("FromDoc")) {
@@ -778,6 +828,7 @@ public class PrintResource extends ServerResource {
 
     public void getDocInfo() throws FPException {
         execLog.msg("Entering getDocInfo");
+        checkDeviceSerialNum(false);
         StrTable res = null;
         StrTable namedArgs = pRequest.getNamedArguments();
         String docNum = "";
@@ -795,6 +846,7 @@ public class PrintResource extends ServerResource {
     
     public void test() throws FPException {
         execLog.msg("Entering test");
+        checkDeviceSerialNum(false);
         StrTable res;
         execLog.msg("Calling daily getDiagnosticInfo");
         res = FP.getDiagnosticInfo();
@@ -808,6 +860,7 @@ public class PrintResource extends ServerResource {
           
     public void cashInOut() throws ParseException, FPException {
         execLog.msg("Request cashInOut");
+        checkDeviceSerialNum();
         String amountStr = "";
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("Amount"))
@@ -827,6 +880,18 @@ public class PrintResource extends ServerResource {
         }    
     }
 
+    public void readPaymentMethods() throws ParseException, FPException {
+        execLog.msg("Request readPaymentMethods");
+        checkDeviceSerialNum(false);
+        StrTable res = FP.readPaymentMethods();
+        if (res == null) {
+            execLog.msg("readPaymentMethods returns no result!");
+        } else {
+            execLog.msg("readPaymentMethods returns result!");
+            response.getResultTable().putAll(res);
+        }    
+    }
+    
     public void getCommPorts() throws ParseException, FPException {
         execLog.msg("Request getComPortList");
         StrTable res = new StrTable();
@@ -990,6 +1055,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "getdiagnosticinfo" :
                         getDiagnosticInfo();
+                        break;
+                    case "readpaymentmethods" :
+                        readPaymentMethods();
                         break;
                     case "getversion" :
                         getVersion();

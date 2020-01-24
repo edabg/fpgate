@@ -2229,6 +2229,61 @@ public class DeviceDatecsDPV1 extends AbstractFiscalDevice {
         }
         return docDate;
     }
-    
+ 
+    @Override
+    public LinkedHashMap<String, String> cmdReadPaymentMethods() throws IOException {
+//    InputString = InputString + String.format("%c%c%c", new Object[] { Integer.valueOf(132), Integer.valueOf(48), Integer.valueOf(59) });
+        LinkedHashMap<String, String> response = new LinkedHashMap(); // 32 31 3B 31 3B
+//        String params =String.format("%c%c%c", new Object[] { (byte)0x84, (byte)0x32, (byte)0x31, (byte)0x3B, (byte)0x31, (byte)0x3B });
+        // Определяне на начина на плащане по номенклатура на НАП
+        String prefix = new String(new byte[] {(byte)0x84});
+        //new String(new byte[] { (byte)0x84, (byte)0x32, (byte)0x31, (byte)0x3B, (byte)0x31, (byte)0x3B });
+        String params = prefix + "21;1;"; 
+        String res = cmdCustom(255, params);
+        LOGGER.fine("Read NRA mapping: "+res);
+        // 21;1;7;7;2;1;2;3;4;5;7;7;9;3;2;1;2;3;4;5;;
+        //                      1 2 3 4 5
+        //                      N C D I J
+        // offset:             10
+        String[] cparts = res.split(";");
+        String[] paymentName = new String[] {"В БРОЙ","","","","",""};
+        String[] paymentEnabled = new String[] {"Да","-","-","-","-","-"};
+        String[] paymentRest = new String[] {"Да","-","-","-","-","-"};
+        String[] paymentNRAMap = new String[] {"0","-","-","-","-","-"};
+        for(int i = 0; (i < 5) && (cparts.length > (i+10)); i++) {
+            paymentNRAMap[i+1] = cparts[(i+10)];
+        }
+        // Прочитане на имената на начините на плащане, разрешени ли са и може ли да се връща ресто
+        //3;1;В БРОЙ;0;0;
+        //3;2;КРЕДИТ;0;1;
+        //3;3;ДЕБ.КАРТА;0;1;
+        //3;4;НЗОК;0;1;
+        //3;5;ВАУЧЕР;0;1;
+        //3;6;КУПОН;0;1;
+        //0 1 2     3 4
+        // offset 3: Забрана, 4 - забрана на ресто
+        for(int i = 0; i < 6; i++) {
+            params = prefix + "3;"+Integer.toString(i+1)+";";
+            res = cmdCustom(255, params);
+            cparts = res.split(";");
+            if (cparts.length > 2)
+                paymentName[i] = cparts[2];
+            if (cparts.length > 3)
+                paymentEnabled[i] = cparts[3].equals("1")?"Не":"Да";
+            if (cparts.length > 4)
+                paymentRest[i] = cparts[4].equals("1")?"Не":"Да";
+            LOGGER.fine(res);
+        }
+        for (int i = 0; i < 6; i++)
+            response.put("P_"+Integer.toString(i+1), Integer.toString(i+1)+" '"+paymentName[i]+"' Разрешен:"+paymentEnabled[i]+" Ресто:"+paymentRest[i]+" НАП #:"+paymentNRAMap[i]);
+        // Конфугурацията на плащанията по кодове
+        response.put("P_P", " 'P' - 'В БРОЙ'");
+        String[] pCodes = new String[] {"N","C","D","I","J"};
+        for(int i=0; i < pCodes.length; i++) {
+            res = cmdCustom(85, pCodes[i]);
+            response.put("P_"+pCodes[i], " '"+pCodes[i]+"' - '"+res+"'");
+        }
+        return response;
+    }
     
 }

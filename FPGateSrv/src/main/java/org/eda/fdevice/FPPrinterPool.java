@@ -20,6 +20,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.restlet.ext.crypto.DigestUtils;
@@ -36,6 +39,8 @@ public class FPPrinterPool {
     private static HashMap<String, FPCBase> FPPool = new HashMap<>();
     
     private static boolean poolEnabled = true;
+    
+    private static ScheduledExecutorService poolCleanScheduler;
 
     public static boolean isPoolEnabled() {
         return poolEnabled;
@@ -43,6 +48,12 @@ public class FPPrinterPool {
 
     public static void setPoolEnabled(boolean poolEnabled) {
         FPPrinterPool.poolEnabled = poolEnabled;
+        if (FPPrinterPool.poolEnabled) {
+            startPoolCleanScheduler();
+        }  else {
+            stopPoolCleanScheduler();
+            clear();
+        }  
     }
 
     public static long getPrinterDeadTime() {
@@ -115,6 +126,33 @@ public class FPPrinterPool {
         }
     }
     
+    protected static synchronized void cleanPool() {
+        LOGGER.info("Autoclean printer pool started. Size="+Integer.toString(FPPool.keySet().size()));
+        Iterator<String> it = FPPool.keySet().iterator();
+        while (it.hasNext()) {
+          String key = it.next();
+          FPCBase fp_ = FPPool.get(key);
+          try {
+              if ((fp_.getLifetime() > printerDeadTime)) {
+                LOGGER.fine(fp_.getUID()+" was expired and vahe to be cleaned.");
+                if (!fp_.isLocked()) {
+                    fp_.destroy();
+                    FPPool.remove(key);
+                    LOGGER.info(fp_.getUID()+" was cleaned.");
+  //                  it.remove();
+                } else
+                    LOGGER.info(key+" is locked and can't be removed.");
+              } else {
+                  LOGGER.fine(fp_.getUID()+" is in time.");
+              } 
+          } catch (Exception E) {
+            E.printStackTrace();
+          }
+//          fp_ = null;
+        }   
+        LOGGER.info("Autoclean printer pool finished. Size="+Integer.toString(FPPool.keySet().size()));
+    } 
+    
     public static synchronized void clear() {
         LOGGER.info("Begin clearing printer pool. Size="+Integer.toString(FPPool.keySet().size()));
         Iterator<String> it = FPPool.keySet().iterator();
@@ -135,5 +173,37 @@ public class FPPrinterPool {
         }   
         LOGGER.info("End clearing printer pool. Size="+Integer.toString(FPPool.keySet().size()));
     }
+    
+    public static void startPoolCleanScheduler() {
+        startPoolCleanScheduler(printerDeadTime, TimeUnit.MILLISECONDS);
+    }
+    
+    public static void startPoolCleanScheduler(long interval, TimeUnit timeU) {
+        // Initiate Colibri ERP Session maintain
+        if (poolCleanScheduler != null)
+            stopPoolCleanScheduler();
+        LOGGER.info("Starting printer pool autoclean.");
+        poolCleanScheduler = Executors.newScheduledThreadPool(1);
+        poolCleanScheduler.scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    cleanPool();
+//                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+            }
+            , interval
+            , interval
+            , timeU
+        );
+    }
+
+    public static void stopPoolCleanScheduler() {
+        if (poolCleanScheduler != null) {
+            LOGGER.info("Stopping printer pool autoclean.");
+            poolCleanScheduler.shutdownNow();
+        }
+        poolCleanScheduler = null;
+    }
+    
     
 }

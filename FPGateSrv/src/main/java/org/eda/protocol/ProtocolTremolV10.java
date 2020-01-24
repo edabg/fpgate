@@ -19,9 +19,11 @@ package org.eda.protocol;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.bind.DatatypeConverter;
 import org.apache.tools.ant.taskdefs.Sleep;
 
 /**
@@ -285,6 +287,22 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         CMD_CODE_ERROR.put((byte)0x38, "Insufficient amount on hand");
     }
     
+    protected void checkACKResult(byte sbFD, byte sbCMD) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        // check FD Status bytes
+        for (byte bval : FD_CODE_ERROR.keySet()) {
+            if ((bval == sbFD) && (FD_CODE_ERROR.get(bval).length() > 0))
+                sb.append("FD Error:"+FD_CODE_ERROR.get(bval));
+        }
+        // check CMD Status bytes
+        for (byte bval : CMD_CODE_ERROR.keySet()) {
+            if ((bval == sbCMD) && (CMD_CODE_ERROR.get(bval).length() > 0))
+                sb.append("CMD Error:"+CMD_CODE_ERROR.get(bval));
+        }
+        if (sb.capacity() > 0)
+            throw new IOException(sb.toString());
+    }
+    
     public ProtocolTremolV10(InputStream in, OutputStream out, EncodingType encoding) {
         super(in, out, encoding);
         mSEQ = SEQ_START;
@@ -309,8 +327,32 @@ public class ProtocolTremolV10 extends AbstractProtocol {
 
     
     @Override
-    public String customCommand(int paramInt, String paramString) throws IOException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public String customCommand(int command, String paramString) throws IOException {
+        byte[] paramData = null;
+        if (paramString.length() > 0) {
+            paramData = new byte[paramString.length()];
+            toAnsi(paramString, paramData, 0, mEncoding);
+        }
+        byte[] data = sendPacket(command, paramData, true);
+        if (data != null) {
+            return toUnicode(data, 0, data.length, mEncoding);
+        } else
+            return "";
+    }
+
+    /**
+     * Sends one way command to device without response
+     * @param command
+     * @param paramString
+     * @throws IOException 
+     */
+    public void customSimpleCommand(int command, String paramString) throws IOException {
+        byte[] paramData = null;
+        if (paramString.length() > 0) {
+            paramData = new byte[paramString.length()];
+            toAnsi(paramString, paramData, 0, mEncoding);
+        }
+        sendPacket(command, paramData, false);
     }
 
     @Override
@@ -320,7 +362,13 @@ public class ProtocolTremolV10 extends AbstractProtocol {
 
     @Override
     public byte[] getStatusBytes() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        byte[] sBytes = new byte[mSB.length];
+        try {
+            sBytes = sendPacket(0x20, null, true);
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        return sBytes;
     }
     
     
@@ -400,7 +448,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         throw new IOException("PING2: "+sb.toString());
     }
     
-    protected String getReceiptPacket(byte[] readBuf) throws IOException {
+    protected byte[] getReceiptPacket(byte[] readBuf) throws IOException {
         // expecting to receive ACK packet
         //   0    1    2   3    4   5    6
         // {ACK}{NBL}{STE}{STE}{CS}{CS}{ETX}
@@ -412,20 +460,21 @@ public class ProtocolTremolV10 extends AbstractProtocol {
 	if (ZFP_ETX != readBuf[ZFP_RECEIPTLEN - 1]) // missing ETX
             throw new IOException("Bad Receive data!");
         byte[] crc = calcCRC(readBuf, 1, 4);
-        if ((crc[0] != readBuf[4]) || (crc[0] != readBuf[5]))
+        if ((crc[0] != readBuf[4]) || (crc[1] != readBuf[5]))
             throw new IOException("CRC Error!");
         // Check Status Bytes 
         mCMDSB[0] = readBuf[2]; // Device Status byte
         mCMDSB[1] = readBuf[3]; // Command Status byte
-        if ((mCMDSB[0] != (byte)0x30) || (mCMDSB[0] != (byte)0x30)) {
+        if ((mCMDSB[0] != (byte)0x30) || (mCMDSB[1] != (byte)0x30)) {
             // there is error in FD or error in command
             // TODO: Explain detailed information about error
-            throw new IOException("Ther is error in command or FD!");
+            checkACKResult(mCMDSB[0], mCMDSB[1]);
+//            throw new IOException("Ther is error in command or FD!");
         }
-        return "ACK";
+        return Arrays.copyOfRange(readBuf, 2, 4);
     }
 
-    protected String getResponsePacket(byte[] readBuf) throws IOException {
+    protected byte[] getResponsePacket(byte[] readBuf) throws IOException {
         // TODO: Transform error responses to exceptions
         // First byte STX was already read, offset in buffer is 1
         // read until ETX or max buffer len
@@ -453,9 +502,10 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             throw new IOException("CRC Error!");
         }
         int dataLen = offs-6;
-        String data = toUnicode(readBuf, 4, dataLen, mEncoding);
+        return Arrays.copyOfRange(readBuf, 4, dataLen+4);
+//        String data = toUnicode(readBuf, 4, dataLen, mEncoding);
         
-        return data;
+//        return data;
     }
     
     protected byte[] calcCRC(byte[] buf, int spos, int epos) {
@@ -469,14 +519,15 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         return crcbuf;
     }
     
-    protected String sendPacket(int command, String data, boolean getResponse) throws IOException {
+    protected byte[] sendPacket(int command, byte[] data, boolean getResponse) throws IOException {
         // {STX}{LEN}{NBL}{CMD}{DATA…DATA}{CS}{CS}{ETX}
+        clear();
         doPing2(3); // check and wait device to be ready!
         byte[] buf = new byte[MAX_SEND_PACKET_SIZE];
         int offs = 0;
         int len;
 
-        len = data != null ? data.length() : 0;
+        len = data != null ? data.length : 0;
         if (len > MAX_SEND_DATASIZE) {
             throw new IllegalArgumentException("Lenght of data exceeds the limits ("+Integer.toString(MAX_SEND_DATASIZE)+"!)");
         }
@@ -489,8 +540,6 @@ public class ProtocolTremolV10 extends AbstractProtocol {
 
         buf[(offs++)] = ((byte) command);
 
-        // Convert unicode to ANSI
-        toAnsi(data, buf, offs, mEncoding);
         offs += len;
 
         // Calc CRC
@@ -500,14 +549,14 @@ public class ProtocolTremolV10 extends AbstractProtocol {
 
         buf[(offs++)] = ZFP_ETX;
         int retryCount = sendRetryCount;
-        String returnResult = "";
+        byte[] returnResult = null;
         byte[] readBuf = new byte[MAX_RECEIVE_PACKET_SIZE];
         do {
             // Send packet
             write(buf, 0, offs);
             if (!getResponse) {
                 //Command will not expect response
-              	returnResult = "";
+              	returnResult = null;
                 break; 
             }    
             // read until receive recognized response byte
@@ -559,6 +608,60 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     
     protected String receivePacket() throws IOException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    
+    public String auxCommand(byte [] data) throws IOException {
+        /*
+        <CR><LF> command  [parameter 1] [parameter 2]<CR><LF>
+        The commands are presented by line of ASCII characters, which must begin and end with the sequence <CR><LF> (0x0d, 0x0a). 
+        The terminal monitor this sequence thus recognizes that data are intended for him 
+        (in fiscal device the format command type is 0xAA, 0x55 ...). 
+        In transmission of parameters for dividers is used interval (0x20) or tab (0x09). 
+        After processing of command, the terminal always returns an answer for the result of its implementation.
+
+        NOTE: The names of commands, parameters, files and directories are case sensitive.
+        */
+        nextSEQ();
+        mSocket.clear();
+
+        String auxcmd = DatatypeConverter.printHexBinary(data);
+        LOGGER.finest(String.format("> auxilary cmd %s", new Object[]{auxcmd}));
+        StopWatch go = new StopWatch();
+        
+        clear();
+        write(data, 0, data.length);
+        // read answer
+        int readBuffSize = 8*1024*1024;// 8M
+        byte[] readBuf = new byte[readBuffSize]; 
+        int b;
+        int offset = 0;
+        // read with minimized timeout and ignore timeout eceptions
+        int OLD_READ_TIMEOUT = READ_TIMEOUT;
+        READ_TIMEOUT = 500; // ms
+        try {
+            do {
+                try {
+                    b = read();
+                } catch (IOException ioe) {
+                    // no data timeout reached
+                    break;
+                }    
+                if (offset < readBuffSize) {
+                   readBuf[offset++] = (byte)(b & 0xFF);
+                } else {
+                  LOGGER.warning("Receive buffer overflow!");
+                  break;
+                }  
+            } while (true); 
+        } catch (Exception ex) {
+            LOGGER.severe(ex.getMessage());
+        }
+        READ_TIMEOUT = OLD_READ_TIMEOUT; // ms
+        String result = toUnicode(readBuf, 0, offset, mEncoding);
+        
+        LOGGER.finest(String.format("< %s (%d bytes) in %dms", new Object[]{auxcmd, result.length(), Integer.valueOf((int) go.getElapsedTime())}));
+        return result;
     }
     
 }

@@ -320,6 +320,11 @@ public class ControlPanel extends javax.swing.JFrame {
         });
 
         jbCancel.setText("Отказ");
+        jbCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbCancelActionPerformed(evt);
+            }
+        });
 
         jtServerAddr.setText("127.0.0.1");
         jtServerAddr.addActionListener(new java.awt.event.ActionListener() {
@@ -889,6 +894,12 @@ public class ControlPanel extends javax.swing.JFrame {
         FPServer.application.stopCBIOService();
         adjustStartStopControls();
     }//GEN-LAST:event_jbCBIOStopActionPerformed
+
+    private void jbCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCancelActionPerformed
+        // TODO add your handling code here:
+        adjustSettingsControls();
+        adjustStartStopControls();
+    }//GEN-LAST:event_jbCancelActionPerformed
 
     private void testRIAP() {
 //        Context context;

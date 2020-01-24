@@ -25,39 +25,123 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import static org.eda.protocol.AbstractFiscalDevice.LOGGER;
 
 /**
- * This class supports Eltrade fiscal devices 
- * Corresponding to specification bg-eltrade-protocol-1-1-6-bg.pdf
+ * This class supports Tremol fiscal devices 
+ * Corresponding to specification protocol_description_BG_1910211454.pdf
  * @author Dimitar Angelov
  */
-public class DeviceEltradeV1 extends AbstractFiscalDevice {
+public class DeviceTremolV1 extends AbstractFiscalDevice {
 
     private SerialPort serialPort;
+
+    protected int CONST_TEXTLENGTH=32;
+    protected boolean isOldDevice = false; // Old device upgraded to new regulations
     
     private boolean fiscalCheckRevOpened = false;
     
-    public DeviceEltradeV1(AbstractProtocol p) {
-        super(p);
+    public static enum ReceiptPrintFormatType {
+        BRIEF, DETAILED
     }
 
-    public DeviceEltradeV1(String portName, int baudRate, int readTimeout, int writeTimeout) {
+    public static enum ReceiptPrintModeType {
+        STEP_BY_STEP, POSTPHONED, BUFFERED
+    }
+
+    public static enum StornoReasonType {
+        ERROR, RETURN, REDUCE
+    }
+    
+    /**
+     * Receipt Print Format
+     */
+    protected ReceiptPrintFormatType receiptPrintFormat;
+
+    /**
+     * Receipt Print Mode
+     */
+    protected ReceiptPrintModeType receiptPrintMode;
+
+    /**
+     * Receipt Print VAT
+     */
+    protected boolean receiptPrintVAT;
+
+    
+    public static enum UICTypeType {
+        BULSTAT, EGN, FOREIGN, NRA
+    }
+    
+    public static class CustomerDataType {
+        public String recipient = "";
+        public String buyer = "";
+        public String address = "";
+        public String VATNumber = "";
+        public String UIC = "";
+        public UICTypeType UICType = UICTypeType.BULSTAT;
+        public String seller = "";
+    }
+    protected CustomerDataType customerData = new CustomerDataType();
+
+    public DeviceTremolV1(AbstractProtocol p) {
+        super(p);
+        this.receiptPrintVAT = false;
+        this.receiptPrintMode = ReceiptPrintModeType.STEP_BY_STEP;
+        this.receiptPrintFormat = ReceiptPrintFormatType.BRIEF;
+    }
+
+    public DeviceTremolV1(String portName, int baudRate, int readTimeout, int writeTimeout) {
         super(portName, baudRate, readTimeout, writeTimeout);
+        this.receiptPrintVAT = false;
+        this.receiptPrintMode = ReceiptPrintModeType.STEP_BY_STEP;
+        this.receiptPrintFormat = ReceiptPrintFormatType.BRIEF;
         serialPort = SerialPort.getCommPort(portName);
         if (serialPort.openPort()) {
             serialPort.setComPortParameters(baudRate, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);
             // Always have to initialize Serial Port in nonblocking (forever) mode!
             serialPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING | SerialPort.TIMEOUT_WRITE_BLOCKING, readTimeout, writeTimeout);
             serialPort.setFlowControl(SerialPort.FLOW_CONTROL_DISABLED);
-            protocol = new ProtocolV10E(serialPort.getInputStream(), serialPort.getOutputStream(), ProtocolV10E.EncodingType.CP_1251);
+            protocol = new ProtocolTremolV10(serialPort.getInputStream(), serialPort.getOutputStream(), ProtocolTremolV10.EncodingType.CP_1251);
         }
         // TODO: if protocol is null throw exception
     }
 
+    public ReceiptPrintFormatType getReceiptPrintFormat() {
+        return receiptPrintFormat;
+    }
 
+    public void setReceiptPrintFormat(ReceiptPrintFormatType receiptPrintFormat) {
+        this.receiptPrintFormat = receiptPrintFormat;
+    }
+
+    public ReceiptPrintModeType getReceiptPrintMode() {
+        return receiptPrintMode;
+    }
+
+    public void setReceiptPrintMode(ReceiptPrintModeType receiptPrintMode) {
+        this.receiptPrintMode = receiptPrintMode;
+    }
+
+    public boolean isReceiptPrintVAT() {
+        return receiptPrintVAT;
+    }
+
+    public void setReceiptPrintVAT(boolean receiptPrintVAT) {
+        this.receiptPrintVAT = receiptPrintVAT;
+    }
+    
+    public CustomerDataType getCustomerData() {
+        return customerData;
+    }
+
+    public void setCustomerData(CustomerDataType customerData) {
+        this.customerData = customerData;
+    }
+    
     @Override
     public void close() throws IOException {
         super.close(); 
@@ -80,49 +164,144 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
     @Override
     protected void readDeviceInfo() throws IOException {
         /*
-        5Ah (90) ЧЕТЕНЕ НА ДИАГНОСТИЧНА ИНФОРМАЦИЯ
-        Област за данни: <Calc>
-        Отговор: <Model of device>,<Type of device>,<EJ type> <FwRev><Sp><FwDate><Sp><FwTime>,<Chk>,<Sw>,<Ser>,<FM>
-        Calc Ако е ‘1’ се изчислява контролна сума на кодовата памет (фърмуера), в противен
-        случай се връща ‘FFFF’. 1 байт.
-        Model of device модел на устройството.
-        Type of device тип на устройството.
-        EJ type Тип на електронната контролна летна 2 байта.
-        <Model of device>,<Type of device>,<EJ type> формират името на устойството
-        FwRev Версията на програмното осигуряване. 13 байта.
-        Sp Интервал. 1 байт.
-        FwDate Датата на програмното осигуряване . 7 байта.
-        Sp Интервал. 1 байт.
-        FwTime Час на програмното осигуряване HH:MM. 5 байта.
-        Chk Контролна сума на EPROM. 4 байта стринг в шестнайсетичен вид. Например, ако
-        контролната сума е 214A, то тя ще се предаде 32h,31h,34h,41h.
-        Sw Ключетата от Sw1 до Sw2. 2 байта стринг с ‘0’ или ‘1’
-        Ser Индивидуален номер на устройството - 8 байта.
-        FМ Номер на фискалния модул – 8 байта.        
-        */
-        // Request diagnostic info
-        String res = cmdCustom(90, "");
-        mDeviceInfo = res;
-        // A3,ONLINE_BG,KL5301.1811.0.3 15Nov18 12:40,FFFF,00,ED327823,44327823
-        String[] commaParts = res.split(",");
-        mModelName = commaParts[0];
-        if (commaParts.length > 1) 
-            mModelName += "/"+commaParts[1];
+        2.2.2. Command: 21h / ! – Version
+        input: n. a.
+        output: <DeviceType[1..2]> <;> <CertificateNum[6]> <;> <CertificateDateTime “DD-MM-YYYY HH:MM”> <;> <Model[50]> <;> <Version[20]>
+        FPR operation: Provides information about the device type, Certificate number, Certificate date and time and Device model.
+        Input data : n. a.
+        Output data :
+        DeviceType
+        1 or 2 symbols for type of fiscal device:
+        - '1' – ECR
+        - '11' – ECR for online store
+        - '2' – FPr
+        - '21' – FPr for online store
+        - '3' – Fuel
+        - '31' – Fuel system
+        - '5' – for FUVAS device
+        CertificateNum
+        6 symbols for Certification Number of device model
+        CertificateDateTime
+        16 symbols for Certificate Date and time parameter in format: DD-MM-YYYY HH:MM
+        Model
+        Up to 50 symbols for Model name
+        Version
+        Up to 20 symbols for Version name and Check sum
+        zfpdef: ReadVersion()
         
-        if (commaParts.length > 2) {
-            String[] spaceParts = commaParts[2].split("\\s");
-            mFWRev = spaceParts[0];
-            if (spaceParts.length > 1)
-                mFWRevDT = spaceParts[1];
-            if (spaceParts.length > 2)
-                mFWRevDT = mFWRevDT + " " + spaceParts[2];
+        2.5.1. Command: 60h / ' – Read FD numbers
+        input: n. a.
+        output: <SerialNumber[8]> <;> <FMNumber[8]>
+        FPR operation: Provides information about the manufacturing number of the fiscal device and FM number.
+        Input data : n. a.
+        Output data :
+        SerialNumber
+        8 symbols for individual number of the fiscal device
+        FMNumber
+        8 symbols for individual number of the fiscal memory
+        zfpdef: ReadSerialAndFiscalNums()
+        
+        2.2.1. Command: 20h / SP - Status
+        input: n. a.
+        output: <StatusBytes[7]>
+        FPR operation: Provides detailed 7-byte information about the current status of the fiscal printer.
+        Input data : n. a.
+        Output data :
+        N byte  N bit   status flag
+        ST0     0       FM Read only
+                1       Power down in opened fiscal receipt
+                2       Printer not ready - overheat        
+                3       DateTime not set
+                4       DateTime wrong
+                5       RAM reset
+                6       Hardware clock error
+                7       1
+        ST1     0       Printer not ready - no paper
+                1       Reports registers Overflow
+                2       Customer report is not zeroed
+                3       Daily report is not zeroed
+                4       Article report is not zeroed
+                5       Operator report is not zeroed
+                6       Duplicate printed
+                7       1
+        ST2     0       Opened Non-fiscal Receipt   
+                1       Opened Fiscal Receipt
+                2       Opened Fiscal Detailed Receipt
+                3       Opened Fiscal Receipt with VAT
+                4       Opened Invoice Fiscal Receipt
+                5       SD card near full
+                6       SD card full
+                7       1
+        ST3     0       No FM module
+                1       FM error
+                2       FM full
+                3       FM near full
+                4       Decimal point (1=fract, 0=whole)
+                5       FM fiscalized
+                6       FM produced
+                7       1
+        ST4     0       Printer: automatic cutting
+                1       External display: transparent display
+                2       Speed is 9600
+                3       reserve
+                4       Drawer: automatic opening
+                5       Customer logo included in the receipt
+                6       reserve
+                7       1
+        ST5     0       Wrong SIM card
+                1       Blocking 3 days without mobile operator
+                2       No task from NRA
+                3       reserved
+                4       reserved
+                5       Wrong SD card
+                6       Deregistered
+                7       1
+        ST6     0       No SIM card
+                1       No GPRS Modem
+                2       No mobile operator
+                3       No GPRS service
+                4       Near end of paper
+                5       Unsent data for 24 hours
+                6       reserved
+                7       1
+        zfpdef:ReadStatus()        
+        
+        */
+        // ReadVersion
+        String res = cmdCustom(0x21, "");
+        //<DeviceType[1..2]> <;> <CertificateNum[6]> <;> <CertificateDateTime “DD-MM-YYYY HH:MM”> <;> <Model[50]> <;> <Version[20]>
+        // 1;823;19-04-2019 08:00;TREMOL S25; Ver.1.01 TRA25 C.S.D26C;
+        mDeviceInfo = res;
+        // TODO: Place here real response
+        String[] commaParts = res.split(";");
+        if (commaParts.length > 3) 
+            mModelName = commaParts[3];
+        
+        if (commaParts.length > 4) {
+            mFWRev = commaParts[4];
         }
-        if (commaParts.length > 4) 
-            mSwitches = commaParts[4];
-        if (commaParts.length > 5) 
-            mSerialNum = commaParts[5];
-        if (commaParts.length > 6) 
-            mFMNum = commaParts[6];
+        mFWRevDT = "";
+        mSwitches = "";
+        //ReadSerialAndFiscalNums
+        res = cmdCustom(0x60, "");
+        // <SerialNumber[8]> <;> <FMNumber[8]>
+        commaParts = res.split(";");
+        mSerialNum = commaParts[0];
+        if (commaParts.length > 1) 
+            mFMNum = commaParts[1];
+        //Read Maximum text length in recipes
+        res = cmdAuxilary(new byte[] {(byte)0x1D, (byte)0x49}); // cmdCustom(0x1D, "I");
+        CONST_TEXTLENGTH = 0;
+        LOGGER.fine(res);
+        if (res.substring(0, 1).equals("I")) {
+            String tl = res.substring(1, 3);
+            try {
+                CONST_TEXTLENGTH = Integer.parseInt(tl);
+            } catch (Exception e) {
+            }
+        }
+//        res = cmdCustom(0x20, "");
+//        // TODO: Read status bytes
     }
 
     @Override
@@ -130,112 +309,133 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
         statusBytesDef = new LinkedHashMap<>();
         errorStatusBits = new LinkedHashMap<>();
         warningStatusBits = new LinkedHashMap<>();
-        
-        statusBytesDef.put("S0", new String[] // Общо предназначение
+
+        statusBytesDef.put("S0", new String[] // 
         {
-             "Синтактична грешка"             // 0 Получените данни имат синктактична грешка.
-            ,"Невалиден код на команда"       // 1 Кодът на получената команда е невалиден.
-            ,"Неустановени дата/час"          // 2 Не е сверен часовника.
-            ,"Не е свързан клиентски дисплей" // 3 Не е свързан клиентски дисплей.
-            ,"В печатащото устройство има неизправност." // 4 Механизмът на печатащото устройство има неизправност.
-            ,"Обща грешка"                    // 5 Обща грешка - това е OR на 0,1 и 4.
-            ,"Отворен е капакът на принтера." // 6 Отворен е капакът на принтера.
-            ,""                               // 7 Резервиран – винаги е 1.
+             "ФП е в режим само за четене"       // 0 FM Read only
+            ,"Изкл. захравнане при отворен ФБ"   // 1 Power down in opened fiscal receipt
+            ,"Принтерът не е готов - Прегряване" // 2 Printer not ready - overheat
+            ,"Неустановени дата и час"           // 3 DateTime not set
+            ,"Грешни дата и час"                 // 4 DateTime wrong
+            ,"Нулиране на RAM"                   // 5 RAM reset
+            ,"Грешка в часовника"                // 6 Hardware clock error
+            ,""                                  // 7 Резервиран – винаги е 1.
         }
         );
         warningStatusBits.put("S0", new byte[] {
-            2,6
+            1,3,4,5
         });
         errorStatusBits.put("S0", new byte[] {
-            0,1,4,5
+            2,6
         });
-        statusBytesDef.put("S1", new String[] // Общо предназначение
+        statusBytesDef.put("S1", new String[] // 
         {
-             "Препълване"                                 // 0 При изпълнение на командата се е получило препълване на някои полета от сумите. Статус 1.1 също ще се установи и командата няма да предизвика промяна на данните в ФУ.
-            ,"Непозволена команда в този контекст"        // 1 Изпълнението на командата не е позволено в текущия фискален режим.
-            ,"Извършено е зануляване на оперативната памет." // 2 Извършено е зануляване на оперативната памет.
-            ,"Слаба батерия"                              // 3 Слаба батерия (Часовникът за реално време е в състояние RESET).
-            ,"Разрушено съдържание на RAM"                // 4 Установено е разрушаване на съдържанието на оперативната памет (RAM) след включване.
-            ,"Отворен е служебен бон завъртян на 90 градуса"  // 5 Отворен е служебен бон за печат на завъртян на 90 градуса текст
-            ,"Вграденият данъчен терминал не отговаря"    // 6 Вграденият данъчен терминал не отговаря.
+             "Принтерът не е готов - липсва хартия"       // 0 Printer not ready - no paper
+            ,"Препълване на регистрите за отчети"         // 1 Reports registers Overflow
+            ,"Клиенският отчет не е нулиран"              // 2 Customer report is not zeroed
+            ,"Дневният отчет не е нулиран"                // 3 Daily report is not zeroed
+            ,"Отчетът по артикули не е нулиран"           // 4 Article report is not zeroed
+            ,"Отчетът по оператори не е нулиран"          // 5 Operator report is not zeroed
+            ,"Отпечатън е дубликат"                       // 6 Duplicate printed
             ,""                                           // 7 Резервиран – винаги е 1.
         }
         );
         warningStatusBits.put("S1", new byte[] {
-            0,2,3,4,6 // ,5 
+            //2,3,4,5,6
         });
         errorStatusBits.put("S1", new byte[] {
-            1
+            0,1
         });
-        statusBytesDef.put("S2", new String[] // Общо предназначение
+
+        statusBytesDef.put("S2", new String[] // 
         {
-             "Край на хартията"                                            // 0 Свършила е хартията. Ако се вдигне този флаг по време на команда, свързана с печат, то командата е отхвърлена и не е променила състоянието на ФУ.
-            ,"Останала е малко хартия."                                    // 1 Останала е малко хартия.
-            ,"Край на КЛЕН (по-малко от 1 MB от КЛЕН свободни)"            // 2 Край на КЛЕН (по-малко от 1 MB от КЛЕН свободни)
-            ,"Отворен Фискален Бон"                                        // 3 Отворен е фискален бон.
-            ,"Близък край на КЛЕН (по-малко от 10 MB от КЛЕН свободни)"    // 4 Близък край на КЛЕН (по-малко от 10 MB от КЛЕН свободни).
-            ,"Отворен е Служебен Бон"                                      // 5 Отворен е служебен бон.
-            ,""                                                            // 6 Не се използува.
+             "Отворен е нефискален бон"                                    // 0 Opened Non-fiscal Receipt
+            ,"Отворен е фискален бон"                                      // 1 Opened Fiscal Receipt
+            ,"Отворен е детайлен фискален бон"                             // 2 Opened Fiscal Detailed Receipt
+            ,"Отворен Фискален бон с ДДС"                                  // 3 Opened Fiscal Receipt with VAT
+            ,"Отворена е фискална фактура"                                 // 4 Opened Invoice Fiscal Receipt
+            ,"SD картата е почти пълна"                                    // 5 SD card near full
+            ,"SD картата е пълна"                                          // 6 SD card full
             ,""                                                            // 7 Резервиран – винаги е 1.
         }
         );
         warningStatusBits.put("S2", new byte[] {
-            1,4
+            5
         });
         errorStatusBits.put("S2", new byte[] {
-            0,2
+            6
         });
-        statusBytesDef.put("S3", new String[] // За състояние на конфигурационните ключета
+        statusBytesDef.put("S3", new String[] //
         {
-             "SW1.1" // 0 Резервиран – винаги е 0.
-            ,"SW1.2" // 1 Резервиран – винаги е 0.
-            ,"SW1.3" // 2 Резервиран – винаги е 0.
-            ,"SW1.4" // 3 Резервиран – винаги е 0.
-            ,"SW1.5" // 4 Резервиран – винаги е 0.
-            ,"SW1.6" // 5 Резервиран – винаги е 0.
-            ,"SW1.7" // 6 Резервиран – винаги е 0.
-            ,"SW1.8" // 7 Резервиран – винаги е 1.
+             "Липсва модул с фискална памет"    // 0 No FM module
+            ,"Грешка във фискалната памет"      // 1 FM error
+            ,"Фискалната памет е пълна"         // 2 FM full
+            ,"Фискалната памет е почти пълна"   // 3 FM near full
+            ,"Десетична точка (дроб)"           // 4 Decimal point (1=fract, 0=whole)
+            ,"Фискалната памет е фискализирана" // 5 FM fiscalized
+            ,"Фискалната памет е подготвена"    // 6 FM produced
+            ,""                                 // 7 Резервиран – винаги е 1.
         }
         );
         warningStatusBits.put("S3", new byte[] {
+            3
         });
         errorStatusBits.put("S3", new byte[] {
+            0,1,2
         });
         statusBytesDef.put("S4", new String[] // За ФП
         {
-             "Грешка при запис във фискалната памет"                   // 0 Грешка при запис във фискалната памет.
-            ,"Зададен е ЕИК"                                           // 1 Зададен е ЕИК
-            ,"Зададени са индивидуален номер на ФУ и номер на ФП."     // 2 Зададени са индивидуален номер на ФУ и номер на ФП.
-            ,"Има място за по-малко от 50 записа във ФП."              // 3 Има място за по-малко от 50 записа във ФП.
-            ,"Фискалната памет е пълна"                                // 4 ФП е пълна.
-            ,"Грешка 0 или 4"                                          // 5 OR на грешки 0 и 4
-            ,""                                                        // 6 Не се използува
-            ,""                                                        // 7 Резервиран – винаги е 1.
+             "Автоматично отрязване на хартията"                   // 0 Printer: automatic cutting
+            ,"Външен дисплей: прозрачен"                           // 1 External display: transparent display
+            ,"Скоростта е 9600"                                    // 2 Speed is 9600
+            ,""                                                    // 3 reserve
+            ,"Автоматично отваряне на касата"                      // 4 Drawer: automatic opening
+            ,"Отпечатване на клиентско лого във ФБ"                // 5 Customer logo included in the receipt
+            ,""                                                    // 6 reserve
+            ,""                                                    // 7 Резервиран – винаги е 1.
         }
         );
         warningStatusBits.put("S4", new byte[] {
-            3
         });
         errorStatusBits.put("S4", new byte[] {
-            0, 4, 5
         });
-        statusBytesDef.put("S5", new String[] // За ФП
+        
+        statusBytesDef.put("S5", new String[] // 
         {
-             "Фискалната памет е заключена"              // 0 Фискалната памет е установена в режим READONLY (заключена)
-            ,"Фискалната памет e форматирана"            // 1 ФП е форматирана. 
-            ,"Последният запис във фискалната памет не е успешен" // 2 Последният запис във фискалната памет не е успешен.
-            ,"ФУ е във фискален режим"                   // 3 ФУ е във фискален режим.
-            ,"Зададени са поне веднъж данъчните ставки"  // 4 Зададени са поне веднъж данъчните ставки.
-            ,"Грешка при четене от фискалната памет."    // 5 Грешка при четене от фискалната памет.
-            ,""                                          // 6 Не се използва
-            ,""                                          // 7 Резервиран – винаги е 1.
+             "Грешна SIM карта"                        // 0 Wrong SIM card
+            ,"Блокиране 3 дена без мобилен оператор"   // 1 Blocking 3 days without mobile operator
+            ,"Няма задача от НАП"                      // 2 No task from NRA
+            ,""                                        // 3 reserved
+            ,""                                        // 4 reserved
+            ,"Грешна SD карта"                         // 5 Wrong SD card
+            ,"Дерегистриран"                           // 6 Deregistered
+            ,""                                        // 7 Резервиран – винаги е 1.
         }
         );
         warningStatusBits.put("S5", new byte[] {
             
         });
         errorStatusBits.put("S5", new byte[] {
-            0,2,5
+            0,1,5
+        });
+
+        statusBytesDef.put("S6", new String[] // 
+        {
+             "Липсва SIM карта"                            // 0 No SIM card
+            ,"Липсва GPRS модем"                           // 1 No GPRS Modem
+            ,"Липсва мобилен оператор"                     // 2 No mobile operator
+            ,"Липсва GPRS услуга"                          // 3 No GPRS service
+            ,"Близък край на хартията"                     // 4 Near end of paper
+            ,"Има неизпратени данни за последните 24 часа" // 5 Unsent data for 24 hours
+            ,""                                            // 6 reserved
+            ,""                                           // 7 Резервиран – винаги е 1.
+        }
+        );
+        warningStatusBits.put("S6", new byte[] {
+            4,5
+        });
+        errorStatusBits.put("S6", new byte[] {
+            0,1,2,3
         });
     }
     
@@ -243,14 +443,14 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
     public boolean isOpenNonFiscalCheck() {
       int byteNum = 2;
       int b = (byteNum < mStatusBytes.length)?mStatusBytes[byteNum]:0x00;
-      return ((b & 0x20) == 0x20);
+      return ((b & 0x01) == 0x01);
     }
 
     @Override
     public boolean isOpenFiscalCheck() {
       int byteNum = 2;
       int b = (byteNum < mStatusBytes.length)?mStatusBytes[byteNum]:0x00;
-      return ((b & 0x08) == 0x08);
+      return ((b & 0x020) == 0x20);
     }
 
     @Override
@@ -260,186 +460,257 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
 
     @Override
     public boolean isFiscalized() {
-      int byteNum = 5;
+      int byteNum = 3;
       int b = (byteNum < mStatusBytes.length)?mStatusBytes[byteNum]:0x00;
-      return ((b & 0x08) == 0x08);
+      return ((b & 0x20) == 0x20);
     }
 
     @Override
     public LinkedHashMap<String, String> cmdOpenFiscalCheck(String opCode, String opPasswd, String wpNum, String UNS, boolean invoice) throws IOException {
         /*
-        90h (144) ОТВАРЯНЕ НА ФИСКАЛЕН (КЛИЕНТСКИ) БОН по Н-18/2018
-        Област за данни: <OperName>,<UNP>[,Type[ ,<FMIN>,<Reason>,<num>[,<time>[,<inv>]]]]
-        Отговор: Allreceipt, FiscReceipt
-        Type = I – разширен фискален бон (фактура); 
-        Type = S – сторно/кредитно известие.
-        варианти:
-        * <OperName>,<UNP>
-        * <OperName>,<UNP>,I
-        * <OperName>,<UNP>,S,<FMIN>,<Reason>,<num>[,<time>[,<inv>]]
-        Когато принтера е част от ЕСФП система прамаетър <UNP> не се подава.
-        , където: * OperName – име на оператора * UNP - уникален номер на продажбата /EDXXXXXX-YYYY-NNNNNNN/ Когато се използва принтер закачен към ЕСФП на мястото на UNP се подава само номера на оператора YYYY * Type - Един символ със стойност:
-        "I" - отваряне на разширен фискален бон (фактура). 
-            Автоматично след заглавната част (HEADER-а) се отпечатва номера на фактурата, а след първата команда за плащане се разпечатват сумите по данъчни групи. 
-            След плащането трябва да се отпечата информация за купувача с команда 57 (39h). 
-        "S" - отваряне на сторно/кредитно известие. 
-            * FMIN - номера на ФП /44ХХХХХХ/ на устройството, от което е издадена фактурата, по повод на която е съставен сторно документът. 
-            * Reason – причината за сторно операцията. Един символ със стойност: 
-                "O" - операторска грешка – само за бележки издадени със същата ФП. 
-                "R" - връщане/рекламация 
-                "T" - намаление на данъчната основа 
-            * num - номер на фискалния бон, който се сторнира. 
-            * time - дата и час на бележката, която се сторнира, във формат ГГГГ-MM-ДДTчч:мм:сс /2018-10-31T15:58:43/
-            * inv - номер на разширеният фискален бон (фактурата) - в случай, че се сторнира фактура.
-        Allreceipt - Броят на всички издадени бонове (фискални и служебни) от последното
-        приключване на деня до момента. /4 байта/
-        FiscReceipt - Броят на всички издадени фискални бонове от последното приключване на деня
-        до момента. /4 байта/
-        Командата няма да бъде изпълнена успешно, ако:
-        - Има отворен фискален или служебен бон.
-        - Фискалната памет е пълна.
-        - Фискалната памет е повредена.
-        - Липсва код или парола на оператор, или номер на касово място.
-        - HEADER-а съдържа по-малко от 2 реда.
-        - Не е зададен ЕИК.
-        - Не е вярна операторската парола.        
+        2.6.3. Command: 30h / 0 –Open Fiscal sales receipt
+        input:<OperNum[1..2]> <;> <OperPass[6]> <;> <ReceiptFormat[1]> <;> <PrintVAT[1]> <;> <FiscalRcpPrintType[1]> {<’$’> <UniqueReceiptNumber[24]>}
+        output: ACK
+        FPR operation: Opens a fiscal receipt assigned to the specified operator number and operator password, parameters for receipt format, print VAT, printing type and unique receipt number.
+        Input data :
+        OperNum
+        (Operator Number) Symbols from 1 to 20 corresponding to operator's number
+        OperPass
+        (Operator Password) 6 symbols for operator's password
+        ReceiptFormat
+        (Format) 1 symbol with value:
+        - '1' - Detailed
+        - '0' - Brief
+        PrintVAT
+        (VAT included in the receipt) 1 symbol with value:
+        - '1' – Yes
+        - '0' – No
+        FiscalRcpPrintType
+        (Printing type) 1 symbol with value:
+        - '0' – Step by step printing
+        - '2' – Postponed printing
+        - '4' – Buffered printing
+        UniqueReceiptNumber
+        Up to 24 symbols for unique receipt number.
+        NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where:
+        * ХХХХХХXX – 8 symbols [A-Z, a-z, 0-9] for individual device number,
+        * ZZZZ – 4 symbols [A-Z, a-z, 0-9] for code of the operator,
+        * YYYYYYY – 7 symbols [0-9] for next number of the receipt
+        Output data: n. a.
+        zfpdef: OpenReceipt(OperNum, OperPass, RcpFormat, PrintVAT, FiscalRcpPrintType, UniqueReceiptNumber)
+        
+        2.6.5. Command: 30h / 0 –Open Fiscal storno receipt
+        input:<OperNum[1..2]> <;> <OperPass[6]> <;> <ReceiptFormat[1]> <;> <PrintVAT[1]> <;> <StornoRcpPrintType[1]> <;> <StornoReason[1]> <;> <RelatedToRcpNum[1..6]> <;> <RelatedToRcpDateTime ”DD-MM-YY HH:MM:SS”> <;> <FMNum[8]> {<;> <RelatedToURN[24]>}
+        output: ACK
+        FPR operation: Open a fiscal storno receipt assigned to the specified operator number and operator password, parameters for receipt format, print VAT, printing type and parameters for the related storno receipt.
+        Input data :
+        OperNum
+        (Operator Number) Symbols from 1 to 20 corresponding to operator's number
+        OperPass
+        (Operator Password) 6 symbols for operator's password
+        ReceiptFormat
+        (Format) 1 symbol with value:
+        - '1' - Detailed
+        - '0' - Brief
+        PrintVAT
+        (VAT included in the receipt) 1 symbol with value:
+        - '1' – Yes
+        - '0' – No
+        StornoRcpPrintType
+        (Printing type) 1 symbol with value:
+        - '@' – Step by step printing
+        - 'B' – Postponed Printing
+        - 'D' – Buffered Printing
+        StornoReason
+        1 symbol for reason of storno operation with value:
+        - '0' – Operator error
+        - '1' – Goods Claim or Goods return
+        - '2' – Tax relief
+        RelatedToRcpNum
+        (Receipt number) Up to 6 symbols for issued receipt number
+        RelatedToRcpDateTime
+        (Receipt Date and Time) 17 symbols for Date and Time of the issued receipt in format DD-MM-YY HH:MM:SS
+        FMNum
+        8 symbols for number of the Fiscal Memory
+        RelatedToURN
+        Up to 24 symbols for the issed receipt unique receipt number.
+        NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where:
+        * ХХХХХХXX – 8 symbols [A-Z, a-z, 0-9] for individual device number,
+        * ZZZZ – 4 symbols [A-Z, a-z, 0-9] for code of the operator,
+        * YYYYYYY – 7 symbols [0-9] for next number of the receipt
+        Output data: n. a.
+        Note:
+        If Postponed printing is enabled after opened fiscal receipt, all the next commands will be executed but won't be printed immediately. The data for whole receipt is stored to be printed up to AS sent information for receipt closure. If up to 5 sec timeout no command ECR closing the receipt
+        zfpdef: OpenStornoReceipt(OperNum, OperPass, ReceiptFormat, PrintVAT, StornoRcpPrintType, StornoReason, RelatedToRcpNum, RelatedToRcpDateTime, FMNum, RelatedToURN)
+
+        2.6.6. Command: 30h / 0 – Open Fiscal Invoice receipt with free customer data
+        input: <OperNum[1..2]> <;> <OperPass[6]> <;> <reserved['0']> <;> <reserved['0']> <;> <InvoicePrintType[1]> <;> <Recipient[26]> <;> <Buyer[16]> <;> <VATNumber[13]> <;> <UIC[13]> <;> <Address[30]> <;> <UICType[1]> { <’$’> <UniqueReceiptNumber[24]>}
+        output: ACK
+        FPR operation: Opens a fiscal invoice receipt assigned to the specified operator number and operator password with free info for customer data. The Invoice receipt can be issued only if the invoice range (start and end numbers) is set.
+        Input data :
+        OperNum
+        (Operator Number) Symbol from 1 to 20 corresponding to operator's number
+        OperPass
+        (Operator Password) 6 symbols for operator's password
+        reserved
+        1 symbol with value '0'
+        reserved
+        1 symbol with value '0'
+        InvoicePrintType
+        (Printing type) 1 symbol with value:
+        - '1' – Step by step printing
+        - '3' – Postponed Printing
+        - '5' – Buffered Printing
+        Recipient
+        26 symbols for Invoice recipient
+        Buyer
+        16 symbols for Invoice buyer
+        VATNumber
+        13 symbols for customer Fiscal number
+        UIC
+        13 symbols for customer Unique Identification Code
+        Address
+        30 symbols for Address
+        UICType
+        1 symbol for type of Unique Identification Code:
+        - '0' - Bulstat
+        - '1' - EGN
+        - '2' – Foreigner Number
+        - '3' – NRA Official Number
+        UniqueReceiptNumber
+        Up to 24 symbols for unique receipt number.
+        NRA format: XXXХХХХХ-ZZZZ-YYYYYYY where:
+        * ХХХХХХXX – 8 symbols [A-Z, a-z, 0-9] for individual device number,
+        * ZZZZ – 4 symbols [A-Z, a-z, 0-9] for code of the operator,
+        * YYYYYYY – 7 symbols [0-9] for next number of the receipt
+        Output data: n. a.
+        Note:
+        If Postponed printing is enabled after opened fiscal receipt, all the next commands will be executed but won't be printed immediately. The data for whole receipt is stored to be printed up to AS sent information for receipt closure. If up to 5 sec timeout no command ECR closing the receipt
+        zfpdef: OpenInvoiceWithFreeCustomerData(OperNum, OperPass, InvoicePrintType, Recipient, Buyer, UIC, IDNumber, Address, UICType, UniqueReceiptNumber)        
         */
         // TODO: Check parameters
+        //<OperNum[1..2]> <;> <OperPass[6]> <;> <ReceiptFormat[1]> <;> <PrintVAT[1]> <;> <FiscalRcpPrintType[1]> {<’$’> <UniqueReceiptNumber[24]>}
+        if (!opCode.matches("^$\\d\\d?$"))
+            throw new FDException("Невалиден код на оператор!");
+        if (opPasswd.length() > 6)
+            throw new FDException("Максималната дължина на паролата е 6 символа!");
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        fiscalCheckRevOpened = false;
-        String params;
-        if (UNS.length() == 0)
-            throw new FDException(-1l, "Липсва UNP!");
-
-        params = "Оператор: "+opCode+","+UNS+","+(invoice?",I":"");
-        String res = cmdCustom(144, params);
-        if (res.contains(",")) {
-            String[] rData = res.split(",");
-            response.put("AllReceipt", rData[0]);
-            response.put("FiscReceipt", rData[1]);
-        } else {    
-            long errCode = -1;
-            err("Грешка при отваряне на фискален бон ("+res+")!");
-            try {
-                errCode = Long.parseLong(res);
-            } catch (Exception ex) {
-            }
-            throw new FDException(errCode, mErrors.toString());
+        String printMode = "";
+        switch (receiptPrintMode) {
+            case BUFFERED :
+                printMode = invoice?"5":"4";
+                break;
+            case POSTPHONED :
+                printMode = invoice?"3":"2";
+            case STEP_BY_STEP :
+            default :
+                printMode = invoice?"1":"0";
         }
+        String params;
+        if (invoice) {
+            String recipient = customerData.recipient;
+            if (recipient.length() > 26) {
+                warn("Дължината на 'получател' е по-голяма от 26 сивола и ще бъде съкратена!");
+                recipient = recipient.substring(0, 26);
+            }
+            recipient = recipient.replaceAll(";", ",");
+            String buyer = customerData.buyer;
+            if (buyer.length() > 16) {
+                warn("Дължината на 'купувач' е по-голяма от 16 сивола и ще бъде съкратена!");
+                buyer = buyer.substring(0, 16);
+            }    
+            buyer = buyer.replaceAll(";", ",");
+            String address = customerData.address;
+            if (address.length() > 30) {
+                warn("Дължината на 'адрес' е по-голяма от 30 сивола и ще бъде съкратена!");
+                address = address.substring(0, 30);
+            }    
+            address = address.replaceAll(";", ",");
+            String UICType = "";
+            switch (customerData.UICType) {
+                case EGN : UICType = "1"; break;
+                case FOREIGN : UICType = "2"; break;
+                case NRA : UICType = "3"; break;
+                case BULSTAT : 
+                default :    
+                    UICType = "0"; break;
+            }
+            params = opCode+";"+opPasswd;
+            params = params + ";0;0";
+            params = params + ";" + printMode;
+            params = params + ";" + recipient;
+            params = params + ";" + buyer;
+            params = params + ";" + customerData.VATNumber;
+            params = params + ";" + customerData.UIC;
+            params = params + ";" + UICType;
+            if (UNS.length() > 0)
+                params = params + "$" + UNS;
+        } else {
+            params = opCode+";"+opPasswd;
+            params = params + ";" + (receiptPrintFormat.equals(ReceiptPrintFormatType.DETAILED)?"1":"0");
+            params = params + ";" + (receiptPrintVAT?"1":"0");
+            params = params + ";" + printMode;
+            if (UNS.length() > 0)
+                params = params + "$" + UNS;
+        }
+        
+        fiscalCheckRevOpened = false;
+
+        String res = cmdCustom(0x30, params);
+        // Няма отговор. Връща ACK и състоянието е в статус байтовете, които се проверяват в cmdCustom и се инициира грешка (exception)
+        
         return response;
     }
 
     @Override
     public void cmdPrintCustomerData(String UIC, int UICType, String seller, String recipient, String buyer, String VATNum, String address)  throws IOException {
-        /*
-        39h (57) ПЕЧАТ НА ИНФОРМАЦИЯ ЗА КЛИЕНТА
-        Област за данни: [#]<Bulstat>[<Tab><Seller>[<Tab><Receiver>[<Tab><Client>[<Tab><TaxNo>[<Tab><Address>]]]]]
-        Отговор: Няма данни
-        Bulstat ЕИК номер на купувача. Между 9 и 10 символа. Ако преди него стои символа ‘#’, данните се считат за ЕГН.
-        Tab Табулация (09H). Разделител между параметрите.
-        Seller Име на продавача. До 26 символа.
-        Receiver Име на получателя. До 26 символа.
-        Client Име на купувача. До 26 символа.
-        TaxNo ЗДДС номер на купувача. Между 10 и 14 символа.
-        Address Адрес на купувача. До два реда текст максимално от 36 символа, разделени с LF(0AH).
-        С изключение на първия всички останали параметри не са задължителни. 
-        Ако трябва да се зададе някой параметър, всички преди него трябва да са зададени. 
-        При празен или незададен параметър се оставя празно място за попълване на ръка. 
-        Командата е допустима само във разширен фискален бон (фактура) за унифицирано оформяне на боновете. 
-        Трябва да се изпълни непосредствено след цялостно плащане на натрупаната за бона сума. 
-        След това вече е разрешено затварянето на бона
-        */
-        if (UICType < 0 || UICType > 3)
-            throw new FDException("Ivalid UIC type!");
-        // UICType = 0 bulstat, 1 - EGN, 2 - FOREIGN, 3 - BRZ
-        String params;
-        if (seller.length() > 26) {
-            LOGGER.warning("Дължина на seller е съкратена до 26 символа.");
-            seller = seller.substring(0, 26);
-        }
-        if (recipient.length() > 26) {
-            LOGGER.warning("Дължина на recipient е съкратена до 26 символа.");
-            recipient = recipient.substring(0, 26);
-        }
-        if (buyer.length() > 26) {
-            LOGGER.warning("Дължина на buyer е съкратена до 26 символа.");
-            buyer = buyer.substring(0, 26);
-        }
-        if (VATNum.length() > 0) {
-            if ((VATNum.length() != 10) && (VATNum.length() != 14)) {
-                throw new FDException("VATNum трябва да е с дължина 10 или 14 символа!");
-            }
-        }
-        String addr_1 = "";
-        String addr_2 = "";
-        if (address.length() > 36) {
-            addr_1 = address.substring(0, 36);
-            addr_2 = address.substring(36, min(72,address.length()));
-        } else
-            addr_1 = address;
-        address = addr_1+((addr_2.length() >0)?("\n"+addr_2):"");
-        //[#]<Bulstat>[<TabxSeller>[<TabxReceiver>[<TabxClient>[<TabxTaxNo>[<TabxAddress>]]]]]
-        params = ((UICType == 1)?"#":"")+UIC+"\t"+seller+"\t"+recipient+"\t"+buyer+"\t"+VATNum+"\t"+address;
-        String res = cmdCustom(57, params);
-        LOGGER.fine("cmdPrintCustomerData returns:"+res);
+        // Не е необходимо, тъй като се задават данните при отваряне на фискален бон
     }
 
     
     @Override
     public LinkedHashMap<String, String> cmdCloseFiscalCheck() throws IOException {
         /*
-        38h (56) ЗАТВАРЯНЕ (ПРИКЛЮЧВАНЕ) НА ФИСКАЛЕН БОН
-        Област за данни: Няма данни
-        Отговор: Allreceipt, FiscReceipt
-        Allreceipt Всички издадени бележки от последното приключване на деня до момента.
-        FiscReceipt Всички издадени фискални бележки от последното приключване на деня до
-        момента. Натрупаните суми от фискалния бон се прибавят към дневните суми в регистрите на оперативната памет.        
-        Командата няма да бъде изпълнена успешно, ако:
-         Не е отворен фискален бон.
-         Команда 53 (35h) не е изпълнена успешно.
-         Платената сума по команда 53 е по-малка от общата сума на фискалния бон.        
+        2.6.23. Command: 38h / 8 – Close Fiscal receipt
+        input: n. a.
+        output: ACK
+        FPR operation: Close the fiscal receipt (Fiscal receipt, Invoice receipt, Storno receipt, Credit Note or Non-fical receipt). When the payment is finished.
+        Input data : n. a.
+        Output data : n. a.
+        zfpdef: CloseReceipt()
         */
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        String res = cmdCustom(56, "");
-        if (res.contains(",")) {
-            String[] rData = res.split(",");
-            response.put("AllReceipt", rData[0]);
-            response.put("FiscReceipt", rData[1]);
-        } else {    
-            long errCode = -1;
-            err("Грешка при затваряне на фискален бон ("+res+")!");
-            try {
-                errCode = Long.parseLong(res);
-            } catch (Exception ex) {
-            }
-            throw new FDException(errCode, mErrors.toString());
-        }
+        String res = cmdCustom(0x38, "");
+        // Няма отговор. Връща ACK и състоянието е в статус байтовете, които се проверяват в cmdCustom и се инициира грешка (exception)
         return response;
     }
     
     @Override
     public void cmdCancelFiscalCheck() throws IOException {
         /*
-        3Ch (60) ОТКАЗВАНЕ (ПРЕКРАТЯВАНЕ) НА ФИСКАЛЕН БОН
-        Област за данни: Няма данни
-        Отговор: Няма данни
-        Командата е допустима само в отворен фискален бон, и то преди изпълнението на команда 53 (Total). 
-        Предизвиква отказването на всички натрупани в бона суми. 
-        Отпечатва се с двойна ширина “=АНУЛИРАНО=” и бонът завършва с надпис “ФИСКАЛЕН БОН”.
+        2.6.24. Command: 39h / 9 – Cancel fiscal receipt
+        input: n. a.
+        output: ACK
+        FPR operation: Available only if receipt is not closed. Void all sales in the receipt and close the fiscal receipt (Fiscal receipt, Invoice receipt, Storno receipt or Credit Note). If payment is started, then finish payment and close the receipt.
+        Input data : n. a.
+        Output data : n. a.
+        zfpdef: CancelReceipt()
         */
-        cmdCustom(60, "");
+        cmdCustom(0x39, "");
     }
 
     @Override
     public void cmdPrintFiscalText(String text) throws IOException {
         /*
-        36h (54) ПЕЧАТАНЕ НА ФИСКАЛЕН СВОБОДЕН ТЕКСТ
-        Област за данни: Text
-        Отговор: Няма данни
-        Text Текст до 46 байта
-        В началото и края на реда се отпечатва символът '#'. 
-        Необходимо е да е отворен фискален бон. В противен случай не се отпечатва текста и се вдига S1.1. 
-        Ако текстът е по-дълг от 46 символа, то буквите след 46-та се изрязват.
+        2.6.22. Command: 37h / 7 – Free text printing
+        input: <Text[TextLength-2]>
+        output: ACK
+        FPR operation: Print a free text. The command can be executed only if receipt is opened (Fiscal receipt, Invoice receipt, Storno receipt, Credit Note or Non-fical receipt). In the beginning and in the end of line symbol ‘#’ is printed.
+        Input data :
+        Text
+        TextLength-2 symbols
+        Output data: n. a.
+        zfpdef: PrintText(Text)
         */        
         int maxLen = 46;
         if (text.length() > maxLen) {
@@ -1336,11 +1607,61 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
         W: Първо чака да се отпечатат всички буфери на принтера.
         X: Не изчаква принтера.
         Sn Статус байт N.
+        
+        2.5.8. Command: 66h / f – Read detailed printer status
+        input: n. a.
+        output: <ExternalDisplay[1]> <;> <StatPRN[4]> <;> <FlagServiceJumper[1]>
+        FPR operation: Provides additional status information
+        Input data : n. a.
+        Output data :
+        ExternalDisplay
+        1 symbol – connection with external display
+        - 'Y' - Yes
+        - 'N' - No
+        StatPRN
+        4 symbols for detailed status of printer (only for printers with ASB)
+        N byte  N bit   status flag
+        ST0     0       Reserved
+                1       Reserved
+                2       Signal level for drawer
+                3       Printer not ready
+                4       Reserved
+                5       Open cover  
+                6       Paper feed status
+                7       Reserved
+        ST1     0       Reserved    
+                1       Reserved
+                2       Reserved
+                3       Cutter error
+                4       Reserved
+                5       Fatal error
+                6       Overheat
+                7       Reserved
+        ST2     0       JNP (journal paper near end)
+                1       RNP (receipt paper near end)
+                2       JPE (journal paper end)
+                3       RPE (receipt paper end)
+                4       Reserved
+                5       Reserved
+                6       Reserved
+                7       Reserved
+        ST3     0       Print data buffer data exists        
+                1       Reserved
+                2       Reserved
+                3       Reserved
+                4       Reserved
+                5       Reserved
+                6       Reserved
+                7       Reserved        
+        FlagServiceJumper
+        1 symbol with value:
+        - 'J' - Yes
+        - ' ' – No        
         */
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        String res = cmdCustom(74, "X");
+        String res = cmdCustom(0x74, "X");
         byte[] bytes = res.getBytes();
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 7; i++) {
             byte b = 0;
             if (i < bytes.length)
                 b = bytes[i];
@@ -1359,20 +1680,35 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
         response.put("IsOpenFiscalCheck", isOpenFiscalCheck()?"1":"0");
         response.put("IsOpenFiscalCheckRev", isOpenFiscalCheckRev()?"1":"0");
         response.put("IsOpenNonFiscalCheck", isOpenNonFiscalCheck()?"1":"0");
-        
+        // Read detailed printer status към момента връща невалиден отговор
+        /*
+        res = cmdCustom(0x66, "");
+        //output: <ExternalDisplay[1]> <;> <StatPRN[4]> <;> <FlagServiceJumper[1]>
+        String[] commaParts = res.split(";");
+        response.put("ExternalDisplay", commaParts[0]);
+        if (commaParts.length > 1) 
+            response.put("StatPRN", commaParts[1]);
+        if (commaParts.length > 2) 
+            response.put("FlagServiceJumper", commaParts[2]);
+        */
         return response;
     }
 
     @Override
     public Date cmdGetDateTime() throws IOException {
         /*
-        3Eh (62) ПРОЧИТАНЕ НА ДАТАТА И ЧАСА
-        Област за данни: Няма данни.
-        Отговор: <DD-MM-YY><Space><HH:MM:SS>
+        2.5.11. Command: 68h / h – Read date and time
+        input: n. a.
+        output: <DateTime “DD-MM-YYYY HH:MM”>
+        FPR operation: Provides information about the current date and time.
+        Input data : n. a.
+        Output data :
+            DateTime  Date Time parameter in format: DD-MM-YYYY HH:MM
+        zfpdef: ReadDateTime()
         */
-        String res = cmdCustom(62, "");
+        String res = cmdCustom(0x68, "");
         Date dt;
-        DateFormat format = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
+        DateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm");
         try {
             dt = format.parse(res);
         } catch (ParseException ex) {
@@ -1384,17 +1720,18 @@ public class DeviceEltradeV1 extends AbstractFiscalDevice {
     @Override
     public void cmdSetDateTime(Date dateTime) throws IOException {
         /*
-        3Dh (61) УСТАНОВЯВАНЕ НА ДАТАТА И ЧАСА
-        Област за данни: <DD-MM-YY><space><HH:MM[:SS]>
-        Отговор: Няма данни
-        Не може да се установява дата, по-ранна от датата на последния запис във фискалната памет. 
-        Предвидено е да се работи до 2099 година включително.
-        Не е възможно задаване на дата и час по-ранна от последния отпечатан документ, записан в КЛЕН. 
-        Това е с цел коректно търсене на документи от КЛЕН по дата и час за печат или изтегляне по серийния порт като текст.
+        2.4.5. Command: 48h / H – Program date and time
+        input: <DateTime “DD-MM-YY HH:MM:SS”>
+        output: ACK
+        FPR operation: Sets the date and time and prints out the current values.
+        Input data :
+        DateTime Date Time parameter in format: DD-MM-YY HH:MM:SS
+        Output data : n. a.
+        zfpdef: SetDateTime(DateTime)
         */
         DateFormat format = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
         String params = format.format(dateTime);
-        cmdCustom(61, params);
+        cmdCustom(0x48, params);
     }
 
     @Override
@@ -1422,6 +1759,15 @@ ERROR 1001
         cmdCustom(109, "1");
     }
 
+    public final String cmdAuxilary(byte[] data) throws IOException {
+        mLastCmd = -1;
+        ProtocolTremolV10 p = (ProtocolTremolV10) protocol;
+        String result = p.auxCommand(data);
+//        mStatusBytes = protocol.getStatusBytes();
+//        checkErrors(mClearErrors);
+        return result;
+    }
+/*    
     public final String cmdCustomRaw(String command) throws IOException {
         mLastCmd = -1;
         ProtocolV10E p = (ProtocolV10E) protocol;
@@ -1430,7 +1776,7 @@ ERROR 1001
 //        checkErrors(mClearErrors);
         return result;
     }
-    
+  */  
     @Override
     public void cmdPrintCheckDuplicateEJ(String docNum) throws IOException {
         /*
@@ -1439,7 +1785,7 @@ ERROR 1001
         */
         //TODO: Check on fiscalized device
         String command = "KLEN "+docNum+" "+docNum;
-        cmdCustomRaw(command);
+//        cmdCustomRaw(command);
     }
 
     @Override
@@ -1606,8 +1952,8 @@ ERROR 1001
         LinkedHashMap<String, String> response = new LinkedHashMap();
         DateFormat dtf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         String command = "SKLEN "+dtf.format(fromDate)+" "+dtf.format(toDate);
-        String EJ = cmdCustomRaw(command);
-        response.put("EJ", EJ);
+//        String EJ = cmdCustomRaw(command);
+//        response.put("EJ", EJ);
         return response;
     }
 
@@ -1617,8 +1963,8 @@ ERROR 1001
         */
         LinkedHashMap<String, String> response = new LinkedHashMap();
         String command = "SKLEN "+fromDoc+" "+toDoc;
-        String EJ = cmdCustomRaw(command);
-        response.put("EJ", EJ);
+//        String EJ = cmdCustomRaw(command);
+//        response.put("EJ", EJ);
         return response;
      }
    
@@ -1664,39 +2010,5 @@ ERROR 1001
         return docDate;
     }
     
-    @Override
-    public LinkedHashMap<String, String> cmdReadPaymentMethods() throws IOException {
-        /*
-        ‘P’ - Плащане в брой (по подразбиране);
-        ‘N’ – „С чек",;
-        ‘C’ – Сима по Талони "Талони",
-        ‘D’ - Сума по външни талони "външни талони"
-        ‘I’ - Сума по амбалаж "амбалаж",
-        ‘J’ - Сума по вътрешно обслужване "вътрешно обслужване",
-        ‘K’ - Сума по повреди "повреди",
-        ‘L’ - Сума по кредитни/дебитни карти "кредитни/дебитни карти",
-        ‘M’ - Сума по банкови трансфери "банкови трансфери"
-        ‘Q’ - Плащане НЗОК "НЗОК",
-        ‘R’ - Резерв 2 "Резерв 2"
-        */        
-//    InputString = InputString + String.format("%c%c%c", new Object[] { Integer.valueOf(132), Integer.valueOf(48), Integer.valueOf(59) });
-        LinkedHashMap<String, String> response = new LinkedHashMap(); // 
-        String res;
-        LinkedHashMap<String, String> pList = new LinkedHashMap(); // 
-        String[] pCodes   = new String[] {"P","N","C","D","I","J","K","L","M","Q","R"};
-        String[] paymentNRAMap = new String[] {"0","1","2","3","4","5","6","7","8","9","10"};
-        for(int i = 0; i < pCodes.length; i++) {
-            res = cmdCustom(85, pCodes[i]);
-            pList.put(pCodes[i], "'"+pCodes[i]+"' - '"+res+"' НАП #:"+paymentNRAMap[i]);
-        }
-        int i = 0;
-        for (String pCode : pList.keySet()) {
-            response.put("P_"+Integer.toString(i++), pList.get(pCode));
-        }
-        for (String pCode : pList.keySet()) {
-            response.put("P_"+pCode, pList.get(pCode));
-        }
-        return response;
-    }
     
 }

@@ -974,6 +974,18 @@ public class FPCGeneralV10 extends FPCBase {
         return res;
     }
 
+    @Override
+    public StrTable readPaymentMethods() throws FPException{
+        StrTable res = new StrTable();
+        lastCommand = "readPaymentMethods";
+        try {
+            LinkedHashMap<String,String> res_ = FP.cmdReadPaymentMethods();
+            res.putAll(res_);
+        } catch (IOException ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
     
     
     

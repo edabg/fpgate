@@ -172,6 +172,8 @@ public class FPCBase {
         CASH, CREDIT, CHECK, CARD
         , CUSTOM1, CUSTOM2, CUSTOM3, CUSTOM4
         , UNSPECIFIED
+        , NRASCASH, NRASCHECKS, NRAST, NRASOT, NRASP
+        , NRASSELF, NRASDMG, NRASCARDS, NRASW, NRASR1, NRASR2
     }
     
     public static final HashMap<String, paymentTypes> paymentTypeAbbr = new HashMap<>(); static {
@@ -187,6 +189,19 @@ public class FPCBase {
         paymentTypeAbbr.put("CUSTOM2", FPCBase.paymentTypes.CUSTOM2);
         paymentTypeAbbr.put("CUSTOM3", FPCBase.paymentTypes.CUSTOM3);
         paymentTypeAbbr.put("CUSTOM4", FPCBase.paymentTypes.CUSTOM4);
+
+        paymentTypeAbbr.put("NRASCASH", FPCBase.paymentTypes.NRASCASH);
+        paymentTypeAbbr.put("NRASCHECKS", FPCBase.paymentTypes.NRASCHECKS);
+        paymentTypeAbbr.put("NRAST", FPCBase.paymentTypes.NRAST);
+        paymentTypeAbbr.put("NRASOT", FPCBase.paymentTypes.NRASP);
+        paymentTypeAbbr.put("NRASP", FPCBase.paymentTypes.NRASCASH);
+        paymentTypeAbbr.put("NRASSELF", FPCBase.paymentTypes.NRASSELF);
+        paymentTypeAbbr.put("NRASDMG", FPCBase.paymentTypes.NRASDMG);
+        paymentTypeAbbr.put("NRASCARDS", FPCBase.paymentTypes.NRASCARDS);
+        paymentTypeAbbr.put("NRASW", FPCBase.paymentTypes.NRASW);
+        paymentTypeAbbr.put("NRASR1", FPCBase.paymentTypes.NRASR1);
+        paymentTypeAbbr.put("NRASR2", FPCBase.paymentTypes.NRASR2);
+
         paymentTypeAbbr.put("", FPCBase.paymentTypes.UNSPECIFIED);
     }
     
@@ -1102,6 +1117,15 @@ public class FPCBase {
     }
     
     public StrTable getJournalInfo() throws FPException{
+        return null;
+    }
+    
+    /**
+     * Read information about payment methods
+     * @return
+     * @throws FPException 
+     */
+    public StrTable readPaymentMethods() throws FPException{
         return null;
     }
 

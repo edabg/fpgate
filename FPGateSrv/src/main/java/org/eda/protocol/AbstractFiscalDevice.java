@@ -766,6 +766,15 @@ public abstract class AbstractFiscalDevice {
     public String cmdLastFiscalCheckQRCode() throws IOException {
         throw new FDException("Unsupported command (cmdLastFiscalCheckQRCode)");
     }
+
+    /**
+     * Read information about payment methods
+     * @return
+     * @throws IOException 
+     */
+    public LinkedHashMap<String, String> cmdReadPaymentMethods() throws IOException {
+        throw new FDException("Unsupported command (cmdReadPaymentMethods)");
+    }
     
     /**
      * Return information of fiscal status of the device

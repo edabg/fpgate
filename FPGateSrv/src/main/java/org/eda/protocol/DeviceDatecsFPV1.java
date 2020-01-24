@@ -1874,5 +1874,71 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
         return response;
     }
     
+    @Override
+    public LinkedHashMap<String, String> cmdReadPaymentMethods() throws IOException {
+        /*
+        `P’	- Плащане в брой (по подразбиране);
+	‘N’	- Плащане с кредит;
+	‘C’	- Плащане с чек;
+	‘D’	- Плащане с дебитна карта
+	‘I’	- Програмируем тип плащане 1
+	‘J’	- Програмируем тип плащане 2
+	‘K’	- Програмируем тип плащане 3
+	‘L’	- Програмируем тип плащане 4
+        ‘i’	- Програмируем тип плащане 1
+	‘j’	- Програмируем тип плащане 2
+	‘k’	- Програмируем тип плащане 3
+	‘l’	- Програмируем тип плащане 4
+        ‘m’	- Талони
+	‘n’	- Външни талони
+	‘o’	- Амбалаж
+	‘p’	- Вътрешно обслужване
+        ‘q’	- Повреди
+	‘r’	- Банкови трансфери
+	‘s’	- С чек
+
+    Видове плащания в паметта на фискалното устройство
+    ##  Код НАП Стойност по подразбиране    Промяна Команда четене  Команда запис
+    --------------------------------------------------------------------------        
+    0   P   0   В БРОЙ                      Не      Не е възможна   Не е възможна
+    1   N   7   ПЛАЩАНЕ С КРЕДИТ            Не      Не е възможна   Не е възможна
+    2   C   1   ПЛАЩАНЕ С ЧЕК               Не      Не е възможна   Не е възможна
+    3   D   7   ПЛАЩАНЕ С ДЕБИТНА КАРТА     Не      Не е възможна   Не е възможна
+    4   I,i 9   ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 1      Да      85,i            85,i,ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 1
+    5   j,j 9   ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 2      Да      85,j            85,j,ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 2
+    6   K,k 9   ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 3      Да      85,k            85,k,ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 3
+    7   L,l 9/10ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 4      Да      85,l            85,l,ДОПЪЛНИТЕЛНО ПЛАЩАНЕ 4
+    8   m   2   ТАЛОНИ                      Да      85,m            85,m,ТАЛОНИ
+    9   n   3   ВЪНШНИ ТАЛОНИ               Да      85,n            85,n,ВЪНШНИ ТАЛОНИ
+    10  o   4   АМБАЛАЖ                     Да      85,o            85,o,АМБАЛАЖ
+    11  p   5   ВЪТРЕШНО ОБСЛУЖВАНЕ         Да      85,p            85,p,ВЪТРЕШНО ОБСЛУЖВАНЕ
+    12  q   6   ПОВРЕДИ                     Да      85,q            85,q,ПОВРЕДИ        
+    13  r   7   БАНКОВИ ТРАНСФЕРИ           Да      85,r            85,r,БАНКОВИ ТРАНСФЕРИ
+    14  s   1   С ЧЕК                       Да      85,s            85,s,С ЧЕК
+*/        
+//    InputString = InputString + String.format("%c%c%c", new Object[] { Integer.valueOf(132), Integer.valueOf(48), Integer.valueOf(59) });
+        LinkedHashMap<String, String> response = new LinkedHashMap(); // 
+        String res;
+        LinkedHashMap<String, String> pList = new LinkedHashMap(); // 
+        pList.put("P", "'P' - 'В БРОЙ' НАП #:0");
+        pList.put("N", "'N' - 'ПЛАЩАНЕ С КРЕДИТ' НАП #:7");
+        pList.put("C", "'C' - 'ПЛАЩАНЕ С ЧЕК' НАП #:1");
+        pList.put("D", "'D' - 'ПЛАЩАНЕ С ДЕБИТНА КАРТА' НАП #:7");
+        String[] pCodes = new String[]        {"I","J","K","L",   "i","j","k","l",   "m","o","p","q","r","s"};
+        String[] paymentNRAMap = new String[] {"9","9","9","9,10","9","9","9","9,10","2","3","5","6","r","1"};
+        for(int i = 0; i < pCodes.length; i++) {
+            res = cmdCustom(85, pCodes[i]);
+            LOGGER.fine(res);
+            pList.put(pCodes[i], "'"+pCodes[i]+"' - '"+res+"' НАП #:"+paymentNRAMap[i]);
+        }
+        int i = 0;
+        for (String pCode : pList.keySet()) {
+            response.put("P_"+Integer.toString(i++), pList.get(pCode));
+        }
+        for (String pCode : pList.keySet()) {
+            response.put("P_"+pCode, pList.get(pCode));
+        }
+        return response;
+    }
     
 }

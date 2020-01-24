@@ -41,6 +41,7 @@ import TremolZFP.OptionStornoReason;
 import TremolZFP.OptionUICType;
 import TremolZFP.OptionVATClass;
 import TremolZFP.OptionZeroing;
+import TremolZFP.PaymentsRes;
 import TremolZFP.Payments_OldRes;
 import TremolZFP.RegistrationInfoRes;
 import TremolZFP.SerialAndFiscalNumsRes;
@@ -181,6 +182,90 @@ public class FPCTremol extends FPCBase {
                 }}
 
         );
+        LinkedHashMap<String, String> payCodeMapList = new LinkedHashMap() {{
+            put("0", "0 - В БРОЙ");
+            put("1", "1 - Плащане 1");
+            put("2", "2 - Плащане 2");
+            put("3", "3 - Плащане 3");
+            put("4", "4 - Плащане 4");
+            put("5", "5 - Плащане 5");
+            put("6", "6 - Плащане 6");
+            put("7", "7 - Плащане 7");
+            put("8", "8 - Плащане 8");
+            put("9", "9 - Плащане 9");
+            put("10", "10 - Плащане 10");
+        }};
+        params.addGroups(
+            new FPPropertyGroup("Начини на плащане", "Начини на плащане по спецификация на НАП") {{
+                 addProperty(new FPProperty( // 0
+                    String.class
+                    , "NRASCASH", "0 НАП SCash", "НАП Спецификация SCash - В БРОЙ"
+                    , "0"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 1
+                    String.class
+                    , "NRASCHECKS", "1 НАП SChecks", "НАП Спецификация SChecks - С чек"
+                    , "1"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 2
+                    String.class
+                    , "NRAST", "2 НАП SТ", "НАП Спецификация SТ - Талони"
+                    , "2"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 3
+                    String.class
+                    , "NRASOT", "3 НАП SOТ", "НАП Спецификация SOТ - Сума по външни талони"
+                    , "3"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+
+                 addProperty(new FPProperty( // 4
+                    String.class
+                    , "NRASP", "4 НАП SP", "НАП Спецификация SP - Сума по амбалаж"
+                    , "4"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 5
+                    String.class
+                    , "NRASSELF", "5 НАП SSelf", "НАП Спецификация SSelf - Сума по вътрешно обслужване"
+                    , "5"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 6
+                    String.class
+                    , "NRASDMG", "6 НАП SDmg", "НАП Спецификация SDmg - Сума по повреди"
+                    , "6"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 7
+                    String.class
+                    , "NRASCARDS", "7 НАП SCards", "НАП Спецификация SCards - Сума по кредитни/дебитни карти"
+                    , "7"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 8
+                    String.class
+                    , "NRASW", "8 НАП SW", "НАП Спецификация SW - Сума по банкови трансфери"
+                    , "8"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 9
+                    String.class
+                    , "NRASR1", "9 НАП SR1", "НАП Спецификация SR1 - Плащане НЗОК"
+                    , "9"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 10
+                    String.class
+                    , "NRASR2", "10 НАП SR2", "НАП Спецификация SR2 - Резерв"
+                    , "10"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+            }}
+        );
         return params;
     }
     
@@ -237,7 +322,7 @@ public class FPCTremol extends FPCBase {
             fp.RawWrite(new byte[] {0x1D, 0x49});
             byte[] res = fp.RawRead(0d, "\n");
             String textres = new String(res);
-            System.out.println(textres);
+            //System.out.println(textres);
             if (textres.substring(0, 1).equals("I")) {
                 String tl = textres.substring(1, 3);
                 try {
@@ -262,7 +347,7 @@ public class FPCTremol extends FPCBase {
     public DeviceInfo getDeviceInfo() throws FPException {
         DeviceInfo di = new DeviceInfo();
         try {
-            Payments_OldRes po = fp.ReadPayments_Old();
+//            Payments_OldRes po = fp.ReadPayments_Old();
             VersionRes ver = fp.ReadVersion();
             di.Model = ver.Model;
             di.Firmware = fixCharsetBug(ver.Version);
@@ -396,6 +481,18 @@ public class FPCTremol extends FPCBase {
             case CHECK : pc = 1; break;
             case CUSTOM1 : pc = 2; break;
             case CUSTOM2 : pc = 3; break;
+
+            case NRASCASH :  pc = params.getInt("NRASCASH", 0); break;
+            case NRASCHECKS :  pc = params.getInt("NRASCHECKS", 1); break;
+            case NRAST :  pc = params.getInt("NRAST", 2); break;
+            case NRASOT :  pc = params.getInt("NRASOT", 3); break;
+            case NRASP :  pc = params.getInt("NRASP", 4); break;
+            case NRASSELF :  pc = params.getInt("NRASSELF", 5); break;
+            case NRASDMG :  pc = params.getInt("NRASDMG", 6); break;
+            case NRASCARDS :  pc = params.getInt("NRASCARDS", 7); break;
+            case NRASW :  pc = params.getInt("NRASW", 8); break;
+            case NRASR1 :  pc = params.getInt("NRASR1", 9); break;
+            case NRASR2 :  pc = params.getInt("NRASR2", 10); break;
         }
         return pc;
     }
@@ -1485,5 +1582,37 @@ FWDT=23NOV18 1000
         return res;
     }
 
+    @Override
+    public StrTable readPaymentMethods() throws FPException{
+        StrTable res = new StrTable();
+        lastCommand = "readPaymentMethods";
+        try {
+            if (isOldDevice) {
+                Payments_OldRes payRes = fp.ReadPayments_Old();
+                res.put("P_0", "'0' '"+payRes.getNamePaym0()+"' НАП #:0");
+                res.put("P_1", "'1' '"+payRes.getNamePaym1()+"' НАП #:"+payRes.getCodePaym1());
+                res.put("P_2", "'2' '"+payRes.getNamePaym2()+"' НАП #:"+payRes.getCodePaym2());
+                res.put("P_3", "'3' '"+payRes.getNamePaym3()+"' НАП #:"+payRes.getCodePaym3());
+                res.put("P_4", "'4' '"+payRes.getNamePaym4()+"' НАП #:0");
+            } else {
+                PaymentsRes payRes = fp.ReadPayments();
+                res.put("P_0", "'0' '"+payRes.getNamePayment0()+"' НАП #:0");
+                res.put("P_1", "'1' '"+payRes.getNamePayment1()+"' НАП #:1");
+                res.put("P_2", "'2' '"+payRes.getNamePayment2()+"' НАП #:2");
+                res.put("P_3", "'3' '"+payRes.getNamePayment3()+"' НАП #:3");
+                res.put("P_4", "'4' '"+payRes.getNamePayment4()+"' НАП #:4");
+                res.put("P_5", "'5' '"+payRes.getNamePayment5()+"' НАП #:5");
+                res.put("P_6", "'6' '"+payRes.getNamePayment6()+"' НАП #:6");
+                res.put("P_7", "'7' '"+payRes.getNamePayment7()+"' НАП #:7");
+                res.put("P_8", "'8' '"+payRes.getNamePayment8()+"' НАП #:8");
+                res.put("P_9", "'9' '"+payRes.getNamePayment9()+"' НАП #:9");
+                res.put("P_10", "'10' '"+payRes.getNamePayment10()+"' НАП #:10");
+                res.put("P_11", "'11' '"+payRes.getNamePayment11()+"' НАП #:11");
+            }
+        } catch (Exception ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
     
 }

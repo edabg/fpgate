@@ -16,16 +16,16 @@
  */
 package org.eda.fdevice;
 
-import java.util.Date;
+import java.io.IOException;
+import java.util.LinkedHashMap;
 import org.eda.protocol.DeviceDatecsDPV1;
-import static org.eda.fdevice.FPCBase.LOGGER;
 
 /**
  *
  * @author Dimitar Angelov
  */
 @FiscalDevice(
-        description = "Datecs Fiscal devices via raw serial communication protocol v1! Supported devices: DP-05, DP-25, DP-35, WP-50, DP-150"
+    description = "Datecs Fiscal devices via raw serial communication protocol v1! Supported devices: DP-05, DP-25, DP-35, WP-50, DP-150"
 )
 public class FPCDatecsDP extends FPCGeneralV10 {
 
@@ -58,6 +58,18 @@ public class FPCDatecsDP extends FPCGeneralV10 {
             case CHECK : pc = "D"; break;
             case CUSTOM1 : pc = "I"; break;
             case CUSTOM2 : pc = "J"; break;
+
+            case NRASCASH :  pc = params.get("NRASCASH", "P"); break;
+            case NRASCHECKS :  pc = params.get("NRASCHECKS", "P"); break;
+            case NRAST :  pc = params.get("NRAST", "I"); break;
+            case NRASOT :  pc = params.get("NRASOT", "J"); break;
+            case NRASP :  pc = params.get("NRASP", "P"); break;
+            case NRASSELF :  pc = params.get("NRASSELF", "P"); break;
+            case NRASDMG :  pc = params.get("NRASDMG", "P"); break;
+            case NRASCARDS :  pc = params.get("NRASCARDS", "C"); break;
+            case NRASW :  pc = params.get("NRASW", "P"); break;
+            case NRASR1 :  pc = params.get("NRASR1", "D"); break;
+            case NRASR2 :  pc = params.get("NRASR2", "P"); break;
         }
         return pc;
     }
@@ -109,7 +121,96 @@ public class FPCDatecsDP extends FPCGeneralV10 {
         params.getProperties().get("PMCash").setValue("P");
         params.getProperties().get("PMCard").setDefaultValue("C");
         params.getProperties().get("PMCard").setValue("C");
+        /*
+        Незадължителен код, указващ начина на плащане. Може да има следните стойности:
+        ‘P’ - Плащане в брой (по подразбиране);
+        ‘N’ - Плащане с кредит;
+        ‘C’ - Плащане с дебитна карта;
+        ‘D’ - Плащане с НЗОК;
+        ‘I’ - Плащане с ваучер;
+        ‘J’ - Плащане с купон;        
+        */
+        LinkedHashMap<String, String> payCodeMapList = new LinkedHashMap() {{
+            put("P", "P - В БРОЙ");
+            put("N", "N - Плащане с кредит");
+            put("C", "C - Плащане с дебитна карта");
+            put("D", "D - Плащане с НЗОК");
+            put("I", "I - Плащане с ваучер");
+            put("J", "J - Плащане с купон");
+        }};
+
+        params.addGroups(
+            new FPPropertyGroup("Начини на плащане", "Начини на плащане по спецификация на НАП") {{
+                 addProperty(new FPProperty( // 0
+                    String.class
+                    , "NRASCASH", "0 НАП SCash", "НАП Спецификация SCash - В БРОЙ"
+                    , "P"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 1
+                    String.class
+                    , "NRASCHECKS", "1 НАП SChecks", "НАП Спецификация SChecks - С чек"
+                    , "P"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 2
+                    String.class
+                    , "NRAST", "2 НАП SТ", "НАП Спецификация SТ - Талони"
+                    , "I"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 3
+                    String.class
+                    , "NRASOT", "3 НАП SOТ", "НАП Спецификация SOТ - Сума по външни талони"
+                    , "J"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 4
+                    String.class
+                    , "NRASP", "4 НАП SP", "НАП Спецификация SP - Сума по амбалаж"
+                    , "P"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 5
+                    String.class
+                    , "NRASSELF", "5 НАП SSelf", "НАП Спецификация SSelf - Сума по вътрешно обслужване"
+                    , "P"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 6
+                    String.class
+                    , "NRASDMG", "6 НАП SDmg", "НАП Спецификация SDmg - Сума по повреди"
+                    , "P"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 7
+                    String.class
+                    , "NRASCARDS", "7 НАП SCards", "НАП Спецификация SCards - Сума по кредитни/дебитни карти"
+                    , "C"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 8
+                    String.class
+                    , "NRASW", "8 НАП SW", "НАП Спецификация SW - Сума по банкови трансфери"
+                    , "P"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 9
+                    String.class
+                    , "NRASR1", "9 НАП SR1", "НАП Спецификация SR1 - Плащане НЗОК"
+                    , "D"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 10
+                    String.class
+                    , "NRASR2", "10 НАП SR2", "НАП Спецификация SR2 - Резерв"
+                    , "D"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+            }}
+        );
+        
         return params;
     }
-    
+
 }

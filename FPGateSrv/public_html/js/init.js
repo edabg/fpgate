@@ -132,6 +132,7 @@ function cmdSelect(el) {
                 "#ToDoc=0000001\n"
         , "GetDocInfo": 
                 "#DocNum=0000001\n"
+        , "ReadPaymentMethods": ""
         , "GetVersion": ""
         , "Test": ""
     }

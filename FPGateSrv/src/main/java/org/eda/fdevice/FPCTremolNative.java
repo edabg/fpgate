@@ -28,15 +28,17 @@ import java.text.SimpleDateFormat;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 import org.eda.protocol.DeviceEltradeV1;
+import org.eda.protocol.DeviceTremolV1;
 
 /**
  *
  * @author Dimitar Angelov
  */
 @FiscalDevice(
-    description = "Eltrade fiscal devices"
+    description = "Tremol fiscal devices native protocol"
+    , usable = false
 )
-public class FPCEltrade extends FPCBase {
+public class FPCTremolNative extends FPCBase {
 
     protected AbstractFiscalDevice FP;
     protected String lastCommand;
@@ -55,7 +57,7 @@ public class FPCEltrade extends FPCBase {
      * FPCDatecsECRICL constructor.
      * @throws Exception Throws an exception
      */
-    public FPCEltrade() throws Exception {
+    public FPCTremolNative() throws Exception {
         super();
         
         lastCommand = "";
@@ -126,89 +128,6 @@ public class FPCEltrade extends FPCBase {
                 }}
 
         );
-        LinkedHashMap<String, String> payCodeMapList = new LinkedHashMap() {{
-            put("P", "P - В БРОЙ");
-            put("N", "N - 'С чек'");
-            put("C", "C - Сума по Талони 'Талони'");
-            put("D", "D - Сума по външни талони 'външни талони'");
-            put("J", "J - Сума по вътрешно обслужване 'вътрешно обслужване'");
-            put("K", "K - Сума по повреди 'повреди'");
-            put("L", "L - Сума по кредитни/дебитни карти 'кредитни/дебитни карти'");
-            put("M", "M - Сума по банкови трансфери 'банкови трансфери'");
-            put("Q", "Q - Плащане НЗОК 'НЗОК'");
-            put("R", "R - Резерв 2 'Резерв 2'");
-        }};
-
-        params.addGroups(
-            new FPPropertyGroup("Начини на плащане", "Начини на плащане по спецификация на НАП") {{
-                 addProperty(new FPProperty( // 0
-                    String.class
-                    , "NRASCASH", "0 НАП SCash", "НАП Спецификация SCash - В БРОЙ"
-                    , "P"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 1
-                    String.class
-                    , "NRASCHECKS", "1 НАП SChecks", "НАП Спецификация SChecks - С чек"
-                    , "N"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 2
-                    String.class
-                    , "NRAST", "2 НАП SТ", "НАП Спецификация SТ - Талони"
-                    , "C"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 3
-                    String.class
-                    , "NRASOT", "3 НАП SOТ", "НАП Спецификация SOТ - Сума по външни талони"
-                    , "D"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 4
-                    String.class
-                    , "NRASP", "4 НАП SP", "НАП Спецификация SP - Сума по амбалаж"
-                    , "I"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 5
-                    String.class
-                    , "NRASSELF", "5 НАП SSelf", "НАП Спецификация SSelf - Сума по вътрешно обслужване"
-                    , "J"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 6
-                    String.class
-                    , "NRASDMG", "6 НАП SDmg", "НАП Спецификация SDmg - Сума по повреди"
-                    , "K"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 7
-                    String.class
-                    , "NRASCARDS", "7 НАП SCards", "НАП Спецификация SCards - Сума по кредитни/дебитни карти"
-                    , "L"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 8
-                    String.class
-                    , "NRASW", "8 НАП SW", "НАП Спецификация SW - Сума по банкови трансфери"
-                    , "M"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 9
-                    String.class
-                    , "NRASR1", "9 НАП SR1", "НАП Спецификация SR1 - Плащане НЗОК"
-                    , "Q"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-                 addProperty(new FPProperty( // 10
-                    String.class
-                    , "NRASR2", "10 НАП SR2", "НАП Спецификация SR2 - Резерв"
-                    , "R"
-                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
-                 ));
-            }}
-        );
         return params;
     }
 
@@ -241,7 +160,7 @@ public class FPCEltrade extends FPCBase {
     @Override
     public void init() throws Exception, FPException {
         lastCommand = "Init";
-        this.FP = new DeviceEltradeV1(getParam("COM"), getParamInt("BaudRate"), getParamInt("PortReadTimeout"), getParamInt("PortWriteTimeout"));
+        this.FP = new DeviceTremolV1(getParam("COM"), getParamInt("BaudRate"), getParamInt("PortReadTimeout"), getParamInt("PortWriteTimeout"));
         this.FP.open();
     }
     
@@ -330,18 +249,6 @@ public class FPCEltrade extends FPCBase {
             case CHECK : pc = "N"; break;
             case CUSTOM1 : pc = "R"; break;
             case CUSTOM2 : pc = ""; break;
-
-            case NRASCASH :  pc = params.get("NRASCASH", "P"); break;
-            case NRASCHECKS :  pc = params.get("NRASCHECKS", "N"); break;
-            case NRAST :  pc = params.get("NRAST", "C"); break;
-            case NRASOT :  pc = params.get("NRASOT", "D"); break;
-            case NRASP :  pc = params.get("NRASP", "I"); break;
-            case NRASSELF :  pc = params.get("NRASSELF", "J"); break;
-            case NRASDMG :  pc = params.get("NRASDMG", "K"); break;
-            case NRASCARDS :  pc = params.get("NRASCARDS", "L"); break;
-            case NRASW :  pc = params.get("NRASW", "M"); break;
-            case NRASR1 :  pc = params.get("NRASR1", "Q"); break;
-            case NRASR2 :  pc = params.get("NRASR2", "R"); break;
         }
         return pc;
     }
@@ -1070,17 +977,7 @@ public class FPCEltrade extends FPCBase {
         return res;
     }
 
-    @Override
-    public StrTable readPaymentMethods() throws FPException{
-        StrTable res = new StrTable();
-        lastCommand = "readPaymentMethods";
-        try {
-            LinkedHashMap<String,String> res_ = FP.cmdReadPaymentMethods();
-            res.putAll(res_);
-        } catch (IOException ex) {
-            throw createException(ex);
-        }
-        return res;
-    }
+    
+    
     
 }

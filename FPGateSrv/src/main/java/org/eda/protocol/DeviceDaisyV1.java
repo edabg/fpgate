@@ -121,6 +121,9 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
             consts.put("COMMENT_LEN", consts.get("P10"));
         else
             consts.put("COMMENT_LEN", 28);
+        
+        if (consts.containsKey("P3"))
+            consts.put("PAY_MAX_CNT", consts.get("P3"));
     }
 
     @Override
@@ -1779,5 +1782,71 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
         return QRCode;
     }
 
+    @Override
+    public LinkedHashMap<String, String> cmdReadPaymentMethods() throws IOException {
+        /*
+        Payment modes:
+        “P” – Cash;
+        “N” – payment 1
+        “C” – payment 2
+        “D” or “U” – payment 3
+        “B” or “E” – payment 4
+        
+        151 (97h) SET PAYMENTS (CURRENCIES)
+        Data field: {Item}{Data}
+        Reply: {Data}
+        Item Determines the type of the required operation. Acceptable values: “P” and “R”.
+        “P” – programming name and currency rate of payment.
+        Data field: {P}{Number},{Name}[{TAB}{Rate},TagNo]
+        “R” –reading parameter value.
+        Data field: {R}{Number}
+        Reply {Number},{Name}{TAB}{Rate},{TagNo}
+        Number Payment number (from 1 to #PAY_MAX_CNT#)
+        Name Payment name. It is "cut" at the right side, if it is longer than #NAME_LEN# symbols.
+        TAB Delimiter (ASCII 09)
+        Rate Currency rate.
+        TagNo Tag number for sending X and Z data to the tax authority server. 0 = <SCash>, 1 = < SChecks>, ......., 10 = <SR2> (Only for FD with tax terminal)
+        
+        */
+        
+        LinkedHashMap<String, String> response = new LinkedHashMap(); 
+        int PAY_MAX_CNT = consts.containsKey("PAY_MAX_CNT")?consts.get("PAY_MAX_CNT"):4;
+        String res;
+        String[] parts;
+        String name;
+        String nratag;
+        LinkedHashMap<String, Integer> pNumsCode = new LinkedHashMap(); 
+        pNumsCode.put("P", 0);
+        pNumsCode.put("N", 1);
+        pNumsCode.put("C", 2);
+        pNumsCode.put("D", 3);
+        pNumsCode.put("U", 3);
+        pNumsCode.put("B", 4);
+        pNumsCode.put("E", 4);
+        LinkedHashMap<Integer, String> pNums = new LinkedHashMap(); 
+        pNums.put(0, "'Б БРОЙ' НАП #:0");
+        for (int i = 1; i <= PAY_MAX_CNT; i++) {
+            res = cmdCustom(151, "R"+Integer.toString(i));
+            //{Number},{Name}{TAB}{Rate},{TagNo}
+            parts = res.split(",");
+            name = "Payment "+Integer.toString(i);
+            nratag = "";
+            if (parts.length > 1) 
+                name = parts[1].replaceAll("\\t.*$", ""); 
+            if (parts.length > 2) 
+                nratag = parts[2]; 
+            pNums.put(i, "'"+name+"' НАП #:"+nratag);
+        }
+        for(Integer i : pNums.keySet()) {
+            response.put("P_"+i.toString(), pNums.get(i));
+        }
+        for(String pCode : pNumsCode.keySet()) {
+            String pName = "N/A";
+            if (pNums.containsKey(pNumsCode.get(pCode)))
+                pName = pNums.get(pNumsCode.get(pCode));
+            response.put("P_"+pCode, " '"+pCode+" "+pName);
+        }    
+        return response;
+    }
     
 }
