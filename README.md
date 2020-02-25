@@ -15,14 +15,14 @@ The server contains two main components:
 
 Current version of FPGate supports following fiscal printers:
 
-- Tremol full range of fiscal printers via ZFPLabServer (No real tests was made)
+- Tremol full range of fiscal printers via ZFPLabServer and native serial communication (No real tests was made)
 - DATECS FP-800, FP-2000, FP-650, SK1-21F, SK1-31F, FMP-10, FP-550 (Real test was made only on FP2000!)
 - Daisy fiscal printers (No real tests was made)
 - Eltrade fiscal printers (No real tests was made)
 
 Current version of FPGate supports following cash registers:
 
-- Tremol full range of cash registers via ZFPLabServer (Real tests was made with S21)
+- Tremol full range of cash registers via ZFPLabServer and serial communication (Real tests was made with S21)
 - DATECS DP-05, DP-25, DP-35, WP-50, DP-150 (Real tests was made with DP-150)
 - Daisy cash registers (Real tests was made with Compact M)
 - Eltrade cash registers (Real tests was made with A3)
@@ -207,6 +207,7 @@ TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text
 CMD        |Command,Params...                   | Call custom printer command. Depending on printer model behavior will be different.
 FTR        |Footer text                         | Print footer text before close check. 
 
+`Text` in `STG` and `SDP` can contain '\~\~' (double tild) to send Line1 and Line2 to register sell.
 
 PFT and PNT supports some simple formatting syntax in the following from.
 @padl\tText[\tPaddingSymbol] - Align text to the left and pad to the whole width with padding symbol (by default is space)
