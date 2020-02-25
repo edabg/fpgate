@@ -1,9 +1,4 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
         <title>${AppTitleFull}</title>
@@ -40,7 +35,7 @@ and open the template in the editor.
 <#escape printer as printer?html>                        
     <tr>
         <th>${printer.RefID}</td>
-        <td><a href="${URL_PRINTERS}edit?id=${printer.idPrinter}" class=""><i class="material-icons left ${printer.IsActive?switch("1","","grey-text text-lighten-2")}">print</i>${printer.Name?switch('','N/A',printer.Name)}</a></td>
+        <td><a href="${URL_PRINTERS}edit?id=${printer.idPrinter}" class=""><i class="material-icons left<#if printer.IsActive != "1" > grey-text text-lighten-2</#if>">print</i><#if printer.Name?has_content>${printer.Name}<#else>N/A</#if></a></td>
         <td>${printer.ModelID}</td>
         <td>${printer.Description}</td>
         <td>${printer.Location}</td>

@@ -3,4 +3,5 @@
             <li><a href="${URL_PRINTERS}">Printers</a></li>
             <li><a href="${URL_USERS}">Users</a></li>
             <li><a href="${URL_STATUS}">Status</a></li>
+            <li><a href="${URL_SETTINGS}">Settings</a></li>
         </ul>

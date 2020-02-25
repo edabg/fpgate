@@ -1,9 +1,4 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
     <head>
         <title>${AppTitleFull}</title>
@@ -19,12 +14,31 @@ and open the template in the editor.
         <main>
             <div class="container">
                 <h1 class="">Status</h1>
-                <p>Manage FPGate Server status.</p>
-
+                <p>FPGate Server Version: ${AppVersion?html} Build ${AppBuild?html}.</p>
                 <div class="row">
-                    <div class="col m6 s12 center">
+                    <div class="col m6 s12 left">
                         <h3>Printer Server Status</h3>
-                        <p>Fiscal printer server is Up and running..</p>
+                        <p>Fiscal printer server is Up and running ${ServerUptime}.</p>
+<#if PrinterPoolEnabled == 1>
+                        <p>Printer pool is enabled. Size = ${PrinterPoolSize}</p>
+<#else>
+                        <p>Printer pool is disabled.</p>
+</#if>
+<#if isCBIOServiceStarted == 1>
+<div>
+Colibri ERP connector is started.
+<ol>
+<#list CBIOServiveState as state>
+<li>${state?html}</li>
+</#list>
+<ol>
+</div>
+<#else>
+<p>Colibri ERP connector is stopped.</p>
+</#if>
+<#if ZFPLabServerStarted == 1>
+<p>Tremol ZFPLabServer is started.</p>
+</#if>
                     </div>
                     <div class="col m6 s12 center">
                         <h3 class="">Printer Server Test</h3>

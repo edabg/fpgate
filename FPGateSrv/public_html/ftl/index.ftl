@@ -29,7 +29,7 @@ and open the template in the editor.
 
                     <!--   Icon Section   -->
                     <div class="row">
-                        <div class="col s12 m4">
+                        <div class="col s12 m4" style="cursor: pointer;" onClick="window.location='${URL_PRINTERS}'">
                             <div class="">
                                 <h2 class="center"><i class="medium material-icons">printer</i></h2>
                                 <h3 class="center">Printers</h3>
@@ -40,7 +40,7 @@ and open the template in the editor.
                             </div>
                         </div>
 
-                        <div class="col s12 m4">
+                        <div class="col s12 m4" style="cursor: pointer;" onClick="window.location='${URL_USERS}'">
                             <div class="">
                                 <h2 class="center"><i class="medium material-icons">group</i></h2>
                                 <h3 class="center">Users</h3>
@@ -51,13 +51,21 @@ and open the template in the editor.
                             </div>
                         </div>
 
-                        <div class="col s12 m4">
+                        <div class="col s12 m4"  style="cursor: pointer;" onClick="window.location='${URL_STATUS}'">
                             <div class="">
                                 <h2 class="center"><i class="medium material-icons">info_outline</i></h2>
                                 <h3 class="center">Status</h3>
                                 <p>Manage FPGate Server status.
                                     <br />Fiscal printer server is Up and running.
                                 </p>
+                            </div>
+                        </div>
+
+                        <div class="col s12 m4" style="cursor: pointer;" onClick="window.location='${URL_SETTINGS}'">
+                            <div class="">
+                                <h2 class="center"><i class="medium material-icons">settings</i></h2>
+                                <h3 class="center">Settings</h3>
+                                <p>Manage FPGate Server settings</p>
                             </div>
                         </div>
                     </div>

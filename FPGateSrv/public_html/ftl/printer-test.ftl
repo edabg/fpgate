@@ -99,6 +99,8 @@ and open the template in the editor.
                                 <option value="GetJournal">Get Journal</option>
                                 <option value="GetDocInfo">Get Doc Info</option>
                                 <option value="ReadPaymentMethods">Read Payment Methods</option>
+                                <option value="ReadDepartments">Read Departments</option>
+                                <option value="ReadTaxGroups">Read Tax Groups</option>
                                 <option value="GetVersion">Get FPGate Version</option>
                                 <option value="AbnormalComplete">Abnormal Complete Fix</option> 
                                 <option value="test">Test</option> 

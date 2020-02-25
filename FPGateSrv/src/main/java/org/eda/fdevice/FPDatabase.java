@@ -21,9 +21,11 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import org.eda.fpsrv.FPServer;
 /**
  *
@@ -31,6 +33,7 @@ import org.eda.fpsrv.FPServer;
  */
 
 public class FPDatabase {
+    protected static final Logger LOGGER = Logger.getLogger(FPCBase.class.getName());
     
     private final String DATABASE_URL;
     
@@ -41,14 +44,64 @@ public class FPDatabase {
     public FPDatabase() throws SQLException {
 
         System.setProperty(com.j256.ormlite.logger.LocalLog.LOCAL_LOG_LEVEL_PROPERTY, "WARNING");
-        
-        DATABASE_URL = "jdbc:sqlite:"+FPServer.application.getAppBasePath()+"/fprinters.db";
+//        DATABASE_URL = "jdbc:hsqldb:"+FPServer.application.getAppBasePath()+"/fpgate.db";
+        DATABASE_URL = "jdbc:h2:"+FPServer.application.getAppBasePath()+"/fpgate.db";
         connectionSource = new JdbcConnectionSource(DATABASE_URL);
         TableUtils.createTableIfNotExists(connectionSource, FPrinter.class);
         TableUtils.createTableIfNotExists(connectionSource, FUser.class);
         //Create a DataAccessObject for a given class;
         fPrinterDao = DaoManager.createDao(connectionSource, FPrinter.class);
         fUserDao = DaoManager.createDao(connectionSource, FUser.class);
+        checkDBAndConvert();
+    }
+    
+    protected void checkDBAndConvert() {
+        String OLD_DB_FILE_PATH = FPServer.application.getAppBasePath()+"/fprinters.db";
+        File OLD_DB_FILE = new File(OLD_DB_FILE_PATH);
+        if (!OLD_DB_FILE.isFile()) return ; // There id no old DB file
+        LOGGER.info("Old database exists check and convert ...");
+        String OLD_DATABASE_URL = "jdbc:sqlite:"+FPServer.application.getAppBasePath()+"/fprinters.db";
+        ConnectionSource oldConnectionSource;
+        Dao<FUser, Integer> oldUserDao;
+        Dao<FPrinter, Integer> oldPrinterDao;
+        try {
+            oldConnectionSource = new JdbcConnectionSource(OLD_DATABASE_URL);
+            oldPrinterDao = DaoManager.createDao(oldConnectionSource, FPrinter.class);
+            oldUserDao = DaoManager.createDao(oldConnectionSource, FUser.class);
+            LOGGER.info("Migrating printers ...");
+            int countPrinters = 0;
+            for(FPrinter printer : oldPrinterDao.queryForAll()) {
+                try {
+                    addPrinter(printer);
+                    countPrinters++;
+                } catch (Exception exp) {
+                    LOGGER.severe(exp.getMessage());
+                }
+            }
+            LOGGER.info(Integer.toString(countPrinters)+" Printers converted.");
+            LOGGER.info("Migrating Users ...");
+            int countUsers = 0;
+            for(FUser user : oldUserDao.queryForAll()) {
+                try {
+                    addUser(user);
+                    countUsers++;
+                } catch (Exception exu) {
+                    LOGGER.severe(exu.getMessage());
+                }
+            }
+            LOGGER.info(Integer.toString(countUsers)+" Users converted.");
+            // Close DB
+            oldPrinterDao = null;
+            oldUserDao = null;
+            oldConnectionSource.close();
+            oldConnectionSource = null;
+        } catch (Exception ex) {
+            LOGGER.severe(ex.getMessage());
+        }
+        // Rename Old DB
+        LOGGER.info("Renaming old DB file.");
+        File OLD_DB_FILE_REN = new File(OLD_DB_FILE_PATH+".old");
+        OLD_DB_FILE.renameTo(OLD_DB_FILE_REN);
     }
 
     public FPrinter getPrinterByRefId(String refId) throws SQLException {
@@ -145,12 +198,16 @@ public class FPDatabase {
     public void updateUser(FUser user) throws SQLException {
         // update all except password
         FUser user_ = fUserDao.queryForId(user.getIdUser());
-        user_.setUserName(user.getUserName());
-        if (user.getUserPass() != null)
-            user_.setUserPass(user.getUserPass());
-        user_.setFullName(user.getFullName());
-        user_.setValidUser(user.getValidUser());
-        user_.setRole(user.getRole());
+        if (user_ != null) {
+            user_.setUserName(user.getUserName());
+            if (user.getUserPass() != null)
+                user_.setUserPass(user.getUserPass());
+            user_.setFullName(user.getFullName());
+            user_.setValidUser(user.getValidUser());
+            user_.setRole(user.getRole());
+        } else {
+            user_ = user;
+        }
         fUserDao.update(user_);
     }
     

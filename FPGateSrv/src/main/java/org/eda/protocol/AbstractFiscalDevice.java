@@ -177,6 +177,15 @@ public abstract class AbstractFiscalDevice {
         }
         return res;
     }
+
+    protected int stringToInt(String str) {
+        int res = 0;
+        try {
+            res = Integer.parseInt(str);
+        } catch (Exception e) {
+        }
+        return res;
+    }
     
     protected String reformatCurrency(String value, int div) {
         double dval = stringToDouble(value, div);
@@ -184,7 +193,7 @@ public abstract class AbstractFiscalDevice {
     }
     
     
-    public final String cmdCustom(int command, String data) throws IOException {
+    public String cmdCustom(int command, String data) throws IOException {
         mLastCmd = command;
         String result = protocol.customCommand(command, data);
         mStatusBytes = protocol.getStatusBytes();
@@ -269,7 +278,7 @@ public abstract class AbstractFiscalDevice {
      * Device Status Bytes After Last Command
      * @return 
      */
-    public final byte[] getStatusBytes() {
+    public byte[] getStatusBytes() {
         return mStatusBytes;
     }
     
@@ -774,6 +783,24 @@ public abstract class AbstractFiscalDevice {
      */
     public LinkedHashMap<String, String> cmdReadPaymentMethods() throws IOException {
         throw new FDException("Unsupported command (cmdReadPaymentMethods)");
+    }
+
+    /**
+     * Read information about Departments
+     * @return
+     * @throws IOException 
+     */
+    public LinkedHashMap<String, String> cmdReadDepartments() throws IOException {
+        throw new FDException("Unsupported command (cmdReadDepartments)");
+    }
+
+    /**
+     * Read information about Tax Groups
+     * @return
+     * @throws IOException 
+     */
+    public LinkedHashMap<String, String> cmdReadTaxGroups() throws IOException {
+        throw new FDException("Unsupported command (cmdReadTaxGroups)");
     }
     
     /**

@@ -287,6 +287,18 @@ CashInOut
 ----------
 Register `cash in` and `cash out` to the cash register. Accepts parameter `Amount` which set cash value. The positive `Amount` is  `cash in`, negative `Amount` is `cash out`, zero `Amount` prints current cash.
 
+ReadPaymentMethods
+------------------
+Return list of programmed payment methods in fiscal device with their name and mapping to NRA schema (if is available).
+
+ReadTaxGroups
+------------------
+Return list of tax groups in fiscal device with their code and tax percentage.
+
+ReadDepartments
+---------------
+Return list of programmed departments in fiscal device with their name and tax group.
+
 CustomCommand
 -------------
 Sends raw command to printer. The command accepts following arguments.

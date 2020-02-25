@@ -16,6 +16,7 @@
  */
 package org.eda.fpsrv;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,8 +51,13 @@ public class ZFPLabServer {
         }
     }    
 
+    protected static String getServerExecutablePath() {
+        return FPServer.application.getAppBasePath()+"/"+SERVER_PATH+"/";
+    }
+    
     protected static String getServerExecutable() {
-        return FPServer.application.getAppBasePath()+"/"+SERVER_PATH+"/"+(System.getProperty("os.name").startsWith("Windows")?SERVER_WINDOWS:SERVER_LINUX);
+        return getServerExecutablePath()+(System.getProperty("os.name").startsWith("Windows")?SERVER_WINDOWS:SERVER_LINUX);
+//        return FPServer.application.getAppBasePath()+"/"+SERVER_PATH+"/"+(System.getProperty("os.name").startsWith("Windows")?SERVER_WINDOWS:SERVER_LINUX);
     }
     
     public static void start() throws Exception{
@@ -61,6 +67,7 @@ public class ZFPLabServer {
         LOGGER.info("Starting "+String.join(" ", args));
         ProcessBuilder pb = new ProcessBuilder (args);
         try {
+            pb.directory(new File(getServerExecutablePath()));
             pProcess = pb.start();
             if (shutdownHook == null) {
                 shutdownHook = new ShutdownProcessHook();

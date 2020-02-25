@@ -76,6 +76,17 @@ public abstract class AbstractProtocol {
         return LOGGER;
     }
     
+    protected String byteArrayToHex(byte[] a) {
+        return byteArrayToHex(a, 0, a.length);
+    }
+    protected String byteArrayToHex(byte[] a, int offset, int len) {
+       String s = "";
+       len = Math.min(len, a.length);
+       for(int i = offset; i < len; i++)
+          s += String.format(" %02x", a[i]);
+       return s;
+    }    
+    
     
     public static void toAnsi(String str, byte[] data, int offset, EncodingType encoding) {
         if (str != null) {

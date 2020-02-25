@@ -153,6 +153,7 @@ public class PrintResource extends ServerResource {
                 throw new FPException("Can't initialize printer!");
             }
             FP.lock();
+            FP.readStatus();
         }    
     }
     
@@ -880,7 +881,7 @@ public class PrintResource extends ServerResource {
         }    
     }
 
-    public void readPaymentMethods() throws ParseException, FPException {
+    public void readPaymentMethods() throws FPException {
         execLog.msg("Request readPaymentMethods");
         checkDeviceSerialNum(false);
         StrTable res = FP.readPaymentMethods();
@@ -888,6 +889,30 @@ public class PrintResource extends ServerResource {
             execLog.msg("readPaymentMethods returns no result!");
         } else {
             execLog.msg("readPaymentMethods returns result!");
+            response.getResultTable().putAll(res);
+        }    
+    }
+
+    public void readDepartments()throws FPException {
+        execLog.msg("Request readDepartments");
+        checkDeviceSerialNum(false);
+        StrTable res = FP.readDepartments();
+        if (res == null) {
+            execLog.msg("readDepartments returns no result!");
+        } else {
+            execLog.msg("readDepartments returns result!");
+            response.getResultTable().putAll(res);
+        }    
+    }
+
+    public void readTaxGroups()throws FPException {
+        execLog.msg("Request readTaxGroups");
+        checkDeviceSerialNum(false);
+        StrTable res = FP.readTaxGroups();
+        if (res == null) {
+            execLog.msg("readTaxGroups returns no result!");
+        } else {
+            execLog.msg("readTaxGroups returns result!");
             response.getResultTable().putAll(res);
         }    
     }
@@ -1058,6 +1083,12 @@ public class PrintResource extends ServerResource {
                         break;
                     case "readpaymentmethods" :
                         readPaymentMethods();
+                        break;
+                    case "readdepartments" :
+                        readDepartments();
+                        break;
+                    case "readtaxgroups" :
+                        readTaxGroups();
                         break;
                     case "getversion" :
                         getVersion();

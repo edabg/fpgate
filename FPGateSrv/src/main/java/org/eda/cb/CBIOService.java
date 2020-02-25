@@ -92,7 +92,41 @@ public class CBIOService {
     }
     
     public static enum ConnectionState {
-        NA, AUTH, AUTHFAILED, CONNECTING, CONNECTED, DISCONNECTED, JOINED, LEAVED
+//        NA, AUTH, AUTHFAILED, CONNECTING, CONNECTED, DISCONNECTED, JOINED, LEAVED
+        NA ("N/A", "?") 
+        , AUTH ("Идентидфициран", "i")
+        , AUTHFAILED ("Отказан", "!")
+        , CONNECTING ("Свързване", ">")
+        , CONNECTED ("Свързан", "=")
+        , DISCONNECTED ("Прекъснат", ".")
+        , JOINED ("Присъединен", "o")
+        , LEAVED ("Напуснат", "x")
+        ;
+        
+        private final String stateName;
+        private final String stateAbbr;
+        
+        private ConnectionState(String name, String abbr) {
+            stateName = name;
+            stateAbbr = abbr;
+        }
+        
+        public String abbr() {
+            return this.stateAbbr;
+        }
+        public String toString() {
+            return this.stateName;
+        }        
+    }
+
+    private int mServiceNum = 0;
+
+    public int getServiceNum() {
+        return mServiceNum;
+    }
+
+    public void setServiceNum(int mServiceNum) {
+        this.mServiceNum = mServiceNum;
     }
     
     // Colibri ERP SOAPService
@@ -104,9 +138,8 @@ public class CBIOService {
     protected CoErpCipher coCipher;
     protected boolean coConnected;
     
-    
     private String mFPGateID;
-    
+
     protected String mMethodPrefix = "com.eda.fpgate";
     private ExecutorService mExecutor;
     // This is the central object to interact with Crossbar.io
@@ -125,8 +158,7 @@ public class CBIOService {
     private ScheduledExecutorService connectionCheckScheduler;
     
     // CBIOService Singleton
-    private static CBIOService mCBIOService = null;
-    private static final ArrayList<OnStateChangeListener> mOnStateChangeListeners = new ArrayList<>();
+    private final ArrayList<OnStateChangeListener> mOnStateChangeListeners = new ArrayList<>();
     
     // Create a trust manager that does not validate certificate chains like the default 
     TrustManager[] trustAllCerts = new TrustManager[]{
@@ -236,7 +268,7 @@ public class CBIOService {
     } // CoErpCipher
     
     public interface OnStateChangeListener {
-        void onStateChange(ConnectionState state);
+        void onStateChange(CBIOService service,  ConnectionState state);
     }
     
 
@@ -277,24 +309,24 @@ public class CBIOService {
     }
 
     
-    public static OnStateChangeListener addOnStateChangeListener(OnStateChangeListener listener) {
+    public OnStateChangeListener addOnStateChangeListener(OnStateChangeListener listener) {
         if (!mOnStateChangeListeners.contains(listener)) {
             mOnStateChangeListeners.add(listener);
         }
         return listener;
     }
     
-    public static void removeOnStateChangeListener(OnStateChangeListener listener) {
+    public  void removeOnStateChangeListener(OnStateChangeListener listener) {
         if (mOnStateChangeListeners.contains(listener)){
             mOnStateChangeListeners.remove(listener);
         }
     }
     
-    protected static void onStateChange() {
+    protected  void onStateChange() {
         LOGGER.fine("OnState change notify");
         List<CompletableFuture<?>> futures = new ArrayList<>();
         for (OnStateChangeListener listener: mOnStateChangeListeners) {
-            futures.add(runAsync(() -> listener.onStateChange(getServiceState())));
+            futures.add(runAsync(() -> listener.onStateChange(this, getConnectionState())));
         }
         CompletableFuture d = CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
 //        d.thenRunAsync(() -> {
@@ -303,31 +335,22 @@ public class CBIOService {
         
     }
     
-    public static void startService(String coURL, String user, String password) {
-        if (mCBIOService != null) {
-            stopService();
-        }    
-        mCBIOService = new CBIOService();
-        mCBIOService.setCoERPInfo(coURL, user, password);
-        mCBIOService.start();
+    public static CBIOService newService(String coURL, String user, String password, int mServiceNum, boolean start) {
+        
+        CBIOService service = new CBIOService();
+        service.setServiceNum(mServiceNum);
+        service.setCoERPInfo(coURL, user, password);
+        if (start)
+            service.start();
+        return service;
+    }
+
+    public static CBIOService newService(String coURL, String user, String password) {
+        return newService(coURL, user, password, 0, true);
     }
     
-    public static void stopService() {
-        if (mCBIOService != null) {
-            mCBIOService.stop();
-        }
-        mCBIOService = null;
-    }
-    
-    public static boolean isStarted() {
-        return (mCBIOService != null);
-    }
-    
-    public static ConnectionState getServiceState() {
-        if (mCBIOService != null) 
-            return mCBIOService.mConnectionState;
-        else
-            return ConnectionState.NA;
+    public ConnectionState getConnectionState() {
+        return (mConnectionState != null)?mConnectionState:ConnectionState.NA;
     }
     
     protected ErpserverPortType getCoPort() throws Exception {
@@ -498,6 +521,7 @@ public class CBIOService {
                 mExecutor.shutdownNow();
             }       
         }
+        setConnectionState(ConnectionState.NA);
         mExecutor = null;
     }
     

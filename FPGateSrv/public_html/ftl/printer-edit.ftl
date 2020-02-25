@@ -104,7 +104,7 @@ Freemaker template, http://freemarker.org/
 <#if Prop.RuleListDefined == '1'>
                             <select name="Property[${Prop.ID}]" id="prop_${Prop.ID}">
 <#list Prop.RuleList?keys as lkey>
-<#if lkey == Prop.Value>selected="selected"<#assign selected='selected="selected"'><#else><#assign selected=''></#if>
+<#if lkey == Prop.Value><#assign selected='selected="selected"'><#else><#assign selected=''></#if>
                                 <option value="${lkey}" ${selected}>${Prop.RuleList[lkey]}</option>
 </#list>
                             </select>

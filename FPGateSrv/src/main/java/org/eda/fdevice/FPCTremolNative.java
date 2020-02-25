@@ -27,8 +27,8 @@ import org.eda.protocol.FDException;
 import java.text.SimpleDateFormat;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
-import org.eda.protocol.DeviceEltradeV1;
 import org.eda.protocol.DeviceTremolV1;
+import org.eda.protocol.DeviceTremolV1.CustomerDataType;
 
 /**
  *
@@ -36,11 +36,11 @@ import org.eda.protocol.DeviceTremolV1;
  */
 @FiscalDevice(
     description = "Tremol fiscal devices native protocol"
-    , usable = false
+    , usable = true
 )
 public class FPCTremolNative extends FPCBase {
 
-    protected AbstractFiscalDevice FP;
+    protected DeviceTremolV1 FP;
     protected String lastCommand;
     protected int lastErrorCode;
     protected String lastErrorMsg;
@@ -119,49 +119,175 @@ public class FPCTremolNative extends FPCBase {
                      addProperty(new FPProperty(Integer.class, "PortWriteTimeout", "Port Write timeout (ms)", "Port Write timeout (ms)", 500));
                      
                      addProperty(new FPProperty(String.class, "OperatorCode", "Operator Code", "Operator Code", "1"));
-                     addProperty(new FPProperty(String.class, "OperatorPass", "Operator Password", "Operator Password", "0000"));
+                     addProperty(new FPProperty(String.class, "OperatorPass", "Operator Password", "Operator Password", "1"));
                      addProperty(new FPProperty(String.class, "TillNumber", "Till Number", "Till Number", "1"));
-//                     addProperty(new FPProperty(String.class, "PMCash", "Payment code for cash", "Payment code for cash", "P"));
-//                     addProperty(new FPProperty(String.class, "PMCard", "Payment code for debit/credit card", "Payment code for debit/credit card", "C"));
-                     addProperty(new FPProperty(Integer.class, "LWIDTH", "Line width Fiscal", "Line width for fiscal text in characters", 46));
-                     addProperty(new FPProperty(Integer.class, "LWIDTHN", "Line width Nonfiscal", "Line width for nonfiscal text in characters", 46));
+                     addProperty(new FPProperty(Integer.class, "PMCash", "Payment number for cash", "Payment number for cash", 0));
+                     addProperty(new FPProperty(Integer.class, "PMCard", "Payment number for debit/credit card", "Payment number for debit/credit card", 7));
+                     addProperty(new FPProperty(Integer.class, "LWIDTH", "Line width", "Line width in characters", 30));
+                     addProperty(new FPProperty(
+                        String.class
+                        , "Printing", "Postphoned or step by step", "Postphoned or step by step"
+                        , "SBS"
+                        , new FPPropertyRule<>(
+                                null, null, true
+                                , new LinkedHashMap() {{
+                                    put("SBS", "Step By Step");
+                                    put("PSP", "Postphoned");
+                                    put("BUF", "Buffered");
+                                }}
+                        )
+                     ));
+                     addProperty(new FPProperty(
+                        String.class
+                        , "ReceiptFormat", "Receipt format", "Receipt format"
+                        , "BRIEF"
+                        , new FPPropertyRule<>(
+                                null, null, true
+                                , new LinkedHashMap() {{
+                                    put("BRIEF", "Brief");
+                                    put("DETAIL", "Detailed");
+                                }}
+                        )
+                     ));
+                     addProperty(new FPProperty(
+                        String.class
+                        , "ReceiptVAT", "Print VAT in receipts", "Print VAT in receipts"
+                        , "YES"
+                        , new FPPropertyRule<>(
+                                null, null, true
+                                , new LinkedHashMap() {{
+                                    put("YES", "Yes");
+                                    put("NO", "No");
+                                }}
+                        )
+                     ));
                 }}
 
+        );
+        LinkedHashMap<String, String> payCodeMapList = new LinkedHashMap() {{
+            put("0", "0 - В БРОЙ");
+            put("1", "1 - Плащане 1");
+            put("2", "2 - Плащане 2");
+            put("3", "3 - Плащане 3");
+            put("4", "4 - Плащане 4");
+            put("5", "5 - Плащане 5");
+            put("6", "6 - Плащане 6");
+            put("7", "7 - Плащане 7");
+            put("8", "8 - Плащане 8");
+            put("9", "9 - Плащане 9");
+            put("10", "10 - Плащане 10");
+        }};
+        params.addGroups(
+            new FPPropertyGroup("Начини на плащане", "Начини на плащане по спецификация на НАП") {{
+                 addProperty(new FPProperty( // 0
+                    String.class
+                    , "NRASCASH", "0 НАП SCash", "НАП Спецификация SCash - В БРОЙ"
+                    , "0"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 1
+                    String.class
+                    , "NRASCHECKS", "1 НАП SChecks", "НАП Спецификация SChecks - С чек"
+                    , "1"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 2
+                    String.class
+                    , "NRAST", "2 НАП SТ", "НАП Спецификация SТ - Талони"
+                    , "2"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 3
+                    String.class
+                    , "NRASOT", "3 НАП SOТ", "НАП Спецификация SOТ - Сума по външни талони"
+                    , "3"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+
+                 addProperty(new FPProperty( // 4
+                    String.class
+                    , "NRASP", "4 НАП SP", "НАП Спецификация SP - Сума по амбалаж"
+                    , "4"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 5
+                    String.class
+                    , "NRASSELF", "5 НАП SSelf", "НАП Спецификация SSelf - Сума по вътрешно обслужване"
+                    , "5"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 6
+                    String.class
+                    , "NRASDMG", "6 НАП SDmg", "НАП Спецификация SDmg - Сума по повреди"
+                    , "6"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 7
+                    String.class
+                    , "NRASCARDS", "7 НАП SCards", "НАП Спецификация SCards - Сума по кредитни/дебитни карти"
+                    , "7"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 8
+                    String.class
+                    , "NRASW", "8 НАП SW", "НАП Спецификация SW - Сума по банкови трансфери"
+                    , "8"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 9
+                    String.class
+                    , "NRASR1", "9 НАП SR1", "НАП Спецификация SR1 - Плащане НЗОК"
+                    , "9"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+                 addProperty(new FPProperty( // 10
+                    String.class
+                    , "NRASR2", "10 НАП SR2", "НАП Спецификация SR2 - Резерв"
+                    , "10"
+                    , new FPPropertyRule<>(null, null, true, payCodeMapList)
+                 ));
+            }}
         );
         return params;
     }
 
     @Override
     protected int getLineWidth() {
-        int lw = getParamInt("LWIDTH");
-        if (lw == 0) 
-            lw = 30;
+        int lw = FP.getLineWidthFiscalText();
+        if (lw == 0)
+            lw = getParamInt("LWIDTH");
+        if (lw == 0)
+            lw = 32;
        return lw; 
     }
 
-    protected int getLineWidthFiscalText() {
-        int lw = FP.getLineWidthFiscalText();
-        if (lw <= 0)
-            lw = getParamInt("LWIDTH");
-        if (lw <= 0) 
-            lw = 30;
-        return lw;
-    }
-
-    protected int getLineWidthNonFiscalText() {
-        int lw = FP.getLineWidthNonFiscalText();
-        if (lw <= 0)
-            lw = getParamInt("LWIDTHN");
-        if (lw <= 0) 
-            lw = 30;
-        return lw;
-    }
-    
     @Override
     public void init() throws Exception, FPException {
         lastCommand = "Init";
         this.FP = new DeviceTremolV1(getParam("COM"), getParamInt("BaudRate"), getParamInt("PortReadTimeout"), getParamInt("PortWriteTimeout"));
         this.FP.open();
+        this.FP.setOpCode(getParam("OperatorCode"));
+        this.FP.setOpPasswd(getParam("OperatorPass"));
+        // Print Mode
+        String printModeAbbr = getParam("Printing");
+        DeviceTremolV1.ReceiptPrintModeType printMode = DeviceTremolV1.ReceiptPrintModeType.STEP_BY_STEP;
+        switch(printModeAbbr) {
+            case "PSP" : printMode = DeviceTremolV1.ReceiptPrintModeType.POSTPHONED; break;
+            case "BUF" : printMode = DeviceTremolV1.ReceiptPrintModeType.BUFFERED; break;
+            case "SBS" : printMode = DeviceTremolV1.ReceiptPrintModeType.STEP_BY_STEP; break;
+        }
+        this.FP.setReceiptPrintMode(printMode);
+        // Receipt format
+        DeviceTremolV1.ReceiptPrintFormatType receiptFormat = DeviceTremolV1.ReceiptPrintFormatType.DETAILED;
+        String receiptFormatAbbr = getParam("ReceiptFormat");
+        if (receiptFormatAbbr.equals("BRIEF"))
+            receiptFormat = DeviceTremolV1.ReceiptPrintFormatType.BRIEF;
+        else
+            receiptFormat = DeviceTremolV1.ReceiptPrintFormatType.DETAILED;
+        this.FP.setReceiptPrintFormat(receiptFormat);
+        // Print VAT
+        FP.setReceiptPrintVAT(getParam("ReceiptVAT").equals("YES"));
+        
     }
     
     @Override
@@ -175,6 +301,13 @@ public class FPCTremolNative extends FPCBase {
         FP = null;
     }
 
+    @Override
+    public void readStatus() {
+        if (FP != null)
+            FP.getStatusBytes();
+    }
+
+    
     @Override
     public DeviceInfo getDeviceInfo() throws FPException {
         DeviceInfo di = new DeviceInfo();
@@ -229,64 +362,90 @@ public class FPCTremolNative extends FPCBase {
     
     protected String paymenTypeChar(paymentTypes payType) {
         /*		
-        ‘P’ - Плащане в брой (по подразбиране);
-        ‘N’ – „С чек",;
-        ‘C’ – Сима по Талони "Талони",
-        ‘D’ - Сума по външни талони "външни талони"
-        ‘I’ - Сума по амбалаж "амбалаж",
-        ‘J’ - Сума по вътрешно обслужване "вътрешно обслужване",
-        ‘K’ - Сума по повреди "повреди",
-        ‘L’ - Сума по кредитни/дебитни карти "кредитни/дебитни карти",
-        ‘M’ - Сума по банкови трансфери "банкови трансфери"
-        ‘Q’ - Плащане НЗОК "НЗОК",
-        ‘R’ - Резерв 2 "Резерв 2"
+        '0' – Payment 0
+        '1' – Payment 1
+        '2' – Payment 2
+        '3' – Payment 3
+        Следващите са за новите устройства
+        '4' – Payment 4
+        '5' – Payment 5
+        '6' – Payment 6
+        '7' – Payment 7
+        '8' – Payment 8
+        '9' – Payment 9
+        '10' – Payment 10
+        '11' – Payment 11
         */        
-        String pc = "P";
+        String pc = "0";
         switch (payType) {
-            case CASH : pc = "P"; break;
-            case CREDIT : pc = ""; break;
-            case CARD : pc = "L"; break;
-            case CHECK : pc = "N"; break;
-            case CUSTOM1 : pc = "R"; break;
-            case CUSTOM2 : pc = ""; break;
+            case CASH : pc = params.get("PMCache", "0"); break;
+            case CREDIT : pc = "3"; break;
+            case CARD : pc = params.get("PMCard", "7"); break;
+            case CHECK : pc = "1"; break;
+            case CUSTOM1 : pc = "2"; break;
+            case CUSTOM2 : pc = "3"; break;
+
+            case NRASCASH :  pc = params.get("NRASCASH", "0"); break;
+            case NRASCHECKS :  pc = params.get("NRASCHECKS", "1"); break;
+            case NRAST :  pc = params.get("NRAST", "2"); break;
+            case NRASOT :  pc = params.get("NRASOT", "3"); break;
+            case NRASP :  pc = params.get("NRASP", "4"); break;
+            case NRASSELF :  pc = params.get("NRASSELF", "5"); break;
+            case NRASDMG :  pc = params.get("NRASDMG", "6"); break;
+            case NRASCARDS :  pc = params.get("NRASCARDS", "7"); break;
+            case NRASW :  pc = params.get("NRASW", "8"); break;
+            case NRASR1 :  pc = params.get("NRASR1", "9"); break;
+            case NRASR2 :  pc = params.get("NRASR2", "10"); break;
         }
         return pc;
     }
 
     protected String revTypeChar(fiscalCheckRevType revType) {
+        /*
+        StornoReason
+        1 symbol for reason of storno operation with value:
+        - '0' – Operator error
+        - '1' – Goods Claim or Goods return
+        - '2' – Tax relief
+        */
         String rt = "0";
         switch (revType) {
             case OP_ERROR :
-                rt = "O";
+                rt = "0";
                 break;
             case RETURN_CLAIM :
-                rt = "R";
+                rt = "1";
                 break;
             case REDUCTION :
-                rt = "T";
+                rt = "2";
                 break;
         }
         return rt;
     }
     
     protected String[] dailyReportTypeToOptions(dailyReportType drType) {
-        String[] options = new String[]{"2",""};
+        /*
+        * 'Z' for Z-report, 'X' for X-report
+        * '' default, 'D' - by departments
+        
+        */
+        String[] options = new String[]{"X",""};
         
         switch (drType) {
             case Z :
-               options[0] = "0";
+               options[0] = "Z";
                options[1] = "";
                break;
             case ZD :
-               options[0] = "0";
+               options[0] = "Z";
                options[1] = "D";
                break;
             case X :
-               options[0] = "2";
+               options[0] = "X";
                options[1] = "";
                break;
             case XD :
-               options[0] = "2";
+               options[0] = "X";
                options[1] = "D";
                break;
         }
@@ -445,9 +604,31 @@ public class FPCTremolNative extends FPCBase {
     }
 
     @Override
+    public void setInvoiceFiscalCheckOn(CustomerInfo custInfo) throws FPException {
+        super.setInvoiceFiscalCheckOn(custInfo); 
+        
+        DeviceTremolV1.CustomerDataType customerData = new CustomerDataType();
+        customerData.UIC = custInfo.UIC;
+        switch (custInfo.UICType) {
+            case EGN : customerData.UICType = DeviceTremolV1.UICTypeType.EGN; break;
+            case FOREIGN : customerData.UICType = DeviceTremolV1.UICTypeType.FOREIGN; break;
+            case NRA : customerData.UICType = DeviceTremolV1.UICTypeType.NRA; break;
+            case BULSTAT : 
+                customerData.UICType = DeviceTremolV1.UICTypeType.BULSTAT;
+                break;
+        }
+        customerData.VATNumber = custInfo.VATNumber;
+        customerData.address = custInfo.address;
+        customerData.buyer = custInfo.buyer;
+        customerData.recipient = custInfo.recipient;
+        customerData.seller = custInfo.seller;
+        FP.setCustomerData(customerData);
+    }
+
+    
+    @Override
     public void openFiscalCheck(String UNS) throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        
         lastCommand = "openFiscalCheckUNS";
         try {
             response = FP.cmdOpenFiscalCheck(params.get("OperatorCode", "1"), params.get("OperatorPass", "1"), params.get("TillNumber", "1"), UNS,  invoiceMode);
@@ -486,21 +667,6 @@ public class FPCTremolNative extends FPCBase {
     @Override
     public void closeFiscalCheck() throws FPException{
         lastCommand = "closeFiscalCheck";
-        if (invoiceMode) {
-            int uicType = 0; // Bulstat
-            if (customer.UICType.equals(FPCBase.UICTypes.EGN))
-                uicType = 1;
-            else if (customer.UICType.equals(FPCBase.UICTypes.FOREIGN))
-                uicType = 2;
-            else if (customer.UICType.equals(FPCBase.UICTypes.NRA))
-                uicType = 3;
-            try {
-               FP.cmdPrintCustomerData(customer.UIC, uicType, customer.seller, customer.recipient, customer.buyer, customer.VATNumber, customer.address);
-            } catch (IOException ex) {
-                throw createException(ex);
-            }
-        }
-        
         try {
             FP.cmdCloseFiscalCheck();
         } catch (IOException ex) {
@@ -510,7 +676,7 @@ public class FPCTremolNative extends FPCBase {
     
     @Override
     public void sell(String text, taxGroup taxCode, double price, double quantity, double discountPerc)  throws FPException {
-        String[] lines = splitOnLines(text, getLineWidthFiscalText());
+        String[] lines = splitOnLines(text, getLineWidth());
         lastCommand = "sell";
         
         try {
@@ -532,7 +698,7 @@ public class FPCTremolNative extends FPCBase {
 
     @Override
     public void sellDept(String text, String deptCode, double price, double quantity, double discountPerc)  throws FPException{
-        String[] lines = splitOnLines(text, getLineWidthFiscalText());
+        String[] lines = splitOnLines(text, getLineWidth());
 
         lastCommand = "sellDept";
         
@@ -551,7 +717,7 @@ public class FPCTremolNative extends FPCBase {
     @Override
     public void printFiscalText(String text) throws FPException {
         lastCommand = "printFiscalText";
-        String[] lines = splitOnLines(text, getLineWidthFiscalText());
+        String[] lines = splitOnLines(text, getLineWidth());
         
         for (String line : lines) {
             try {
@@ -565,7 +731,7 @@ public class FPCTremolNative extends FPCBase {
     @Override
     public void printNonFiscalText(String text) throws FPException {
         lastCommand = "printNonFiscalText";
-        String[] lines = splitOnLines(text, getLineWidthNonFiscalText());
+        String[] lines = splitOnLines(text, getLineWidth());
         
         for (String line : lines) {
             try {
@@ -596,7 +762,7 @@ public class FPCTremolNative extends FPCBase {
     @Override
     public StrTable total(String text, paymentTypes payType, double payAmount) throws FPException {
         LinkedHashMap<String, String> response = new LinkedHashMap();
-        String[] lines = splitOnLines(text, getLineWidthFiscalText());
+        String[] lines = splitOnLines(text, getLineWidth());
         
         lastCommand = "total";
         
@@ -635,18 +801,19 @@ public class FPCTremolNative extends FPCBase {
             res.IsOpen = response.get("IsOpen").equals("1");
             res.FCType = fiscalCheckType.UNKNOWN;
             res.IsInvoice = false;
-            if (res.IsOpen) {
-                if (FP.isOpenFiscalCheck())
-                    res.FCType = fiscalCheckType.FISCAL;
-                if (FP.isOpenFiscalCheckRev())
-                    res.FCType = fiscalCheckType.FISCAL_REV;
-                if (FP.isOpenNonFiscalCheck())
-                    res.FCType = fiscalCheckType.NON_FISCAL;
-                res.IsInvoice = response.get("Inv").equals("1");
-            }    
+            String resFBType = response.containsKey("Type")?response.get("Type"):"";
+            
+            if (resFBType.equals("FISCAL")) {
+                res.FCType = fiscalCheckType.FISCAL;
+            } else if (resFBType.equals("FISCAL_REV")) {
+                res.FCType = fiscalCheckType.FISCAL_REV;
+            } else if (FP.isOpenNonFiscalCheck()) {
+                res.FCType = fiscalCheckType.NON_FISCAL;
+            }        
+            res.IsInvoice = response.get("Inv").equals("1");
             if (res.IsInvoice)
                 res.InvNum = response.get("InvNum");
-            res.SellCount = parseInt(response.get("SellCount"));
+            res.SellCount = parseDouble(response.get("SellCount"));
             res.SellAmount = parseDouble(response.get("SellAmount"));
             res.PayAmount = parseDouble(response.get("PayAmount"));
             try {
@@ -692,10 +859,10 @@ public class FPCTremolNative extends FPCBase {
             }    
             if (ci != null) {
                 Date lastDocDate = null;
-                try {
-                    lastDocDate = FP.cmdLastFiscalCheckDate();
-                } catch (IOException ex) {
-                }
+//                try {
+//                    lastDocDate = FP.cmdLastFiscalCheckDate();
+//                } catch (IOException ex) {
+//                }
                 QRInfo = new FiscalCheckQRCodeInfo(FP.getFMNum(), ci.DocNum, (lastDocDate != null)?lastDocDate:dtAfterOpenFiscalCheck, ci.SellAmount);
             }    
             
@@ -730,14 +897,16 @@ public class FPCTremolNative extends FPCBase {
                 LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
             }
 //            res.DocDate = DateUtils.parse(response.get("DocDate"), Arrays.asList("yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd"));
-            res.TaxA = parseDouble(response.get("TaxA"));
-            res.TaxB = parseDouble(response.get("TaxB"));
-            res.TaxC = parseDouble(response.get("TaxC"));
-            res.TaxD = parseDouble(response.get("TaxD"));
-            res.TaxE = parseDouble(response.get("TaxE"));
-            res.TaxF = parseDouble(response.get("TaxF"));
-            res.TaxG = parseDouble(response.get("TaxG"));
-            res.TaxH = parseDouble(response.get("TaxH"));
+            if (response.containsKey("TaxA")) {
+                res.TaxA = parseDouble(response.get("TaxA"));
+                res.TaxB = parseDouble(response.get("TaxB"));
+                res.TaxC = parseDouble(response.get("TaxC"));
+                res.TaxD = parseDouble(response.get("TaxD"));
+                res.TaxE = parseDouble(response.get("TaxE"));
+                res.TaxF = parseDouble(response.get("TaxF"));
+                res.TaxG = parseDouble(response.get("TaxG"));
+                res.TaxH = parseDouble(response.get("TaxH"));
+            }    
             if (response.containsKey("RevTaxA")) {
                 res.RevTaxA = parseDouble(response.get("RevTaxA"));
                 res.RevTaxB = parseDouble(response.get("RevTaxB"));
@@ -977,7 +1146,43 @@ public class FPCTremolNative extends FPCBase {
         return res;
     }
 
-    
-    
-    
+    @Override
+    public StrTable readPaymentMethods() throws FPException{
+        StrTable res = new StrTable();
+        lastCommand = "readPaymentMethods";
+        try {
+            LinkedHashMap<String,String> res_ = FP.cmdReadPaymentMethods();
+            res.putAll(res_);
+        } catch (IOException ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
+
+    @Override
+    public StrTable readDepartments() throws FPException{
+        StrTable res = new StrTable();
+        lastCommand = "readDepartments";
+        try {
+            LinkedHashMap<String,String> res_ = FP.cmdReadDepartments();
+            res.putAll(res_);
+        } catch (IOException ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
+
+    @Override
+    public StrTable readTaxGroups() throws FPException {
+        StrTable res = new StrTable();
+        lastCommand = "readTaxGroups";
+        try {
+            LinkedHashMap<String,String> res_ = FP.cmdReadTaxGroups();
+            res.putAll(res_);
+        } catch (IOException ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
+
 }

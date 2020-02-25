@@ -11,7 +11,7 @@
 
     <job name="Start FPGate Server" condition="start-after-install" >
         <os family = "linux" />
-        <executefile name="$INSTALL_PATH/bin/FPGateSrv.jar" workingDir="$INSTALL_PATH/bin/" />
+        <executefile name="$INSTALL_PATH/bin/FPGateSrv.sh" workingDir="$INSTALL_PATH/bin/" />
     </job>
 
 </izpack:processing>    

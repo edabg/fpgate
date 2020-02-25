@@ -125,6 +125,10 @@ public class FPPrinterPool {
             }
         }
     }
+
+    public static synchronized int getPoolSize() {
+        return FPPool.keySet().size();
+    }
     
     protected static synchronized void cleanPool() {
         LOGGER.info("Autoclean printer pool started. Size="+Integer.toString(FPPool.keySet().size()));

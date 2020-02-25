@@ -2,7 +2,7 @@
     <div class="container">  
         <ul class="collapsible" data-collapsible="accordion">
 <#list errors as err>                    
-<#escape err as msg?html>                        
+<#escape err as err?html>                        
             <li>
                 <div class="collapsible-header red white-text active"><i class="material-icons">error</i>Error!</div>
                 <div class="collapsible-body"><p>${err}</p></div>

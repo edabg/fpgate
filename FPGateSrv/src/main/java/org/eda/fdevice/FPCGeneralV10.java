@@ -643,7 +643,7 @@ public class FPCGeneralV10 extends FPCBase {
             }    
             if (res.IsInvoice)
                 res.InvNum = response.get("InvNum");
-            res.SellCount = parseInt(response.get("SellCount"));
+            res.SellCount = parseDouble(response.get("SellCount"));
             res.SellAmount = parseDouble(response.get("SellAmount"));
             res.PayAmount = parseDouble(response.get("PayAmount"));
             try {
@@ -987,6 +987,31 @@ public class FPCGeneralV10 extends FPCBase {
         return res;
     }
     
+    @Override
+    public StrTable readDepartments() throws FPException{
+        StrTable res = new StrTable();
+        lastCommand = "readDepartments";
+        try {
+            LinkedHashMap<String,String> res_ = FP.cmdReadDepartments();
+            res.putAll(res_);
+        } catch (IOException ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
+
+    @Override
+    public StrTable readTaxGroups() throws FPException {
+        StrTable res = new StrTable();
+        lastCommand = "readTaxGroups";
+        try {
+            LinkedHashMap<String,String> res_ = FP.cmdReadTaxGroups();
+            res.putAll(res_);
+        } catch (IOException ex) {
+            throw createException(ex);
+        }
+        return res;
+    }
     
     
 }

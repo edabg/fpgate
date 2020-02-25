@@ -18,6 +18,5 @@ Any value defined here will override the pom.xml file value but is only applicab
 -->
         <netbeans.hint.license>gpl30</netbeans.hint.license>
         <org-netbeans-modules-javascript2-requirejs.enabled>true</org-netbeans-modules-javascript2-requirejs.enabled>
-        <org-netbeans-modules-maven-jaxws._5f_C_5f_colibrierp-fpg>file:/W:/www%20-%20CO.edabg.com/Apps/fp3530/FPGateSrv/FPGateSrv/lib/coerp/colibrierp-fpg.wsdl</org-netbeans-modules-maven-jaxws._5f_C_5f_colibrierp-fpg>
     </properties>
 </project-shared-configuration>

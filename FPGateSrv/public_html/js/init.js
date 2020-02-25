@@ -133,6 +133,8 @@ function cmdSelect(el) {
         , "GetDocInfo": 
                 "#DocNum=0000001\n"
         , "ReadPaymentMethods": ""
+        , "ReadDepartments": ""
+        , "ReadTaxGroups": ""
         , "GetVersion": ""
         , "Test": ""
     }

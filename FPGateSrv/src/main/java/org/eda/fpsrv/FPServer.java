@@ -17,6 +17,7 @@
 package org.eda.fpsrv;
 
 import TremolZFP.FPcore;
+import java.awt.GraphicsEnvironment;
 import org.eda.fdevice.FUser;
 import org.eda.fdevice.FPDatabase;
 import org.eda.fdevice.FPCBase;
@@ -33,6 +34,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
@@ -41,6 +43,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import static java.util.concurrent.CompletableFuture.runAsync;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.FileHandler;
@@ -50,6 +55,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import javax.swing.JOptionPane;
+import org.eclipse.jetty.util.Uptime;
 import org.eda.cb.CBIOService;
 import org.eda.fdevice.FPPrinterPool;
 import org.eda.protocol.AbstractFiscalDevice;
@@ -94,6 +100,15 @@ public class FPServer extends Application {
     public static Server httpsServer;
     public ChallengeAuthenticator adminGuard;
     public ChallengeAuthenticator userGuard;
+    public long serverStartedAt;
+    
+    protected static final int CBIO_SERVICE_COUNT = 4;
+
+    public static int getCBIO_SERVICE_COUNT() {
+        return CBIO_SERVICE_COUNT;
+    }
+    
+    protected static CBIOService[] CBIOServiceList = new CBIOService[CBIO_SERVICE_COUNT];
     
     private String version;
     
@@ -123,6 +138,7 @@ public class FPServer extends Application {
         return VersionInformation;
     }
     
+    private Properties defaultProperties;
     private Properties appProperties;
 
     /**
@@ -253,13 +269,15 @@ public class FPServer extends Application {
             E.printStackTrace();
         }
         
-        Properties defaultProperties = new Properties();
+        defaultProperties = new Properties();
+        defaultProperties.setProperty("ServerAddr", "");
         defaultProperties.setProperty("ServerPort", "8182");
         defaultProperties.setProperty("ServerPortSSL", "8183");
         defaultProperties.setProperty("AdminUser", "fpgadmin");
         defaultProperties.setProperty("AdminPass", DigestUtils.toMd5("Pr1nt"));
         defaultProperties.setProperty("DisableAnonymous", "0");
         defaultProperties.setProperty("UseSSL", "1");
+        defaultProperties.setProperty("UseHTTP", "1");
         defaultProperties.setProperty("StartMinimized", "0");
         defaultProperties.setProperty("CheckVersionAtStartup", "1");
         defaultProperties.setProperty("SSLKeyFile", "ssl/fpgate.jks");
@@ -277,6 +295,21 @@ public class FPServer extends Application {
         defaultProperties.setProperty("CoURL", "");
         defaultProperties.setProperty("CoUser", "");
         defaultProperties.setProperty("CoPass", "");
+
+        // Colibri ERP Link 2
+        defaultProperties.setProperty("CoURL_1", "");
+        defaultProperties.setProperty("CoUser_1", "");
+        defaultProperties.setProperty("CoPass_1", "");
+
+        // Colibri ERP Link 3
+        defaultProperties.setProperty("CoURL_2", "");
+        defaultProperties.setProperty("CoUser_2", "");
+        defaultProperties.setProperty("CoPass_2", "");
+
+        // Colibri ERP Link 4
+        defaultProperties.setProperty("CoURL_3", "");
+        defaultProperties.setProperty("CoUser_3", "");
+        defaultProperties.setProperty("CoPass_3", "");
         
         defaultProperties.setProperty("LLProtocol", Level.WARNING.getName()); // 
         defaultProperties.setProperty("LLDevice", Level.WARNING.getName()); // 
@@ -316,12 +349,33 @@ public class FPServer extends Application {
 //        System.out.println("Server Port:"+this.appProperties.getProperty("ServerPort"));
     }
     
+    public void resetProperties(boolean store) {
+        appProperties = new Properties(defaultProperties);
+        updateProperties(store);
+        // Start/Stop CBIOService
+        startCBIOService();
+        if (appProperties.getProperty("ZFPLabServerAutoStart", "0").equals("1"))
+            try {
+                ZFPLabServer.start();
+            } catch (Exception ex) {
+                Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        else
+            ZFPLabServer.stop();
+    }
+    
     public void updateProperties() {
+        updateProperties(true);
+    }
+
+    public void updateProperties(boolean store) {
         try {
 //            File jarPath=new File(FPServer.class.getProtectionDomain().getCodeSource().getLocation().getPath());
             String pfile = appBasePath+"/FPGateSrv.properties";
-            this.appProperties.store(new FileOutputStream(pfile), "EDA FPGate Properties");
-            userGuard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
+            if (store)
+                this.appProperties.store(new FileOutputStream(pfile), "EDA FPGate Properties");
+            if (userGuard != null)
+                userGuard.setOptional(getAppProperties().getProperty("DisableAnonymous", "1").equals("1")?false:true);
             adjustPrinterPool();
             adjustLogLevels();
         } catch (IOException E) {
@@ -411,6 +465,10 @@ public class FPServer extends Application {
         return appProperties.getProperty("UseSSL", "0").equals("1");
     }
 
+    protected boolean getUseHTTP() {
+        return appProperties.getProperty("UseHTTP", "1").equals("1");
+    }
+    
     /**
      * Run as a standalone component.
      * 
@@ -453,10 +511,13 @@ public class FPServer extends Application {
         // TODO: Move in constructor of FPServer
         application.initLogs();
         // Create a component
-        ControlPanel cp = new ControlPanel();
-        cp.setVisible(true);
-        if (application.appProperties.getProperty("StartMinimized", "0").equals("1"))
-            cp.setState(ControlPanel.ICONIFIED);
+        ControlPanel cp = null;
+        if (!GraphicsEnvironment.isHeadless()) {
+            cp = new ControlPanel();
+            cp.setVisible(true);
+            if (application.appProperties.getProperty("StartMinimized", "0").equals("1"))
+                cp.setState(ControlPanel.ICONIFIED);
+        }    
 //        mainComponent.start();
         Logger logger = application.getLogger();
         logger.info("Default Locale:   " + Locale.getDefault());
@@ -465,7 +526,8 @@ public class FPServer extends Application {
         logger.info("sun.jnu.encoding: " + System.getProperty("sun.jnu.encoding"));
 
         application.startServer();
-        cp.notifyChange();
+        if (cp != null)
+            cp.notifyChange();
         // 
         if (application.appProperties.getProperty("CheckVersionAtStartup", "0").equals("1"))
             application.checkAppVersion(false);
@@ -475,17 +537,97 @@ public class FPServer extends Application {
             application.startCBIOService();
     }
 
-    public void startCBIOService() {
-        String CoURL = application.appProperties.getProperty("CoURL", "");
-        String user = application.appProperties.getProperty("CoUser", "");
-        // TODO: Decrypt password
-        String password = application.appProperties.getProperty("CoPass", "");
-        password = new String(Base64.getDecoder().decode(password));
-        CBIOService.startService(CoURL, user, password);
+    public interface OnCBIOServiceStateChangeListener {
+        void onStateChange(int svcNum, CBIOService.ConnectionState state);
+    }
+    private final ArrayList<OnCBIOServiceStateChangeListener> mOnCBIOServiceStateChangeListeners = new ArrayList<>();
+
+    public OnCBIOServiceStateChangeListener addOnStateChangeListener(OnCBIOServiceStateChangeListener listener) {
+        if (!mOnCBIOServiceStateChangeListeners.contains(listener)) {
+            mOnCBIOServiceStateChangeListeners.add(listener);
+        }
+        return listener;
     }
     
+    public  void removeOnStateChangeListener(OnCBIOServiceStateChangeListener listener) {
+        if (mOnCBIOServiceStateChangeListeners.contains(listener)){
+            mOnCBIOServiceStateChangeListeners.remove(listener);
+        }
+    }
+    
+    protected void OnCBIOServiceStateChange(CBIOService service, CBIOService.ConnectionState state) {
+//        LOGGER.fine("OnState change notify");
+        List<CompletableFuture<?>> futures = new ArrayList<>();
+        for (OnCBIOServiceStateChangeListener listener: mOnCBIOServiceStateChangeListeners) {
+            futures.add(runAsync(() -> listener.onStateChange(service.getServiceNum(), state)));
+        }
+        CompletableFuture d = CompletableFuture.allOf(futures.toArray(new CompletableFuture[futures.size()]));
+//        d.thenRunAsync(() -> {
+//            LOGGER.fine("All listeners was notified.");
+//        });
+        
+    }
+    
+    public void startCBIOService(int svcNum) {
+        if ((svcNum < 0 ) || (svcNum >= CBIO_SERVICE_COUNT)) return;
+        
+        String suffix = (svcNum > 0)?"_"+Integer.toString(svcNum):"";
+        String CoURL = application.appProperties.getProperty("CoURL"+suffix, "");
+        String user = application.appProperties.getProperty("CoUser"+suffix, "");
+        // TODO: Decrypt password
+        String password = application.appProperties.getProperty("CoPass"+suffix, "");
+        password = new String(Base64.getDecoder().decode(password));
+        if (CBIOServiceList[svcNum] != null) {
+            CBIOServiceList[svcNum].stop();
+        }
+        CBIOServiceList[svcNum] = null;
+        if (!CoURL.isEmpty()) {
+            CBIOServiceList[svcNum] = CBIOService.newService(CoURL, user, password, svcNum, false);
+            CBIOServiceList[svcNum].addOnStateChangeListener(this::OnCBIOServiceStateChange);
+            CBIOServiceList[svcNum].start();
+        }    
+    }
+
+    public void stopCBIOService(int svcNum) {
+        if ((svcNum < 0 ) || (svcNum >= CBIO_SERVICE_COUNT)) return;
+        if (CBIOServiceList[svcNum] != null) {
+            CBIOServiceList[svcNum].stop();
+        }
+        CBIOServiceList[svcNum] = null;
+    }
+    
+    public void startCBIOService() {
+        for (int svcNum = 0; svcNum < CBIO_SERVICE_COUNT; svcNum++)
+            startCBIOService(svcNum);
+        
+    }
+
     public void stopCBIOService() {
-        CBIOService.stopService();
+        for (int svcNum = 0; svcNum < CBIO_SERVICE_COUNT; svcNum++)
+            stopCBIOService(svcNum);
+    }
+    
+    public boolean isCBIOServiceStarted() {
+        boolean isStarted = false;
+        for (int svcNum = 0; svcNum < CBIO_SERVICE_COUNT; svcNum++)
+            isStarted = isStarted || isCBIOServiceStarted(svcNum);
+        return isStarted;
+    }
+    
+    public boolean isCBIOServiceStarted(int svcNum) {
+        if ((svcNum < 0 ) || (svcNum >= CBIO_SERVICE_COUNT)) return false;
+        if (CBIOServiceList[svcNum] != null) {
+            return true;
+        } else
+            return false;
+    }
+    
+    public CBIOService.ConnectionState getCBIOServiceStatus(int svcNum) {
+        if ((svcNum < 0 ) || (svcNum >= CBIO_SERVICE_COUNT)) return CBIOService.ConnectionState.NA;
+        if (CBIOServiceList[svcNum] != null) {
+            return CBIOServiceList[svcNum].getConnectionState();
+        } else
+            return CBIOService.ConnectionState.NA;
     }
     
     public static class LogFormatter extends SimpleFormatter {
@@ -611,7 +753,7 @@ public class FPServer extends Application {
         loggerFPCBase.addHandler(h);
     }
   
-    public void addSSL() {
+    public void addHTTPS() {
         if (!appProperties.getProperty("UseSSL", "0").equals("1")) return;
         String keyFileName = appBasePath+"/"+appProperties.getProperty("SSLKeyFile", "ssl/fpgate.jks");
         File keyFile = new File(keyFileName);
@@ -632,35 +774,68 @@ public class FPServer extends Application {
             getLogger().log(Level.WARNING, "SSL Key file:"+keyFileName+" doesn' exist. SSL is turned off.");
     }
     
+    public void addHTTP() {
+        if (!appProperties.getProperty("UseHTTP", "1").equals("1")) return;
+//            httpServer = new Server(Protocol.HTTP, application.getServerPort());
+        String address = application.getServerAddress(); 
+        if (address.length() > 0)
+            httpServer = new Server(Protocol.HTTP, address, application.getServerPort());
+        else
+            httpServer = new Server(Protocol.HTTP, application.getServerPort());
+        mainComponent.getServers().add(httpServer);
+    }
+    
+    public void addRIAP() {
+        mainComponent.getServers().add(new Server(Protocol.RIAP));
+    }
+    
     public void startServer() {
         try {
-            if (mainComponent.isStarted()) stopServer();
-            
-//            httpServer = new Server(Protocol.HTTP, application.getServerPort());
-            String address = application.getServerAddress(); 
-            if (address.length() > 0)
-                httpServer = new Server(Protocol.HTTP, address, application.getServerPort());
-            else
-                httpServer = new Server(Protocol.HTTP, application.getServerPort());
-            mainComponent.getServers().add(httpServer);
+            stopServer();
+            serverStartedAt = System.currentTimeMillis();           
             // Enable RIAP
-            mainComponent.getServers().add(new Server(Protocol.RIAP));
-            // Check and add SSL
-            addSSL();
+            addRIAP();
+            // Enable HTTP
+            addHTTP();
+            // Enable HTTPS
+            addHTTPS();
             mainComponent.getClients().add(Protocol.FILE);
             mainComponent.start();
         } catch (Exception E) {
-            E.printStackTrace();
+            getLogger().severe("Сървърът не може да се стартира! Вероятна причина е зает вече порт. "+E.getMessage());
         }
+    }
+    
+    public long getServerUptimeMills() {
+        if (mainComponent.isStarted())
+            return System.currentTimeMillis() - serverStartedAt;
+        else 
+            return 0;
+    }
+    
+    public String getServerUptime() {
+        long upTime = getServerUptimeMills();
+        if (upTime > 0) {
+            return 
+                String.format("%02d:%02d:%02d", 
+                    TimeUnit.MILLISECONDS.toHours(upTime),
+                    TimeUnit.MILLISECONDS.toMinutes(upTime) -  
+                    TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(upTime)), // The change is in this line
+                    TimeUnit.MILLISECONDS.toSeconds(upTime) - 
+                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(upTime))
+                ); 
+        } else
+            return "";
     }
     
     public void stopServer() {
         try {
-            mainComponent.stop();
+            if (mainComponent.isStarted()) 
+                mainComponent.stop();
             mainComponent.getServers().clear();
             mainComponent.getClients().clear();
         } catch (Exception E) {
-            E.printStackTrace();
+            getLogger().severe("Грешка при спиране на сървъра. "+E.getMessage());
         }
     }
 

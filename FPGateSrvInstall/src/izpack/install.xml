@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <uninstaller write="yes" />
         <singleinstance>yes</singleinstance>
         <url>https://github.com/edabg/fpgate</url>
-        <run-privileged />
+        <run-privileged condition="izpack.windowsinstall|izpack.macinstall" />
         <authors>
             <author name="EDA Ltd." email="support@edabg.com"/>
         </authors>
@@ -79,6 +79,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
     </panels>
     <resources>
         <res id="Win_shortcutSpec.xml" src="@{izpack.staging}/Win_shortcutSpec.xml" />
+        <res id="Unix_shortcutSpec.xml" src="@{izpack.staging}/Unix_shortcutSpec.xml" />
         <res id="LicencePanel.licence" src="@{izpack.staging}/license.txt"/>
         <res id="ProcessPanel.Spec.xml" src="@{izpack.staging}/ProcessPanel.Spec.xml" />
         <res id="userInputSpec.xml" src="@{izpack.staging}/userInputSpec.xml" />        
@@ -119,10 +120,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         <pack name="fpgatesrv" required="yes">
             <description>FPGateSrv Installation</description>
             <singlefile src="@{project.fpgatesrv.target}/FPGateSrv-@{fpgatesrv.version}-WL.jar" target="$INSTALL_PATH/bin/FPGateSrv.jar" />
+            <executable targetfile="$INSTALL_PATH/bin/FPGateSrv.jar" type="bin" stage="never" failure ="ignore" keep="true" os="unix" />
             <singlefile src="@{izpack.staging}/FPGateSrv.cmd" target="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
+            <singlefile src="@{izpack.staging}/FPGateSrv.sh" target="$INSTALL_PATH/bin/FPGateSrv.sh" os="unix" />
             <parsable targetfile="$INSTALL_PATH/bin/FPGateSrv.cmd" os="windows" />
+            <parsable targetfile="$INSTALL_PATH/bin/FPGateSrv.sh" os="unix" />
+            <executable targetfile="$INSTALL_PATH/bin/FPGateSrv.sh" type="bin" stage="never" failure ="ignore" keep="true" os="unix" />
 <!--            <fileset dir="@{project.fpgatesrv.target}/classes" includes="*.dll"  targetdir="$INSTALL_PATH/bin" override="true" />-->
                 <fileset dir="@{project.fpgatesrv.target}/../lib/tremol" excludes="HttpServerSettings.xml" targetdir="$INSTALL_PATH/lib/tremol" override="true" />
+                <executable targetfile="$INSTALL_PATH/lib/tremol/zfplabserver" type="bin" stage="never" failure ="ignore" keep="true" />
+                <executable targetfile="$INSTALL_PATH/lib/tremol/zfplabserver_arm" type="bin" stage="never" failure ="ignore" keep="true" />
                 <singlefile src="@{project.fpgatesrv.target}/../lib/tremol/HttpServerSettings.xml" target="$INSTALL_PATH/lib/tremol/HttpServerSettings.xml" override="false" />
 <!--            <fileset dir="@{project.fpgatesrv.target}/../lib/" includes="*.dll"  targetdir="$INSTALL_PATH/lib" override="true" />-->
 <!--            <fileset dir="@{project.fpgatesrv.target}/../lib/x86/" includes="*.dll"  targetdir="$INSTALL_PATH/lib/x86" override="true" />-->

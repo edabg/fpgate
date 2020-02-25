@@ -19,12 +19,11 @@ package org.eda.protocol;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.bind.DatatypeConverter;
-import org.apache.tools.ant.taskdefs.Sleep;
 
 /**
  * 1. COMMUNICATION PROTOCOL
@@ -179,6 +178,9 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     protected static byte ZFP_OUTOFPAPER = (byte)0x07;	// No Paper
     protected static byte ZFP_PING2      = (byte)0x09; 
     
+    protected static int ZFP_TIMEOUT = 2000;
+    protected static int ZFP_PINGTIMEOUT = 200;
+    
     /*
     Error codes
     */
@@ -227,6 +229,8 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     protected static int MAX_SEND_DATASIZE = 220;
     protected static int MAX_RECEIVE_DATASIZE = 220;
 
+    protected static int MAX_RAW_READ_BUFSIZE = 8*1024*1024; // 8M
+
     /**
      * Start packed sequence number
      */
@@ -245,6 +249,8 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     
     protected byte[] mSB = new byte[7]; // STATUS Bytes
     protected byte[] mCMDSB = new byte[2]; // Last command ACK packet Status Bytes
+    
+    protected int lastCommand = 0;
 
     /**
      * ACK FD Status Byte Definition
@@ -288,19 +294,19 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     }
     
     protected void checkACKResult(byte sbFD, byte sbCMD) throws IOException {
-        StringBuilder sb = new StringBuilder();
+        List<String> sb = new ArrayList<String>();
         // check FD Status bytes
         for (byte bval : FD_CODE_ERROR.keySet()) {
             if ((bval == sbFD) && (FD_CODE_ERROR.get(bval).length() > 0))
-                sb.append("FD Error:"+FD_CODE_ERROR.get(bval));
+                sb.add("FD Error:"+FD_CODE_ERROR.get(bval));
         }
         // check CMD Status bytes
         for (byte bval : CMD_CODE_ERROR.keySet()) {
             if ((bval == sbCMD) && (CMD_CODE_ERROR.get(bval).length() > 0))
-                sb.append("CMD Error:"+CMD_CODE_ERROR.get(bval));
+                sb.add("CMD Error:"+CMD_CODE_ERROR.get(bval));
         }
-        if (sb.capacity() > 0)
-            throw new IOException(sb.toString());
+        if (sb.size() > 0)
+            throw new IOException("Cmd: "+Integer.toString(lastCommand)+" "+String.join(",", sb));
     }
     
     public ProtocolTremolV10(InputStream in, OutputStream out, EncodingType encoding) {
@@ -340,6 +346,14 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             return "";
     }
 
+    public String customCommandB(int command, byte[] paramData) throws IOException {
+        byte[] data = sendPacket(command, paramData, true);
+        if (data != null) {
+            return toUnicode(data, 0, data.length, mEncoding);
+        } else
+            return "";
+    }
+    
     /**
      * Sends one way command to device without response
      * @param command
@@ -353,6 +367,28 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             toAnsi(paramString, paramData, 0, mEncoding);
         }
         sendPacket(command, paramData, false);
+    }
+
+    public String rawRead(int byteCount, byte stopByte) throws IOException {
+        byte[] readBuf = new byte[MAX_RAW_READ_BUFSIZE];
+        LOGGER.finest("RAW READ Byte_Count="+Integer.toString(byteCount)+" Stop_Byte="+byteArrayToHex(new byte[] {stopByte}));
+        int offset = 0;
+        try {
+            int maxBytes = byteCount;
+            if (maxBytes < 1)
+                maxBytes = readBuf.length;
+            maxBytes = Math.min(maxBytes, readBuf.length);
+            do {
+                byte b = (byte)read();
+                if (b == stopByte) break;
+                readBuf[offset] = b;
+                offset++;
+            } while (offset < maxBytes);
+        } catch (Exception e) {
+            
+        }
+        LOGGER.finest("Bytes read="+Integer.toString(offset));
+        return toUnicode(readBuf, 0, offset, mEncoding);
     }
 
     @Override
@@ -376,8 +412,10 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         byte[] buf = new byte[2];
         buf[0]= ZFP_ANTIECHO;
         buf[1]= ZFP_PING; // 04
+        LOGGER.finest("PINGAE > "+byteArrayToHex(buf));
         write(buf, 0, 2);
         byte b = (byte)read();
+        LOGGER.finest("PONGGAE > "+byteArrayToHex(new byte[] {b}));
         if (b != buf[0])
             throw new IOException("PING_AE: Antiecho not received!");
         b = (byte)read();
@@ -387,8 +425,11 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     }
 
     protected boolean doPing() throws IOException { // simple ping to check if device is power on
+        clear();
+        LOGGER.finest("PING > "+byteArrayToHex(new byte[] {ZFP_PING}));
         write(ZFP_PING);
         byte b = (byte)read();
+        LOGGER.finest("PONG < "+byteArrayToHex(new byte[] {b}));
         if (b != ZFP_PING)
             throw new IOException("PING: Not received match pong!");
         return true; // FD is on
@@ -409,25 +450,35 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         // 60 - FD is already busy with another connection (LAN or WiFi connection only)
         // 70 - Wrong password (LAN or WiFi connection only)!
         byte b = 0;
+        int OLD_READ_TIMEOUT = READ_TIMEOUT;
+        READ_TIMEOUT = 500; // ms
         do {
-            write(ZFP_PING2);
-            b = (byte)read();
+            try {
+                clear();
+                LOGGER.finest("PING > "+byteArrayToHex(new byte[] {ZFP_PING2}));
+                write(ZFP_PING2);
+                b = (byte)read();
+            } catch (Exception ex) {
+                LOGGER.finest("Pong read timeout reached!");
+                b = (byte)0x41; // Fake busy
+            }
+            LOGGER.finest("PONG < "+byteArrayToHex(new byte[] {b}));
             if (b == (byte)0x40)
                 return true; // FD is READY
+            if (b == (byte)0x41) {
+                try {
+                    // FD is busy only no other errors
+                    // wait and try again
+                    LOGGER.finest("Device is Busy Retry_Count="+Integer.toString(retryIfBusy));
+                    Thread.sleep(20);
+                } catch (InterruptedException ex) {
+                    LOGGER.log(Level.SEVERE, null, ex);
+                } 
+            } else
+                retryIfBusy = 0; // break;
             retryIfBusy--;
-            if (retryIfBusy >= 0) {
-                if (b == (byte)0x40) {
-                    try {
-                        // FD is busy only no other errors
-                        // wait and try again
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
-                    } 
-                    continue; // 
-                }    
-            }
-        } while (false);    
+        } while (retryIfBusy >= 0);    
+        READ_TIMEOUT = OLD_READ_TIMEOUT; // ms
         StringBuilder sb = new StringBuilder();
         if ((b & (byte)0x01) != 0)
             sb.append("Device is busy!"); // FD is busy
@@ -443,8 +494,9 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             sb.append("FD is already busy with another connection (LAN or WiFi connection only)!");   //
         if (b == (byte)0x70)
             sb.append("Wrong password (LAN or WiFi connection only)!");   //
-        if (sb.length() == 0)
-            sb.append("Unknown response from the device!");  
+        if (sb.length() == 0) {
+            sb.append("Unknown response from the device!");
+        }
         throw new IOException("PING2: "+sb.toString());
     }
     
@@ -456,6 +508,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         // First ACK byte was already read offset in buffer is 1
         // Read rest of ACK packet bytes
         read(readBuf, 1, ZFP_RECEIPTLEN-1);
+        LOGGER.finest("RCP < "+byteArrayToHex(readBuf, 0, ZFP_RECEIPTLEN));
         mCMDSB[0] = 0; mCMDSB[1] = 0;
 	if (ZFP_ETX != readBuf[ZFP_RECEIPTLEN - 1]) // missing ETX
             throw new IOException("Bad Receive data!");
@@ -482,6 +535,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         while ((offs < MAX_RECEIVE_PACKET_SIZE) && (readBuf[offs] != ZFP_ETX)) {
             read(readBuf, ++offs, 1);
         }
+        LOGGER.finest("RES < "+byteArrayToHex(readBuf, 0, offs));
         if (offs >= MAX_RECEIVE_PACKET_SIZE) 
             throw new IOException("Invalid response! Max receive packet size exceeded.");
         // Double ensurance
@@ -521,8 +575,9 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     
     protected byte[] sendPacket(int command, byte[] data, boolean getResponse) throws IOException {
         // {STX}{LEN}{NBL}{CMD}{DATA…DATA}{CS}{CS}{ETX}
+        lastCommand = command;
+        doPing2(100); // check and wait device to be ready!
         clear();
-        doPing2(3); // check and wait device to be ready!
         byte[] buf = new byte[MAX_SEND_PACKET_SIZE];
         int offs = 0;
         int len;
@@ -539,8 +594,9 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         buf[(offs++)] = ((byte) mSEQ);
 
         buf[(offs++)] = ((byte) command);
-
-        offs += len;
+        for (int i = 0; i < len; i++)
+            buf[(offs++)] = data[i];
+//        offs += len;
 
         // Calc CRC
         byte[] crc = calcCRC(buf, 1, offs);
@@ -553,6 +609,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         byte[] readBuf = new byte[MAX_RECEIVE_PACKET_SIZE];
         do {
             // Send packet
+            LOGGER.finest(" > "+byteArrayToHex(buf, 0, offs));
             write(buf, 0, offs);
             if (!getResponse) {
                 //Command will not expect response
@@ -572,6 +629,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             ); 
             // NACK Handling
             if ((readBuf[0] == ZFP_NACK) && (retryCount > 0)) {
+                LOGGER.finest(" NACK: "+byteArrayToHex(readBuf, 0, 1)+" retry count="+Integer.toString(retryCount));
                retryCount--;
                if (retryCount > 0) continue; // resend packet
             }
@@ -582,26 +640,31 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             // ACK handling
             if (readBuf[0] == ZFP_ACK) {
                 // Expecting ACK packet
+               LOGGER.finest(" ACK: "+byteArrayToHex(readBuf, 0, 1));
                 returnResult = getReceiptPacket(readBuf);
                 break;
             }
             // ZFP_RETRY Handling
             if (readBuf[0] == ZFP_RETRY) {
+               LOGGER.finest(" RETRY: "+byteArrayToHex(readBuf, 0, 1)+" retry count="+Integer.toString(retryCount));
                retryCount--;
                if (retryCount > 0) continue; // resend packet
                throw new IOException("Number of retries was reached!");
             }
             // ZFP_ANTIECHO handling
             if (readBuf[0] == ZFP_ANTIECHO) {
+               LOGGER.finest(" ANTIECHO: "+byteArrayToHex(readBuf, 0, 1)+" retry count="+Integer.toString(retryCount));
                throw new IOException("Ivalid device! ANTIECHO received.");
             }
             // Expecting data packet have to be ZFP_STX
             if (readBuf[0] == ZFP_STX) {
+               LOGGER.finest(" STX: "+byteArrayToHex(readBuf, 0, 1));
                returnResult = getResponsePacket(readBuf);
                break;
             }
             // Error: not expected response
-            throw new IOException("Ivalid response! ANTIECHO received.");
+            LOGGER.finest(" RESPONSE BYTE: "+byteArrayToHex(readBuf, 0, 1));
+            throw new IOException("Ivalid response!");
         } while (false);    
 	return returnResult;
     }
@@ -625,8 +688,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         nextSEQ();
         mSocket.clear();
 
-        String auxcmd = DatatypeConverter.printHexBinary(data);
-        LOGGER.finest(String.format("> auxilary cmd %s", new Object[]{auxcmd}));
+        LOGGER.finest(" AUX > "+byteArrayToHex(data));
         StopWatch go = new StopWatch();
         
         clear();
@@ -658,9 +720,8 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             LOGGER.severe(ex.getMessage());
         }
         READ_TIMEOUT = OLD_READ_TIMEOUT; // ms
+        LOGGER.finest(" AUX < "+byteArrayToHex(readBuf, 0, offset));
         String result = toUnicode(readBuf, 0, offset, mEncoding);
-        
-        LOGGER.finest(String.format("< %s (%d bytes) in %dms", new Object[]{auxcmd, result.length(), Integer.valueOf((int) go.getElapsedTime())}));
         return result;
     }
     

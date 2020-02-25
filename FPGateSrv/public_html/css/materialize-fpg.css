@@ -2233,8 +2233,8 @@ button.btn-floating {
   background-color: transparent;
   color: #343434;
   cursor: pointer; }
-  .btn-flat.disabled {
-    color: #b3b3b3;
+  .btn-flat.disabled, .btn-flat[disabled] {
+    color: #b3b3b3 !important;
     cursor: default; }
 
 .btn-large {

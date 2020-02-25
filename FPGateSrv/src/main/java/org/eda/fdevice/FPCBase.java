@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 import org.reflections.Reflections;
@@ -301,7 +299,7 @@ public class FPCBase {
         public Double TaxF = 0d;
         public Double TaxG = 0d;
         public Double TaxH = 0d;
-        public Integer SellCount = 0;
+        public Double SellCount = 0d;
         public Double SellAmount = 0d;
         public Double PayAmount = 0d;
         public String DocNum = "";
@@ -796,6 +794,12 @@ public class FPCBase {
     }
     
     /**
+     * Read printer status after initialization
+     */
+    public void readStatus() {
+        
+    }
+    /**
      * Returns device diagnostic info
      * 
      * @return Diagnostic info as String HashMap
@@ -1133,6 +1137,24 @@ public class FPCBase {
         return null;
     }
 
+     /**
+     * Read information about departments
+     * @return
+     * @throws FPException 
+     */
+    public StrTable readDepartments() throws FPException{
+        return null;
+    }
+
+     /**
+     * Read information about Tax Groups
+     * @return
+     * @throws FPException 
+     */
+    public StrTable readTaxGroups() throws FPException{
+        return null;
+    }
+    
     /**
      * Get printer status fields
      * @return Status fields

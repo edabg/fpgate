@@ -20,6 +20,7 @@ import TremolZFP.CurrentOrLastReceiptPaymentAmountsRes;
 import TremolZFP.CurrentReceiptInfoRes;
 import TremolZFP.DailyAvailableAmountsRes;
 import TremolZFP.DailyAvailableAmounts_OldRes;
+import TremolZFP.DepartmentRes;
 import TremolZFP.InvoiceRangeRes;
 import TremolZFP.LastDailyReportInfoRes;
 import TremolZFP.OptionChange;
@@ -46,6 +47,7 @@ import TremolZFP.Payments_OldRes;
 import TremolZFP.RegistrationInfoRes;
 import TremolZFP.SerialAndFiscalNumsRes;
 import TremolZFP.StatusRes;
+import TremolZFP.VATratesRes;
 import TremolZFP.VersionRes;
 import java.io.IOException;
 import static java.lang.Math.abs;
@@ -81,6 +83,8 @@ public class FPCTremol extends FPCBase {
     protected DeviceInfo devInfo;
     
     protected int CONST_TEXTLENGTH=32;
+    protected int CONST_DEPTNUM=32;
+    protected int CONST_PAYNUM=10;
     protected boolean isOldDevice = false;
 
     HashMap<String, String> statusDefs = new HashMap<>();
@@ -319,15 +323,47 @@ public class FPCTremol extends FPCBase {
             }
             
             CONST_TEXTLENGTH = getParamInt("LWIDTH");
+            CONST_PAYNUM = 11;
+            CONST_DEPTNUM = 40;
+            /*
+            Information
+            <1Dh><Info> where: Info – character 49h - 'I'
+            <'I'><Number of printable characters per line[2]>
+            <;> <PLU number[5]>
+            <;> <Departments number[2]>
+            <;> <Operators number[2]>
+            <;> <VAT classs number[1]>
+            <;> <header lines number[2]>
+            <;> <payments number[2]>
+            <;> <logo number[2]>
+            <;> <reserve=’00’[2]>
+            <;> <receipt transaction number[3]>
+            <;> <customers base info [4]>
+            <0Ah>
+            */
             fp.RawWrite(new byte[] {0x1D, 0x49});
             byte[] res = fp.RawRead(0d, "\n");
             String textres = new String(res);
             //System.out.println(textres);
-            if (textres.substring(0, 1).equals("I")) {
-                String tl = textres.substring(1, 3);
+            if (textres.startsWith("I")) {
+                textres = textres.substring(1);
+                String[] parts = textres.split(";");
                 try {
-                    CONST_TEXTLENGTH = Integer.parseInt(tl);
+                    CONST_TEXTLENGTH = Integer.parseInt(parts[0].trim());
                 } catch (Exception e) {
+                    LOGGER.warning("Невалидна стойност за максимална дължина на текста!"+e.getMessage());
+                }
+                try {
+                    if (parts.length > 2)
+                        CONST_DEPTNUM = Integer.parseInt(parts[2].trim());
+                } catch (Exception e) {
+                    LOGGER.warning("Невалидна стойност за брой департаменти!"+e.getMessage());
+                }
+                try {
+                    if (parts.length > 6)
+                        CONST_PAYNUM = Integer.parseInt(parts[6].trim());
+                } catch (Exception e) {
+                    LOGGER.warning("Невалидна стойност за брой плащания!"+e.getMessage());
                 }
             }
         } catch (Exception ex) {
@@ -1162,7 +1198,7 @@ FWDT=23NOV18 1000
             res.DocNum = String.format("%07d", ri.CurrentReceiptNumber.intValue());
 //            res.DocNum = String.format("%07d", fp.ReadLastReceiptNum().intValue());
             res.IsOpen = (ri.OptionIsReceiptOpened == OptionIsReceiptOpened.Yes);
-            res.SellCount = ri.SalesNumber.intValue();
+            res.SellCount = ri.SalesNumber;
             Double totalAmount = 
                     ri.SubtotalAmountVAT0+ri.SubtotalAmountVAT1+ri.SubtotalAmountVAT2+ri.SubtotalAmountVAT3
                     +ri.SubtotalAmountVAT4+ri.SubtotalAmountVAT5+ri.SubtotalAmountVAT6+ri.SubtotalAmountVAT7;
@@ -1614,5 +1650,49 @@ FWDT=23NOV18 1000
         }
         return res;
     }
+
+    @Override
+    public StrTable readDepartments() throws FPException{
+        StrTable res = new StrTable();
+        lastCommand = "readDepartments";
+        for (int i = 0; i < CONST_DEPTNUM;  i++ ) {
+            DepartmentRes dept;
+            try {
+                dept = fp.ReadDepartment((double)i);
+                res.put(
+                    "D_"+Integer.toString(i)
+                   , 
+                     Integer.toString(i)
+                     +" Група:"+dept.getOptionVATClass().toString()
+                     +" Име:"+dept.getDepName()
+                     +" Продажби:"+Double.toString(dept.SoldQuantity)+"/"+Double.toString(dept.Turnover)
+                );
+            } catch (Exception ex) {
+                LOGGER.warning(ex.getMessage());
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public StrTable readTaxGroups() throws FPException {
+        StrTable res = new StrTable();
+        lastCommand = "readTaxGroups";
+        try {
+            VATratesRes vr = fp.ReadVATrates();
+            res.put("TaxA", Double.toString(vr.VATrate0));
+            res.put("TaxB", Double.toString(vr.VATrate1));
+            res.put("TaxC", Double.toString(vr.VATrate2));
+            res.put("TaxD", Double.toString(vr.VATrate3));
+            res.put("TaxE", Double.toString(vr.VATrate4));
+            res.put("TaxF", Double.toString(vr.VATrate5));
+            res.put("TaxG", Double.toString(vr.VATrate6));
+            res.put("TaxH", Double.toString(vr.VATrate7));
+        } catch (Exception ex) {
+            LOGGER.warning(ex.getMessage());
+        }
+        return res;
+    }
+
     
 }

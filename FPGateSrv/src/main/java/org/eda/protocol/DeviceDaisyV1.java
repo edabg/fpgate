@@ -121,9 +121,10 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
             consts.put("COMMENT_LEN", consts.get("P10"));
         else
             consts.put("COMMENT_LEN", 28);
-        
         if (consts.containsKey("P3"))
             consts.put("PAY_MAX_CNT", consts.get("P3"));
+        if (consts.containsKey("P16"))
+            consts.put("DEPT_MAX_CNT", consts.get("P16"));
     }
 
     @Override
@@ -1847,6 +1848,160 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
             response.put("P_"+pCode, " '"+pCode+" "+pName);
         }    
         return response;
+    }
+
+    @Override
+    public LinkedHashMap<String, String> cmdReadDepartments() throws IOException {
+        /*
+        131 (83h) PROGRAM DEPARTMENTS
+        Data field: {Item}[Data]
+        Reply: Code[,Data]
+        Code 1 symbol, indicating the result::
+        “P” – valid command.
+        “F” – invalid command.
+        Item Specifies the type of required operation. Acceptable values: “P” and“R”.
+        “P” – programming departments
+        Data field: {P}{DeptNum},{Name}{CR}{TaxGroup},{Price}[,{MaxDigits}]
+        DeptNum Number of department (from 1 to #DEPT_MAX_CNT#)
+        Name Name of department. It is "cut" at the right side, if it is longer than #NAME_LEN#symbols.
+        CR 1 byte with value 0Ah.
+        TaxGroup Tax group. 1 byte of (А,Б,В,Г,Д,Е,Ж,З)
+        Price Unit price of department (up to 8 digits). It is not used. For compatibility send 0.
+        MaxDigit Maximum acceptable number of digits for free unit price entered. If there is no value (or value=0), it will be unpossible to sale by this department (command 138)
+        Attention: Can‘t change the name or the tax group of the department, if there are sales on that department and the corresponfing Z reports are not issued. Check the error number (status byte 3) and print the necessary Z report.
+        “R” – Reading data about department.
+        Data field: {R}{DeptNum}
+        Reply: {P},{DeptNum},{Name}{CR}{TaxGroup},{Price},{Amount},{Total},{PerAmount},{PerTotal},{MaxDigits}
+        The information is anallogical to the command for programming departments.
+        Amount Accumulated quantity at sale by this department in the daily report. Number with 3 decimal symbols.
+        Total Accumulated amount from registrated sale by this department in the daily report.
+        PerAmount Accumulated quantity at sale by this department in the periodic report. Number with 3 decimal symbols.
+        PerTotal Accumulated amount from registrated sale by this department in the periodic report.
+        If the indicated number of department is not found, FD returns Code = ‘F”.        
+        */
+        class TotInfo {
+            double totQty = 0;
+            double totSum = 0;
+            String totName = "";
+            public TotInfo(double TotSales, double TotSum) {
+                this.totQty = TotSales;
+                this.totSum = TotSum;
+            }
+        }
+        class DeptInfo {
+            String deptNum;
+            String deptName;
+            String taxGr;
+            TotInfo[] totals;
+
+            public DeptInfo(String deptNum, String deptName, String taxGr) {
+                this.deptNum = deptNum;
+                this.deptName = deptName;
+                this.taxGr = taxGr;
+                this.totals = new TotInfo[4];
+                for(int i = 0; i < 4; i++)
+                    this.totals[i] = new TotInfo(0, 0);
+                this.totals[0].totName = "Продажби";
+                this.totals[1].totName = "Сторно от връщане/рекламация";
+                this.totals[2].totName = "Сторно от операторска грешка";
+                this.totals[3].totName = "Сторно от намаление на данъчната основа";
+            }
+            
+        }
+        
+        LinkedHashMap<String, String> response = new LinkedHashMap(); 
+        int MaxDeptCount = consts.containsKey("DEPT_MAX_CNT")?consts.get("DEPT_MAX_CNT"):10;
+        DeptInfo[] Depts = new DeptInfo[MaxDeptCount];
+        String res;
+        for (int i = 0; i < MaxDeptCount; i++) {
+            String deptNum = Integer.toString(i+1);
+            res = cmdCustom(131, "R"+deptNum);
+            // {P},{DeptNum},{Name}{CR}{TaxGroup},{Price},{Amount},{Total},{PerAmount},{PerTotal},{MaxDigits}
+            // 0       1             2               3        4       5         6          7          8
+            String[] parts = res.substring(1).split(",");
+            if (parts[0].equals("P") && (parts.length > 1)) {
+                Depts[i] = new DeptInfo(deptNum, "-", "-");
+                String[] ng = parts[1].split("\r");
+                Depts[i].deptName = ng[0];
+                if (ng.length > 1)
+                    Depts[i].taxGr = ng[1];
+                if (parts.length > 6)
+                    Depts[i].totals[0].totQty = stringToDouble(parts[6]);
+                if (parts.length > 7)
+                    Depts[i].totals[0].totSum = stringToDouble(parts[7]);
+            } else {
+//                err("Грешка при четене на информация за департамент #"+Integer.toString(i));
+            }
+/*            
+            // Прочитане на информация за сторно сумите
+            for (int j = 1; j <= 3; j++) {
+                res = cmdCustom(??, deptNum+","+Integer.toString(j));
+                if (res.startsWith("P")) {
+                    String[] parts = res.substring(1).split(",");
+                    if (parts.length > 3)
+                       Depts[i].totals[j].totQty = stringToDouble(parts[3]); 
+                    if (parts.length > 4)
+                       Depts[i].totals[j].totSum = stringToDouble(parts[4]); 
+                } else {
+                    err("Грешка при четене на информация за департамент #"+Integer.toString(i)+" Сторно тип:"+Integer.toString(j));
+                }
+            }
+*/
+        }
+        // Формиране на резултата
+        for (int i = 0; i < MaxDeptCount; i++) {
+            if (Depts[i] != null)
+                response.put("D_"+Depts[i].deptNum, Depts[i].deptNum+" Група:"+Depts[i].taxGr+" Име:"+Depts[i].deptName);
+        }
+        // Формиране на резултата по натрупани суми
+        for (int i = 0; i < MaxDeptCount; i++) {
+            if (Depts[i] != null) {
+                String sInfo = 
+                       Depts[i].deptNum
+                      + " " + Depts[i].totals[0].totName+"="
+                      + Double.toString(Depts[i].totals[0].totQty)
+                      + ":" + Double.toString(Depts[i].totals[0].totSum);
+                response.put("DS_"+Depts[i].deptNum, sInfo);
+            }    
+        }
+        return response; //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public LinkedHashMap<String, String> cmdReadTaxGroups() throws IOException {
+        /*
+        97 (61h) CURRENT TAX RATES
+        Data field: No data
+        Reply: Tax1,Tax2,Tax3,Tax4,Tax5,Tax6,Tax7,Tax8
+        Tax 1 Tax rate А
+        Tax 2 Tax rate Б
+        Tax 3 Tax rate В
+        Tax 4 Tax rate Г
+        Tax 5 Tax rate Д
+        Tax 6 Tax rate Е
+        Tax 7 Tax rate Ж
+        Tax 8 Tax rate З
+        Receiving information about the current tax rates.
+        */
+        LinkedHashMap<String, String> response = new LinkedHashMap(); 
+        String res = cmdCustom(97, "");
+        //00.00,20.00,20.00,09.00,00.00,00.00,00.00,00.00
+        if (res.length() > 0) {
+            String[] resLines = res.split(",");
+            response.put("TaxA", reformatCurrency((resLines.length > 0)?resLines[0]:"0", 1));
+            response.put("TaxB", reformatCurrency((resLines.length > 1)?resLines[1]:"0", 1));
+            response.put("TaxC", reformatCurrency((resLines.length > 2)?resLines[2]:"0", 1));
+            response.put("TaxD", reformatCurrency((resLines.length > 3)?resLines[3]:"0", 1));
+            response.put("TaxE", reformatCurrency((resLines.length > 4)?resLines[4]:"0", 1));
+            response.put("TaxF", reformatCurrency((resLines.length > 5)?resLines[5]:"0", 1));
+            response.put("TaxG", reformatCurrency((resLines.length > 6)?resLines[6]:"0", 1));
+            response.put("TaxH", reformatCurrency((resLines.length > 7)?resLines[7]:"0", 1));
+        } else {
+            long errCode = -1;
+            err("Грешка при получаване на информация за данъчните групи!");
+            throw new FDException(errCode, mErrors.toString());
+        }
+        return response; //To change body of generated methods, choose Tools | Templates.
     }
     
 }
