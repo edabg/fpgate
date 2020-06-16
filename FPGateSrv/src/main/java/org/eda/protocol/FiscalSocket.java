@@ -19,16 +19,9 @@ package org.eda.protocol;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.text.DateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import org.eda.fdevice.FPCBase;
 
 /**
  * Fiscal device layer2 protocol independent socket working on input/output streams.
@@ -39,10 +32,10 @@ import org.eda.fdevice.FPCBase;
  */
 public class FiscalSocket {
 
-    protected static final Logger logger = Logger.getLogger(FiscalSocket.class.getName());
+    protected static final Logger LOGGER = Logger.getLogger(FiscalSocket.class.getName());
     
-    private InputStream in;
-    private OutputStream out;
+    private final InputStream in;
+    private final OutputStream out;
     private Thread readThread = null;
 
     private final List<Byte> queue; 
@@ -78,12 +71,12 @@ public class FiscalSocket {
     public void open() throws IOException {
         //TODO: It is not good idea to start thread immediately.
         // It is better to start after first write for example or in separate method Start!
-        logger.fine("Opening fiscal device socket");
+        LOGGER.fine("Opening fiscal device socket");
         clear();
         readThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                logger.fine("Read thread begin");
+                LOGGER.fine("Read thread begin");
                 boolean isInterrupted = false;
                 byte[] buffer = new byte[1024]; // 1K read buffer 
                 try {
@@ -94,7 +87,7 @@ public class FiscalSocket {
                             // In SerialComm timeouts have to be confgured correctly
                             readed = in.read(buffer);
                         } catch (IOException ioe) {
-                            logger.finest("Read thread IO:"+ioe.getMessage());
+                            LOGGER.finest("Read thread IO:"+ioe.getMessage());
                         }
                         if (readed == 0) { // No bytes read
                             try {
@@ -102,14 +95,14 @@ public class FiscalSocket {
                             } catch (InterruptedException lie) {
                                 // Until sleeps can be interrupted by another 
                                 isInterrupted = true;
-                                logger.fine("Read thread interrupted. "+lie.getMessage());
+                                LOGGER.fine("Read thread interrupted. "+lie.getMessage());
                             }
                         } else {
                             if (readed < 0) {
                                 throw new IOException("The end of the stream has been reached");
                             }
                             if (readed > 0) {
-                                logger.fine("receive(" + readed + "): " + FiscalSocket.byteArrayToHexString(buffer, 0, readed));
+                                LOGGER.fine("receive(" + readed + "): " + FiscalSocket.byteArrayToHexString(buffer, 0, readed));
                                 // Append packet bytes to the queue and notify it
                                 synchronized (queue) {
                                     for (int el = 0; el < readed; el++) {
@@ -121,27 +114,27 @@ public class FiscalSocket {
                         }
                     } while (!isInterrupted);
                 } catch (IOException ioe) {
-                    logger.fine("Read thread:"+ioe.getMessage());
+                    LOGGER.fine("Read thread:"+ioe.getMessage());
                 } finally {
                     FiscalSocket.Listener l = listener;
                     if (l != null) {
                         l.onDisconnect();
                     }
                 }
-                logger.fine("Read thread end");
+                LOGGER.fine("Read thread end");
             }
         });
         readThread.start();
     }
     
     public void close() throws IOException {
-        logger.fine("Closing fiscal device socket");
+        LOGGER.fine("Closing fiscal device socket");
         if ((readThread != null) && readThread.isAlive()) {
             readThread.interrupt();
             try {
                 readThread.join();
             } catch (InterruptedException iex) {
-                logger.log(Level.FINE, null, iex);
+                LOGGER.log(Level.FINE, null, iex);
             }
             readThread = null;
         }    
@@ -179,7 +172,7 @@ public class FiscalSocket {
      */
     public void write(byte[] b, int off, int len) throws IOException {
         out.write(b, off, len);
-        logger.fine("send(" + len + "): " + byteArrayToHexString(b, off, len));
+        LOGGER.fine("send(" + len + "): " + byteArrayToHexString(b, off, len));
     }
 
     /**

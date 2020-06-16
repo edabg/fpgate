@@ -425,9 +425,11 @@ public class FPCBase {
     }
 
     public static final String getClassDecription(Class<? extends FPCBase> clazz) throws Exception {
-        Method m;
-        m = clazz.getMethod("getClassDecription");
-        return ((String)m.invoke(null));
+        FiscalDevice fda = clazz.getAnnotation(FiscalDevice.class);
+        return (fda.experimental()?"EXPERIMENTAL! ":"")+fda.description();
+//        Method m;
+//        m = clazz.getMethod("getClassDecription");
+//        return ((String)m.invoke(null));
     }
 
     public static final String getClassDecription(String FPCClassName) throws Exception {
@@ -953,7 +955,7 @@ public class FPCBase {
      * @param discountPerc - discount percent
      * @throws org.eda.fdevice.FPException
      */
-    public void sell(String text, taxGroup taxCode, double price, double quantity, double discountPerc)  throws FPException {
+    public void sell(String text, taxGroup taxCode, double price, double quantity, String discountPerc)  throws FPException {
         
     }
 
@@ -966,7 +968,7 @@ public class FPCBase {
      * @param discountPerc - discount percent
      * @throws org.eda.fdevice.FPException
      */
-    public void sell(String text, taxGroup taxCode, double price, double discountPerc)  throws FPException {
+    public void sell(String text, taxGroup taxCode, double price, String discountPerc)  throws FPException {
         
     }
     
@@ -980,12 +982,12 @@ public class FPCBase {
      * @param discountPerc - discount in percent
      * @throws org.eda.fdevice.FPException
      */
-    public void sellDept(String text, String deptCode, double price, double quantity, double discountPerc)  throws FPException{
+    public void sellDept(String text, String deptCode, double price, double quantity, String discountPerc)  throws FPException{
         
     }
 
     public void sellDept(String text, String deptCode, double price) throws FPException {
-        this.sellDept(text, deptCode, price, 1, 0);
+        this.sellDept(text, deptCode, price, 1, "");
     }
     
     /**

@@ -12,12 +12,12 @@ import java.io.IOException;
  * @author Dimitar Angelov
  */
 public class FDException extends IOException {
-    private Long ErrorCode = -1L;
+    protected long ErrorCode = -1L;
 
     public FDException(String message) {
         this(-1L, message);
     }
-    public FDException(Long ErrorCode, String message) {
+    public FDException(long ErrorCode, String message) {
         super(message);
         this.ErrorCode = ErrorCode;
     }
@@ -28,7 +28,7 @@ public class FDException extends IOException {
      *
      * @return the value of ErrorCode
      */
-    public Long getErrorCode() {
+    public long getErrorCode() {
         return ErrorCode;
     }
 
@@ -37,7 +37,7 @@ public class FDException extends IOException {
      *
      * @param ErrorCode new value of ErrorCode
      */
-    public void setErrorCode(Long ErrorCode) {
+    public void setErrorCode(long ErrorCode) {
         this.ErrorCode = ErrorCode;
     }
     

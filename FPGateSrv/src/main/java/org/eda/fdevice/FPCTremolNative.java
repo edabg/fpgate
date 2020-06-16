@@ -37,6 +37,7 @@ import org.eda.protocol.DeviceTremolV1.CustomerDataType;
 @FiscalDevice(
     description = "Tremol fiscal devices native protocol"
     , usable = true
+    , experimental = true
 )
 public class FPCTremolNative extends FPCBase {
 
@@ -675,7 +676,7 @@ public class FPCTremolNative extends FPCBase {
     }
     
     @Override
-    public void sell(String text, taxGroup taxCode, double price, double quantity, double discountPerc)  throws FPException {
+    public void sell(String text, taxGroup taxCode, double price, double quantity, String discountPerc)  throws FPException {
         String[] lines = splitOnLines(text, getLineWidth());
         lastCommand = "sell";
         
@@ -684,7 +685,7 @@ public class FPCTremolNative extends FPCBase {
                 lines[0]+((lines.length > 1)?"\n"+lines[1]:"")
                 , this.taxGroupToChar(taxCode), price, quantity
                 , ""
-                , (abs(discountPerc) >= 0.01)?Double.toString(discountPerc)+"%":""
+                , discountPerc
             );
         } catch (IOException ex) {
             throw createException(ex);
@@ -692,12 +693,12 @@ public class FPCTremolNative extends FPCBase {
     }
 
     @Override
-    public void sell(String text, taxGroup taxCode, double price, double discountPerc) throws FPException {
+    public void sell(String text, taxGroup taxCode, double price, String discountPerc) throws FPException {
         this.sell(text, taxCode, price, 0, discountPerc); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void sellDept(String text, String deptCode, double price, double quantity, double discountPerc)  throws FPException{
+    public void sellDept(String text, String deptCode, double price, double quantity, String discountPerc)  throws FPException{
         String[] lines = splitOnLines(text, getLineWidth());
 
         lastCommand = "sellDept";
@@ -707,7 +708,7 @@ public class FPCTremolNative extends FPCBase {
                 lines[0]+((lines.length > 1)?"\n"+lines[1]:"")
                 , deptCode, price, quantity
                 , ""
-                , (abs(discountPerc) >= 0.01)?Double.toString(discountPerc)+"%":""
+                , discountPerc
             );
         } catch (IOException ex) {
             throw createException(ex);

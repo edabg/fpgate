@@ -93,20 +93,22 @@ public class CBIOService {
     
     public static enum ConnectionState {
 //        NA, AUTH, AUTHFAILED, CONNECTING, CONNECTED, DISCONNECTED, JOINED, LEAVED
-        NA ("N/A", "?") 
-        , AUTH ("Идентидфициран", "i")
-        , AUTHFAILED ("Отказан", "!")
-        , CONNECTING ("Свързване", ">")
-        , CONNECTED ("Свързан", "=")
-        , DISCONNECTED ("Прекъснат", ".")
-        , JOINED ("Присъединен", "o")
-        , LEAVED ("Напуснат", "x")
+        NA ("NA", "N/A", "?") 
+        , AUTH ("AUTH", "Идентидфициран", "i")
+        , AUTHFAILED ("AUTHFAILED", "Отказан", "!")
+        , CONNECTING ("CONNECTING", "Свързване", ">")
+        , CONNECTED ("CONNECTED", "Свързан", "=")
+        , DISCONNECTED ("DISCONNECTED", "Прекъснат", ".")
+        , JOINED ("JOINED", "Присъединен", "o")
+        , LEAVED ("LEAVED", "Напуснат", "x")
         ;
         
+        private final String stateNameL;
         private final String stateName;
         private final String stateAbbr;
         
-        private ConnectionState(String name, String abbr) {
+        private ConnectionState(String nameL, String name, String abbr) {
+            stateNameL = nameL;
             stateName = name;
             stateAbbr = abbr;
         }
@@ -567,6 +569,7 @@ public class CBIOService {
     }
     
     protected void setConnectionState(ConnectionState state) {
+        LOGGER.finest("Setting connection state to: "+state.stateNameL);
         mConnectionState = state;
         onStateChange();
     }
@@ -668,7 +671,7 @@ public class CBIOService {
     protected void sessionOnDisconnect(Session session, boolean wasClean) {
         if ((mSession == null) || session.equals(mSession)) {
             LOGGER.info("Session disconnected");
-            mConnectionState = ConnectionState.DISCONNECTED;
+            setConnectionState(ConnectionState.DISCONNECTED);
 //            try {
 //                if (mTransport != null)
 //                    mTransport.close();
@@ -698,7 +701,7 @@ public class CBIOService {
         // when the session joins a realm, run our code
         mSession.addOnReadyListener((aSession) -> { // ???
             LOGGER.info("Session ready");
-//            mConnectionState = ConnectionState.CONNECTED;
+//            setConnectionState(ConnectionState.CONNECTED);
         });
         mSession.addOnConnectListener(this::sessionOnConnect);
         mSession.addOnJoinListener(this::sessionOnJoin);
@@ -726,7 +729,8 @@ public class CBIOService {
         CompletableFuture<ExitInfo> exitFuture = mClient.connect();
         exitFuture.thenAccept(exitInfo -> {
             mConnectionExitCode = exitInfo.code;
-            LOGGER.info("Client connection exit with code: "+exitInfo.code);
+            LOGGER.info("Client connection exit with code: "+exitInfo.code+" "+getConnectionState().stateNameL);
+            setConnectionState(ConnectionState.DISCONNECTED);
         });
         
         exitFuture.handle((ExitInfo res, Throwable ex) -> {

@@ -1570,14 +1570,14 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
             if (!resLines[0].equals("F")) {
                 // Отговор: <CanVd>,<TaxA>,<TaxB>,<TaxC>,<TaxD>,<TaxE>,<TaxF>,<TaxG>,<TaxH>,<Inv>,<InvNum>,<Type>
                 response.put("CanVD", resLines[0]);
-                response.put("TaxA", reformatCurrency((resLines.length > 1)?resLines[1]:"0", 1));
-                response.put("TaxB", reformatCurrency((resLines.length > 2)?resLines[2]:"0", 1));
-                response.put("TaxC", reformatCurrency((resLines.length > 3)?resLines[3]:"0", 1));
-                response.put("TaxD", reformatCurrency((resLines.length > 4)?resLines[4]:"0", 1));
-                response.put("TaxE", reformatCurrency((resLines.length > 5)?resLines[5]:"0", 1));
-                response.put("TaxF", reformatCurrency((resLines.length > 6)?resLines[6]:"0", 1));
-                response.put("TaxG", reformatCurrency((resLines.length > 7)?resLines[7]:"0", 1));
-                response.put("TaxH", reformatCurrency((resLines.length > 8)?resLines[8]:"0", 1));
+                response.put("TaxA", reformatCurrencyIfDot((resLines.length > 1)?resLines[1]:"0", 100));
+                response.put("TaxB", reformatCurrencyIfDot((resLines.length > 2)?resLines[2]:"0", 100));
+                response.put("TaxC", reformatCurrencyIfDot((resLines.length > 3)?resLines[3]:"0", 100));
+                response.put("TaxD", reformatCurrencyIfDot((resLines.length > 4)?resLines[4]:"0", 100));
+                response.put("TaxE", reformatCurrencyIfDot((resLines.length > 5)?resLines[5]:"0", 100));
+                response.put("TaxF", reformatCurrencyIfDot((resLines.length > 6)?resLines[6]:"0", 100));
+                response.put("TaxG", reformatCurrencyIfDot((resLines.length > 7)?resLines[7]:"0", 100));
+                response.put("TaxH", reformatCurrencyIfDot((resLines.length > 8)?resLines[8]:"0", 100));
                 response.put("Inv", (resLines.length > 9)?resLines[9]:"");
                 response.put("InvNum", (resLines.length > 10)?resLines[10]:"");
                 
@@ -1599,10 +1599,10 @@ public class DeviceDaisyV1 extends AbstractFiscalDevice {
                         Double sellAmount = 0d;
                         Double restAmount = 0d;
                         if (resLines.length > 2) {
-                            sellAmount = stringToDouble(resLines[2]);
+                            sellAmount = stringToDouble(reformatCurrencyIfDot(resLines[2], 100));
                             restAmount = sellAmount;
                             if (resLines.length > 4) 
-                                restAmount = stringToDouble(resLines[4]);
+                                restAmount = stringToDouble(reformatCurrencyIfDot(resLines[4], 100));
                         }    
                         response.put("SellAmount", String.format(Locale.ROOT, "%.2f", sellAmount));
                         response.put("PayAmount", String.format(Locale.ROOT, "%.2f", Double.min(sellAmount - restAmount, sellAmount)));

@@ -1068,7 +1068,7 @@ FWDT=23NOV18 1000
     }
 
     @Override
-    public void sell(String text, taxGroup taxCode, double price, double quantity, double discountPerc) throws FPException {
+    public void sell(String text, taxGroup taxCode, double price, double quantity, String discountPerc) throws FPException {
         String[] lines = splitOnLines(text.replace("|", "/")); // | - is used as line separator in next command
         lastCommand = "sell";
         
@@ -1077,8 +1077,8 @@ FWDT=23NOV18 1000
                 , taxGroupToVATClass(taxCode)
                 , price
                 , quantity
-                , discountPerc
-                , 0d
+                , discountPerc.contains("%")?parseDouble(discountPerc.replaceAll("%", "")):0d
+                , discountPerc.contains("%")?0d:parseDouble(discountPerc)
             );
         } catch (Exception ex) {
             throw createException(ex);
@@ -1086,12 +1086,12 @@ FWDT=23NOV18 1000
     }
     
     @Override
-    public void sell(String text, taxGroup taxCode, double price, double discountPerc) throws FPException {
+    public void sell(String text, taxGroup taxCode, double price, String discountPerc) throws FPException {
         sell(text, taxCode, price, 1d, discountPerc);
     }
 
     @Override
-    public void sellDept(String text, String deptCode, double price, double quantity, double discountPerc) throws FPException {
+    public void sellDept(String text, String deptCode, double price, double quantity, String discountPerc) throws FPException {
         String[] lines = splitOnLines(text.replace("|", "/")); // | - is used as line separator in next command
         lastCommand = "sell";
         
@@ -1102,8 +1102,8 @@ FWDT=23NOV18 1000
                 , DeptNum
                 , price
                 , quantity
-                , discountPerc
-                , 0d
+                , discountPerc.contains("%")?parseDouble(discountPerc.replaceAll("%", "")):0d
+                , discountPerc.contains("%")?0d:parseDouble(discountPerc)
             );
         } catch (Exception ex) {
             throw createException(ex);
@@ -1112,7 +1112,7 @@ FWDT=23NOV18 1000
 
     @Override
     public void sellDept(String text, String deptCode, double price) throws FPException {
-        sellDept(text, deptCode, price, 1, 0);
+        sellDept(text, deptCode, price, 1, "0");
     }
 
     @Override

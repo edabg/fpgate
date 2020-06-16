@@ -186,9 +186,27 @@ public abstract class AbstractFiscalDevice {
         }
         return res;
     }
+
+    protected long stringToLong(String str) {
+        long res = 0;
+        try {
+            res = Long.parseLong(str);
+        } catch (Exception e) {
+        }
+        return res;
+    }
     
     protected String reformatCurrency(String value, int div) {
         double dval = stringToDouble(value, div);
+        return String.format(Locale.ROOT, "%.2f",dval);
+    }
+    
+    protected String reformatCurrencyIfDot(String value, int div) {
+        double dval;
+        if (value.contains("."))
+            dval = stringToDouble(value, 1);
+        else
+            dval = stringToDouble(value, div);
         return String.format(Locale.ROOT, "%.2f",dval);
     }
     

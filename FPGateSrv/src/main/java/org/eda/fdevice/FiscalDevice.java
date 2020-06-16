@@ -32,4 +32,5 @@ public @interface FiscalDevice {
     String description() default "";
     boolean usable() default true;
     boolean deprecated() default false;
+    boolean experimental() default false;
 }

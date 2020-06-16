@@ -89,18 +89,20 @@ public class StrTable extends LinkedHashMap<String,String> {
     
     public void setFromJSONString(String jsonString) {
         LinkedHashMap<String,String> h_map;
-        try {
-            
-            h_map = new ObjectMapper().readValue(jsonString, new TypeReference<LinkedHashMap<String,Object>>(){});
-            FPProperty property;
-            for(String key : keySet()) {
-                if (h_map.containsKey(key)) {
-                    put(key, h_map.get(key));
+        if (!jsonString.isEmpty()) {
+            try {
+
+                h_map = new ObjectMapper().readValue(jsonString, new TypeReference<LinkedHashMap<String,Object>>(){});
+                FPProperty property;
+                for(String key : keySet()) {
+                    if (h_map.containsKey(key)) {
+                        put(key, h_map.get(key));
+                    }
                 }
+            } catch (IOException ex) {    
+                Logger.getLogger(StrTable.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             }
-        } catch (IOException ex) {    
-            Logger.getLogger(StrTable.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
-        }
+        }    
     }
 
     public String toJSONString() throws JsonProcessingException {

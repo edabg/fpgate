@@ -56,6 +56,10 @@ public class FPProperty {
     public FPPropertyRule getRule() {
         return rule;
     }
+
+    public void setRule(FPPropertyRule rule) {
+        this.rule = rule;
+    }
     
     public static boolean classSupported(Class clazz) {
         return (clazz == Integer.class || clazz == Double.class || clazz == String.class);

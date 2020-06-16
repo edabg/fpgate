@@ -1476,7 +1476,7 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
             params = params + ";" + dateFormat.format(RevDateTime); // <;> <RelatedToRcpDateTime ”DD-MM-YY HH:MM:SS”>
             params = params + ";" + RevFMNum;// <;> <FMNum[8]>
             if (RevUNS.length() > 0)
-                params = params + "$" + RevUNS; // {<;> <RelatedToURN[24]>}
+                params = params + ";" + RevUNS; // {<;> <RelatedToURN[24]>}
         }
         
         fiscalCheckRevOpened = true;

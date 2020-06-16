@@ -193,6 +193,20 @@ public class PrintResource extends ServerResource {
             return text;
     }
     
+    protected String adjustDiscount(String discount) {
+        // Discoutn values:
+        // [+|-]99.99[%] - Отстъпка/надбавка като процент
+        // v[+|-]99.99   - Отстъпка като стойност
+        String aDiscount = discount;
+        if (!aDiscount.contains("%")) {
+            if (aDiscount.startsWith("v")) {
+                aDiscount = aDiscount.substring(1);
+            } else
+                aDiscount = aDiscount+"%";
+        }
+        return aDiscount;
+    }
+    
     /**
      * Prints Fiscal/Non fiscal check<br>
      * Fiscal check contents is as items in pRequest.Arguments.<br>
@@ -436,37 +450,37 @@ public class PrintResource extends ServerResource {
                         if (cmd.length > 5) {
                             // sell with Quantity
                             FP.sell(
-                                splitSellText2(cmd[1])
-                                , FP.taxAbbrToGroup(cmd[2])
-                                , Double.parseDouble(cmd[3])
-                                , Double.parseDouble(cmd[5])
-                                , Double.parseDouble(cmd[4])
+                                splitSellText2(cmd[1])          // text
+                                , FP.taxAbbrToGroup(cmd[2])     // taxCode
+                                , Double.parseDouble(cmd[3])    // price
+                                , Double.parseDouble(cmd[5])    // quantity
+                                , adjustDiscount(cmd[4])        // discountPerc
                             );
                         } else if (cmd.length == 5) {
                             // sell w/o Quantity
                             FP.sell(
-                                splitSellText2(cmd[1])
-                                , FP.taxAbbrToGroup(cmd[2])
-                                , Double.parseDouble(cmd[3])
-                                , Double.parseDouble(cmd[4])
+                                splitSellText2(cmd[1])          // text
+                                , FP.taxAbbrToGroup(cmd[2])     // taxCode
+                                , Double.parseDouble(cmd[3])    // price
+                                , adjustDiscount(cmd[4])        // discountPerc
                             );
                         } else
                            execLog.error("line:"+lineNum+" cmd:"+cmd[0]+": Invalid number of arguments");
                         break;
                     case "SDP" : // STG\tText(48)\DeptCode([...])\tPrice\tPercent[\tQty] - Register Sell by department
-                        if (cmd.length >=5)
+                        if (cmd.length > 4) {
                            FP.sellDept(
-                                splitSellText2(cmd[1])
-                                , cmd[2]
-                                , Double.parseDouble(cmd[3])
-                                , Double.parseDouble(cmd[5])
-                                , Double.parseDouble(cmd[4])
+                                splitSellText2(cmd[1])                              // text
+                                , cmd[2]                                            // deptCode
+                                , Double.parseDouble(cmd[3])                        // price
+                                , Double.parseDouble((cmd.length > 5)?cmd[5]:"1")   // quantity
+                                , adjustDiscount(cmd[4])                            // discountPerc
                            );
-                        else
+                        } else
                            FP.sellDept(
-                                splitSellText2(cmd[1])
-                                , cmd[2]
-                                , Double.parseDouble(cmd[3])
+                                splitSellText2(cmd[1])          // text
+                                , cmd[2]                        // deptCode
+                                , Double.parseDouble(cmd[3])    // price
                            );
                         break;
                     case "STL" : // STL[\tToPrint[\tToDisplay[\tPerc]]] - Subtotal
