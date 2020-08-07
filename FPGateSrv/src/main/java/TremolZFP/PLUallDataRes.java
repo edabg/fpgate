@@ -79,7 +79,8 @@ public class PLUallDataRes {
 
    /**
     *BelongToDepNumber + 80h, 1 symbol for PLU department 
-    *attachment = 0x80 … 0x93
+    *attachment = 0x80 … 0x93 
+    *Department range from 1 to 127
     */
     public int BelongToDepNumber;
     public int getBelongToDepNumber() {

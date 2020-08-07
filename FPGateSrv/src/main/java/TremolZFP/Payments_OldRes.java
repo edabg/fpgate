@@ -1,7 +1,7 @@
 package TremolZFP;
 public class Payments_OldRes {
    /**
-    *10 symbols for payment name type 0
+    *6 symbols for payment name type 0
     */
     public String NamePaym0;
     public String getNamePaym0() {
@@ -12,7 +12,7 @@ public class Payments_OldRes {
     }
 
    /**
-    *10 symbols for payment name type 1
+    *6 symbols for payment name type 1
     */
     public String NamePaym1;
     public String getNamePaym1() {
@@ -23,7 +23,7 @@ public class Payments_OldRes {
     }
 
    /**
-    *10 symbols for payment name type 2
+    *6 symbols for payment name type 2
     */
     public String NamePaym2;
     public String getNamePaym2() {
@@ -34,7 +34,7 @@ public class Payments_OldRes {
     }
 
    /**
-    *10 symbols for payment name type 3
+    *6 symbols for payment name type 3
     */
     public String NamePaym3;
     public String getNamePaym3() {
@@ -45,7 +45,7 @@ public class Payments_OldRes {
     }
 
    /**
-    *10 symbols for payment name type 4
+    *6 symbols for payment name type 4
     */
     public String NamePaym4;
     public String getNamePaym4() {

@@ -133,8 +133,7 @@ public class PaymentsRes {
     }
 
    /**
-    *Up to 10 symbols for exchange rate of payment type 11 in format: 
-    *####.#####
+    *Up to 10 symbols for exchange rate of payment type 11 in format: ####.#####
     */
     public Double ExchangeRate;
     public Double getExchangeRate() {

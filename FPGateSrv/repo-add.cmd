@@ -1,5 +1,6 @@
 @echo off
-set MVN=C:\Program Files\NetBeans 8.1\java\maven\bin\mvn.bat
+rem set MVN=C:\Program Files\NetBeans 8.1\java\maven\bin\mvn.bat
+set MVN=C:\Program Files\NetBeans-11.2\netbeans\java\maven\bin\mvn.cmd
 rem set JAVA_HOME=C:\Program Files\Java\jre1.8.0_101
 rem C:\Documents and Settings\nikolabintev\.m2\repository\com\jacob\jacob\1.18-M2\jacob-1.18-M2.jar
 set FPGateRoot=W:\www - CO.edabg.com\Apps\fp3530\FPGateSrv
@@ -84,7 +85,7 @@ goto end
 :tremol_sdk
 echo Adding tremol-sdk to repository ... 
 rem echo "%TREMOL_SDK_LIB_PATH%\Java-201906120933\FPCore.jar"
-call "%MVN%" install:install-file -Dfile="%TREMOL_SDK_LIB_PATH%\Java-201910211454\FPCore-1.0.4.jar" -DgroupId=TremolZFP -DartifactId=FPCore -Dversion=1.0.4 -Dpackaging=jar -DlocalRepositoryPath="%REPOSITORY%"
+call "%MVN%" install:install-file -Dfile="%TREMOL_SDK_LIB_PATH%\Java-202005141555\FPCore-1.0.5.jar" -DgroupId=TremolZFP -DartifactId=FPCore -Dversion=1.0.5 -Dpackaging=jar -DlocalRepositoryPath="%REPOSITORY%"
 goto end
 
 :usage

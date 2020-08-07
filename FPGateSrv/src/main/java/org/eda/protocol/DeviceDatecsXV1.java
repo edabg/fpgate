@@ -2055,7 +2055,7 @@ public class DeviceDatecsXV1 extends AbstractFiscalDevice {
         String params = 
                 (detailed?"1":"0")
                 +SEP+dtf.format(startDate)
-                +SEP+((endDate != null)?","+dtf.format(endDate):"")
+                +SEP+((endDate != null)?dtf.format(endDate):"")
                 +SEP;
         String res = cmdCustom(94, params);
         getResponse(res, "Отчет на фискалната памет за период");
@@ -2197,11 +2197,11 @@ public class DeviceDatecsXV1 extends AbstractFiscalDevice {
         • LastDoc - Last document in the period. For DocType = '2' (1...3650), else (1...99999999);        
         */
         //TODO: Check on fiscalized device
-        DateFormat dtf = new SimpleDateFormat("dd-MM-yy hh:mm:ss");
+        DateFormat dtf = new SimpleDateFormat("dd-MM-yy");
         // {StartDate}<SEP>{EndDate}<SEP>{DocType}<SEP>
         String params = 
-            dtf.format(fromDate)
-            +SEP+dtf.format(toDate)
+            dtf.format(fromDate)+" 00:00:00"
+            +SEP+dtf.format(toDate)+" 23:59:59"
             +SEP+"0"
             +SEP;
         // {ErrorCode}<SEP>{StartDate}<SEP>{EndDate}<SEP>{FirstDoc}<SEP>{LastDoc}<SEP>
@@ -2320,17 +2320,28 @@ public class DeviceDatecsXV1 extends AbstractFiscalDevice {
         for(int docN = fromN; docN <= toN; docN++) {
             // {Option}<SEP>{DocNum}<SEP>{RecType}<SEP>
             String params = "0"+SEP+docN+SEP+"0"+SEP; // Set first
-            String res = cmdCustom(125, params);
-            // {ErrorCode}<SEP>{DocNumber}<SEP>{RecNumber}<SEP>{Date}<SEP>{Type}<SEP>{Znumber}<SEP>
-            //      0              1                2            3          4            5
-            rData = getResponse(res, "Избор на документ за четене от КЛЕН", new long[]{-105000L});
-            int maxLines = 2000; // for infinity protections
-            while (rData[0].equals("0") && (maxLines > 0)) {
-                params = "1"+SEP+docN+SEP+"0"+SEP; // Read line
+            String res = "";
+            try {
                 res = cmdCustom(125, params);
-                // {ErrorCode}<SEP>{TextData}<SEP>
-                rData = getResponse(res, "Четене не ред от документ в КЛЕН", new long[]{-105000L});
-                if (rData[0].equals("0")) {
+                // {ErrorCode}<SEP>{DocNumber}<SEP>{RecNumber}<SEP>{Date}<SEP>{Type}<SEP>{Znumber}<SEP>
+                //      0              1                2            3          4            5
+                rData = getResponse(res, "Избор на документ за четене от КЛЕН", new long[]{-105000L});
+            } catch (Exception e) {
+                LOGGER.fine(e.getMessage());
+                continue;
+            }
+            int maxLines = 2000; // for infinity protections
+            while ((rData.length > 0) && rData[0].equals("0") && (maxLines > 0)) {
+                params = "1"+SEP+docN+SEP+"0"+SEP; // Read line
+                try {
+                    res = cmdCustom(125, params);
+                    // {ErrorCode}<SEP>{TextData}<SEP>
+                    rData = getResponse(res, "Четене не ред от документ в КЛЕН", new long[]{-105000L});
+                } catch (Exception e) {
+                    LOGGER.fine(e.getMessage());
+                    break;
+                }
+                if ((rData.length > 1) && rData[0].equals("0")) {
                     EJ = EJ + rData[1]+"\n";
                 }
                 maxLines--;

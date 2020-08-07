@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class FP extends FPcore {
      public FP(){
-        this.setVersionDef(1910211454);
+        this.setVersionDef(2005141555);
     }
 
     /**
@@ -22,6 +22,18 @@ public class FP extends FPcore {
      */
      public DailyAvailableAmountsRes ReadDailyAvailableAmounts() throws Exception {
              return CreateRes(Do("ReadDailyAvailableAmounts"), DailyAvailableAmountsRes.class);
+     }
+
+    /**
+     *Program weight barcode format.
+     * @param  optionBarcodeFormat
+     *         1 symbol with value: 
+     *  - '0' - NNNNcWWWWW 
+     *  - '1' - NNNNNWWWWW
+     * @throws java.lang.Exception
+     */
+     public void ProgramWeightBarcodeFormat(OptionBarcodeFormat optionBarcodeFormat) throws Exception {
+             Do("ProgramWeightBarcodeFormat", "OptionBarcodeFormat", optionBarcodeFormat);
      }
 
     /**
@@ -107,15 +119,6 @@ public class FP extends FPcore {
      }
 
     /**
-     *Provides information about last sent receipt number and date time to NRA server and first unsent receipt number and date time to NRA. If there is no unsent receipt the number will be 0 and date time will be 00-00-0000 00:00 Parameter NRA_ErrorMessage provide error message from NRA server if exist. Command is not allowed if device is deregistered, not fiscalized or in opened receipt.
-     * @return SentRcpInfoStatusRes
-     * @throws java.lang.Exception
-     */
-     public SentRcpInfoStatusRes ReadSentRcpInfoStatus() throws Exception {
-             return CreateRes(Do("ReadSentRcpInfoStatus"), SentRcpInfoStatusRes.class);
-     }
-
-    /**
      *Print Electronic Journal Report from receipt number to receipt number and selected documents content. FlagsReceipts is a char with bits representing the receipt types. FlagsReports is a char with bits representing the report type.
      * @param  flagsReceipts
      *         1 symbol for Receipts included in EJ: 
@@ -148,14 +151,31 @@ public class FP extends FPcore {
      }
 
     /**
+     *Start LAN test on the device and print out the result
+     * @throws java.lang.Exception
+     */
+     public void StartTest_Lan() throws Exception {
+             Do("StartTest_Lan");
+     }
+
+    /**
      *Provides information for the programmed data, the turnover from the stated department number
      * @param  depNum
-     *         2 symbols for department number in format: ##
+     *         Up to 3 symbols for department number
      * @return DepartmentRes
      * @throws java.lang.Exception
      */
      public DepartmentRes ReadDepartment(Double depNum) throws Exception {
              return CreateRes(Do("ReadDepartment", "DepNum", depNum), DepartmentRes.class);
+     }
+
+    /**
+     *Provide information about parameter for automatic transfer of daily available amounts.
+     * @return String
+     * @throws java.lang.Exception
+     */
+     public String ReadTransferAmountParam_RA() throws Exception {
+             return CreateRes(Do("ReadTransferAmountParam_RA"), String.class);
      }
 
     /**
@@ -263,7 +283,8 @@ public class FP extends FPcore {
      *         BelongToDepNum + 80h, 1 symbol for article 
      * department attachment, formed in the following manner: 
      * BelongToDepNum[HEX] + 80h example: Dep01 = 81h, Dep02 = 82h … 
-     * Dep19 = 93h
+     * Dep19 = 93h 
+     * Department range from 1 to 127
      * @param  optionSingleTransaction
      *         1 symbol with value: 
      *  - '0' - Inactive, default value 
@@ -306,7 +327,7 @@ public class FP extends FPcore {
      *  - '3' - Payment 3 
      *  - '4' - Payment 4
      * @param  name
-     *         10 symbols for payment type name
+     *         6 symbols for payment type name
      * @param  rate
      *         Up to 10 symbols for exchange rate in format: ####.##### 
      * of the 4th payment type, maximal value 0420.00000
@@ -342,6 +363,15 @@ public class FP extends FPcore {
      }
 
     /**
+     *Provide information about weight barcode format.
+     * @return String
+     * @throws java.lang.Exception
+     */
+     public String ReadWeightBarcodeFormat() throws Exception {
+             return CreateRes(Do("ReadWeightBarcodeFormat"), String.class);
+     }
+
+    /**
      *Opens the cash drawer.
      * @throws java.lang.Exception
      */
@@ -361,7 +391,7 @@ public class FP extends FPcore {
      }
 
     /**
-     *Print a detailed FM payments report by initial and end FM report number.
+     *Print a detailed FM payments report by initial and end Z report number.
      * @param  startZNum
      *         4 symbols for initial FM report number included in report, format ####
      * @param  endZNum
@@ -370,6 +400,18 @@ public class FP extends FPcore {
      */
      public void PrintDetailedFMPaymentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
              Do("PrintDetailedFMPaymentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
+     }
+
+    /**
+     *Program device's TCP password. To apply use - SaveNetworkSettings()
+     * @param  passLength
+     *         Up to 3 symbols for the password len
+     * @param  password
+     *         Up to 100 symbols for the TCP password
+     * @throws java.lang.Exception
+     */
+     public void SetTCPpassword(Double passLength, String password) throws Exception {
+             Do("SetTCPpassword", "PassLength", passLength, "Password", password);
      }
 
     /**
@@ -438,12 +480,29 @@ public class FP extends FPcore {
      }
 
     /**
+     *Start WiFi test on the device and print out the result
+     * @throws java.lang.Exception
+     */
+     public void StartTest_WiFi() throws Exception {
+             Do("StartTest_WiFi");
+     }
+
+    /**
      *Read the number of the remaining free records for Z-report in the Fiscal Memory.
      * @return String
      * @throws java.lang.Exception
      */
      public String ReadFMfreeRecords() throws Exception {
              return CreateRes(Do("ReadFMfreeRecords"), String.class);
+     }
+
+    /**
+     *Provides information about device's Bluetooth password.
+     * @return Bluetooth_PasswordRes
+     * @throws java.lang.Exception
+     */
+     public Bluetooth_PasswordRes ReadBluetooth_Password() throws Exception {
+             return CreateRes(Do("ReadBluetooth_Password"), Bluetooth_PasswordRes.class);
      }
 
     /**
@@ -472,7 +531,8 @@ public class FP extends FPcore {
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner; example: Dep01=81h, 
-     * Dep02=82h … Dep19=93h
+     * Dep02=82h … Dep19=93h 
+     * Department range from 1 to 127
      * @throws java.lang.Exception
      */
      public void SellPLUfromDep(String namePLU, Double price, Double quantity, Double discAddP, Double discAddV, int depNum) throws Exception {
@@ -494,6 +554,15 @@ public class FP extends FPcore {
      */
      public void PrintSpecialEventsFMreport() throws Exception {
              Do("PrintSpecialEventsFMreport");
+     }
+
+    /**
+     *Provides information about device's idle timeout. This timeout is seconds in which the connection will be closed when there is an inactivity. This information is available if the device has LAN or WiFi. Maximal value - 7200, minimal value 1. 0 is for never close the connection.
+     * @return Double
+     * @throws java.lang.Exception
+     */
+     public Double Read_IdleTimeout() throws Exception {
+             return CreateRes(Do("Read_IdleTimeout"), Double.class);
      }
 
     /**
@@ -596,6 +665,18 @@ public class FP extends FPcore {
      }
 
     /**
+     *Program device's Bluetooth password. To apply use - SaveNetworkSettings()
+     * @param  passLength
+     *         Up to 3 symbols for the BT password len
+     * @param  password
+     *         Up to 100 symbols for the BT password
+     * @throws java.lang.Exception
+     */
+     public void SetBluetooth_Password(Double passLength, String password) throws Exception {
+             Do("SetBluetooth_Password", "PassLength", passLength, "Password", password);
+     }
+
+    /**
      *Provides information about the quantity registers of the specified article.
      * @param  pLUNum
      *         5 symbols for article number with leading zeroes in format: #####
@@ -604,6 +685,14 @@ public class FP extends FPcore {
      */
      public PLUqtyRes ReadPLUqty(Double pLUNum) throws Exception {
              return CreateRes(Do("ReadPLUqty", "PLUNum", pLUNum), PLUqtyRes.class);
+     }
+
+    /**
+     *Scan and print all available WiFi networks
+     * @throws java.lang.Exception
+     */
+     public void ScanAndPrintWiFiNetworks() throws Exception {
+             Do("ScanAndPrintWiFiNetworks");
      }
 
     /**
@@ -622,6 +711,10 @@ public class FP extends FPcore {
      * number
      * @param  operPass
      *         6 symbols for operator's password
+     * @param  optionPayType
+     *         1 symbol with value 
+     *  - '0' - Cash 
+     *  - '11' - Currency
      * @param  amount
      *         Up to 10 symbols for the amount lodged. Use minus sign for withdrawn
      * @param  optionPrintAvailability
@@ -629,12 +722,19 @@ public class FP extends FPcore {
      *  - '0' - No 
      *  - '1' - Yes
      * @param  text
-     *         TextLength-2 symbols. In the beginning and in the end of line symbol '#' 
-     * is printed.
+     *         TextLength-2 symbols. In the beginning and in the end of line symbol
      * @throws java.lang.Exception
      */
-     public void ReceivedOnAccount_PaidOut(Double operNum, String operPass, Double amount, OptionPrintAvailability optionPrintAvailability, String text) throws Exception {
-             Do("ReceivedOnAccount_PaidOut", "OperNum", operNum, "OperPass", operPass, "Amount", amount, "OptionPrintAvailability", optionPrintAvailability, "Text", text);
+     public void ReceivedOnAccount_PaidOut(Double operNum, String operPass, OptionPayType optionPayType, Double amount, OptionPrintAvailability optionPrintAvailability, String text) throws Exception {
+             Do("ReceivedOnAccount_PaidOut", "OperNum", operNum, "OperPass", operPass, "OptionPayType", optionPayType, "Amount", amount, "OptionPrintAvailability", optionPrintAvailability, "Text", text);
+     }
+
+    /**
+     *After every change on Idle timeout, LAN/WiFi/GPRS usage, LAN/WiFi/TCP/GPRS password or TCP auto start networks settings this Save command needs to be execute.
+     * @throws java.lang.Exception
+     */
+     public void SaveNetworkSettings() throws Exception {
+             Do("SaveNetworkSettings");
      }
 
     /**
@@ -706,19 +806,21 @@ public class FP extends FPcore {
      }
 
     /**
-     *Stores in the memory the graphic file under stated number. Prints information about loaded in the printer graphic files.
-     * @param  logoNumber
-     *         1 character value from '0' to '9' setting the number where the logo will be saved.
+     *Print a brief FM Departments report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
      * @throws java.lang.Exception
      */
-     public void ProgLogoNum(String logoNumber) throws Exception {
-             Do("ProgLogoNum", "LogoNumber", logoNumber);
+     public void PrintBriefFMDepartmentsReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("PrintBriefFMDepartmentsReportByDate", "StartDate", startDate, "EndDate", endDate);
      }
 
     /**
      *Provides information for the programmed data, the turnovers from the stated department number
      * @param  depNum
-     *         2 symbols for department number in format: ##
+     *         Up to 3 symbols for department number
      * @return DepartmentAllRes
      * @throws java.lang.Exception
      */
@@ -748,6 +850,18 @@ public class FP extends FPcore {
      */
      public void PrintBriefFMPaymentsReportByDate(Date startDate, Date endDate) throws Exception {
              Do("PrintBriefFMPaymentsReportByDate", "StartDate", startDate, "EndDate", endDate);
+     }
+
+    /**
+     *Program device's WiFi network name where it will connect. To apply use -SaveNetworkSettings()
+     * @param  wiFiNameLength
+     *         Up to 3 symbols for the WiFi network name len
+     * @param  wiFiNetworkName
+     *         Up to 100 symbols for the device's WiFi ssid network name
+     * @throws java.lang.Exception
+     */
+     public void SetWiFi_NetworkName(Double wiFiNameLength, String wiFiNetworkName) throws Exception {
+             Do("SetWiFi_NetworkName", "WiFiNameLength", wiFiNameLength, "WiFiNetworkName", wiFiNetworkName);
      }
 
     /**
@@ -806,6 +920,18 @@ public class FP extends FPcore {
      */
      public void SellPLUwithSpecifiedVAT(String namePLU, OptionVATClass optionVATClass, Double price, Double quantity, Double discAddP, Double discAddV) throws Exception {
              Do("SellPLUwithSpecifiedVAT", "NamePLU", namePLU, "OptionVATClass", optionVATClass, "Price", price, "Quantity", quantity, "DiscAddP", discAddP, "DiscAddV", discAddV);
+     }
+
+    /**
+     *Read a detailed FM Departments report by initial and end Z report number.
+     * @param  startZNum
+     *         4 symbols for initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void ReadDetailedFMDepartmentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("ReadDetailedFMDepartmentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
      }
 
     /**
@@ -955,6 +1081,18 @@ public class FP extends FPcore {
      }
 
     /**
+     *Program device's TCP network DHCP enabled or disabled. To apply use -SaveNetworkSettings()
+     * @param  optionDHCPEnabled
+     *         1 symbol with value: 
+     *  - '0' - Disabled 
+     *  - '1' - Enabled
+     * @throws java.lang.Exception
+     */
+     public void SetDHCP_Enabled(OptionDHCPEnabled optionDHCPEnabled) throws Exception {
+             Do("SetDHCP_Enabled", "OptionDHCPEnabled", optionDHCPEnabled);
+     }
+
+    /**
      *Read the PO by type of payment and the total number of operations by specified operator
      * @param  operNum
      *         Symbols from 1 to 20 corresponding to operator's number
@@ -1041,6 +1179,42 @@ public class FP extends FPcore {
      }
 
     /**
+     *Program parameter for automatic transfer of daily available amounts.
+     * @param  optionTransferAmount
+     *         1 symbol with value: 
+     *  - '0' - No 
+     *  - '1' - Yes
+     * @throws java.lang.Exception
+     */
+     public void ProgramTransferAmountParam_RA(OptionTransferAmount optionTransferAmount) throws Exception {
+             Do("ProgramTransferAmountParam_RA", "OptionTransferAmount", optionTransferAmount);
+     }
+
+    /**
+     *Provides information about device's DHCP status
+     * @return OptionDhcpStatus
+     * @throws java.lang.Exception
+     */
+     public OptionDhcpStatus ReadDHCP_Status() throws Exception {
+             return CreateRes(Do("ReadDHCP_Status"), OptionDhcpStatus.class);
+     }
+
+    /**
+     *Provides information about device's IP address, subnet mask, gateway address, DNS address.
+     * @param  optionAddressType
+     *         1 symbol with value: 
+     *  - '2' - IP address 
+     *  - '3' - Subnet Mask 
+     *  - '4' - Gateway address 
+     *  - '5' - DNS address
+     * @return TCP_AddressesRes
+     * @throws java.lang.Exception
+     */
+     public TCP_AddressesRes ReadTCP_Addresses(OptionAddressType optionAddressType) throws Exception {
+             return CreateRes(Do("ReadTCP_Addresses", "OptionAddressType", optionAddressType), TCP_AddressesRes.class);
+     }
+
+    /**
      *Provides information about the QR code data in last issued receipt.
      * @return String
      * @throws java.lang.Exception
@@ -1088,13 +1262,11 @@ public class FP extends FPcore {
      }
 
     /**
-     *Stores in the memory the graphic file under number 0. Prints information  about loaded in the printer graphic files.
-     * @param  bMPfile
-     *         *BMP file with fixed size 9022 bytes
+     *Removes all paired devices. To apply use -SaveNetworkSettings()
      * @throws java.lang.Exception
      */
-     public void ProgLogo(String bMPfile) throws Exception {
-             Do("ProgLogo", "BMPfile", bMPfile);
+     public void UnpairAllDevices() throws Exception {
+             Do("UnpairAllDevices");
      }
 
     /**
@@ -1103,6 +1275,27 @@ public class FP extends FPcore {
      */
      public void DisplayDateTime() throws Exception {
              Do("DisplayDateTime");
+     }
+
+    /**
+     *Set device's TCP autostart . To apply use -SaveNetworkSettings()
+     * @param  optionTCPAutoStart
+     *         1 symbol with value: 
+     *  - '0' - No 
+     *  - '1' - Yes
+     * @throws java.lang.Exception
+     */
+     public void SetTCP_AutoStart(OptionTCPAutoStart optionTCPAutoStart) throws Exception {
+             Do("SetTCP_AutoStart", "OptionTCPAutoStart", optionTCPAutoStart);
+     }
+
+    /**
+     *Provide information about NBL parameter to be monitored by the fiscal device.
+     * @return String
+     * @throws java.lang.Exception
+     */
+     public String ReadNBLParameter() throws Exception {
+             return CreateRes(Do("ReadNBLParameter"), String.class);
      }
 
     /**
@@ -1120,6 +1313,18 @@ public class FP extends FPcore {
      */
      public void PrintOrStoreEJByDate(OptionReportStorage optionReportStorage, Date startRepFromDate, Date endRepFromDate) throws Exception {
              Do("PrintOrStoreEJByDate", "OptionReportStorage", optionReportStorage, "StartRepFromDate", startRepFromDate, "EndRepFromDate", endRepFromDate);
+     }
+
+    /**
+     *Sets the used TCP module for communication - Lan or WiFi. To apply use -SaveNetworkSettings()
+     * @param  optionUsedModule
+     *         1 symbol with value: 
+     *  - '1' - LAN 
+     *  - '2' - WiFi
+     * @throws java.lang.Exception
+     */
+     public void SetTCP_ActiveModule(OptionUsedModule optionUsedModule) throws Exception {
+             Do("SetTCP_ActiveModule", "OptionUsedModule", optionUsedModule);
      }
 
     /**
@@ -1164,6 +1369,15 @@ public class FP extends FPcore {
      }
 
     /**
+     *Read the used TCP module for communication - Lan or WiFi
+     * @return OptionUsedModule
+     * @throws java.lang.Exception
+     */
+     public OptionUsedModule ReadTCP_UsedModule() throws Exception {
+             return CreateRes(Do("ReadTCP_UsedModule"), OptionUsedModule.class);
+     }
+
+    /**
      *Feeds one line of paper.
      * @throws java.lang.Exception
      */
@@ -1198,7 +1412,8 @@ public class FP extends FPcore {
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner: DepNum[HEX] + 80h 
-     * example: Dep01 = 81h, Dep02 = 82h … Dep19 = 93h
+     * example: Dep01 = 81h, Dep02 = 82h … Dep19 = 93h 
+     * Department range from 1 to 127
      * @param  price
      *         Up to 10 symbols for article's price. Use minus sign '-' for correction
      * @param  quantity
@@ -1213,6 +1428,50 @@ public class FP extends FPcore {
      */
      public void SellPLUfromDep_(String namePLU, int depNum, Double price, Double quantity, Double discAddP, Double discAddV) throws Exception {
              Do("SellPLUfromDep_", "NamePLU", namePLU, "DepNum", depNum, "Price", price, "Quantity", quantity, "DiscAddP", discAddP, "DiscAddV", discAddV);
+     }
+
+    /**
+     *Arrangement of payment positions according to NRA list: 0-Cash, 1-Check, 2-Talon, 3-V.Talon, 4-Packaging, 5-Service, 6-Damage, 7-Card, 8-Bank, 9- Programming Name 1, 10-Programming Name 2, 11-Currency.
+     * @param  paymentPosition0
+     *         2 digits for payment position 0 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition1
+     *         2 digits for payment position 1 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition2
+     *         2 digits for payment position 2 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition3
+     *         2 digits for payment position 3 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition4
+     *         2 digits for payment position 4 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition5
+     *         2 digits for payment position 5 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition6
+     *         2 digits for payment position 6 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition7
+     *         2 digits for payment position 7 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition8
+     *         2 digits for payment position 8 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition9
+     *         2 digits for payment position 9 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition10
+     *         2 digits for payment position 10 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @param  paymentPosition11
+     *         2 digits for payment position 11 in format ##.  
+     * Values from '1' to '11' according to NRA payments list.
+     * @throws java.lang.Exception
+     */
+     public void ArrangePayments(Double paymentPosition0, Double paymentPosition1, Double paymentPosition2, Double paymentPosition3, Double paymentPosition4, Double paymentPosition5, Double paymentPosition6, Double paymentPosition7, Double paymentPosition8, Double paymentPosition9, Double paymentPosition10, Double paymentPosition11) throws Exception {
+             Do("ArrangePayments", "PaymentPosition0", paymentPosition0, "PaymentPosition1", paymentPosition1, "PaymentPosition2", paymentPosition2, "PaymentPosition3", paymentPosition3, "PaymentPosition4", paymentPosition4, "PaymentPosition5", paymentPosition5, "PaymentPosition6", paymentPosition6, "PaymentPosition7", paymentPosition7, "PaymentPosition8", paymentPosition8, "PaymentPosition9", paymentPosition9, "PaymentPosition10", paymentPosition10, "PaymentPosition11", paymentPosition11);
      }
 
     /**
@@ -1270,7 +1529,7 @@ public class FP extends FPcore {
      }
 
     /**
-     *Prints barcode from type stated by CodeType and CodeLen and with data stated in CodeData field. Command works only for fiscal printer devices. ECR does not support this command.
+     *Prints barcode from type stated by CodeType and CodeLen and with data stated in CodeData field. Command works only for fiscal printer devices. ECR does not support this command. The command is not supported by KL ECRs!
      * @param  optionCodeType
      *         1 symbol with possible values: 
      *  - '0' - UPC A 
@@ -1351,6 +1610,14 @@ public class FP extends FPcore {
      }
 
     /**
+     *Prints a brief Departments report from the FM.
+     * @throws java.lang.Exception
+     */
+     public void PrintBriefFMDepartmentsReport() throws Exception {
+             Do("PrintBriefFMDepartmentsReport");
+     }
+
+    /**
      *Shows a 20-symbols text in the lower external display line.
      * @param  text
      *         20 symbols text
@@ -1367,6 +1634,18 @@ public class FP extends FPcore {
      */
      public DailyCountersRes ReadDailyCounters() throws Exception {
              return CreateRes(Do("ReadDailyCounters"), DailyCountersRes.class);
+     }
+
+    /**
+     *Program device's WiFi network password where it will connect. To apply use -SaveNetworkSettings()
+     * @param  passLength
+     *         Up to 3 symbols for the WiFi password len
+     * @param  password
+     *         Up to 100 symbols for the device's WiFi password
+     * @throws java.lang.Exception
+     */
+     public void SetWiFi_Password(Double passLength, String password) throws Exception {
+             Do("SetWiFi_Password", "PassLength", passLength, "Password", password);
      }
 
     /**
@@ -1398,6 +1677,26 @@ public class FP extends FPcore {
      }
 
     /**
+     *Start Bluetooth test on the device and print out the result
+     * @throws java.lang.Exception
+     */
+     public void StartTest_Bluetooth() throws Exception {
+             Do("StartTest_Bluetooth");
+     }
+
+    /**
+     *Read a brief FM Departments report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void ReadBriefFMDepartmentsReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("ReadBriefFMDepartmentsReportByDate", "StartDate", startDate, "EndDate", endDate);
+     }
+
+    /**
      *Erase all articles in PLU database.
      * @param  password
      *         6 symbols for password
@@ -1405,6 +1704,18 @@ public class FP extends FPcore {
      */
      public void EraseAllPLUs(String password) throws Exception {
              Do("EraseAllPLUs", "Password", password);
+     }
+
+    /**
+     *Print a detailed FM Departments report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void PrintDetailedFMDepartmentsReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("PrintDetailedFMDepartmentsReportByDate", "StartDate", startDate, "EndDate", endDate);
      }
 
     /**
@@ -1439,12 +1750,20 @@ public class FP extends FPcore {
      }
 
     /**
-     *Provide information about daily report parameter. If the parameter is set to 0 the status flag 4.6 will become 1 and the device will block all sales operation until daily report is printed. If the parameter is set to 1 the report will be generated automaticly without printout
-     * @return OptionDailyReportSetting
+     *Provide information about automatic daily report printing or not printing parameter
+     * @return OptionDailyReport
      * @throws java.lang.Exception
      */
-     public OptionDailyReportSetting ReadDailyReportParameter() throws Exception {
-             return CreateRes(Do("ReadDailyReportParameter"), OptionDailyReportSetting.class);
+     public OptionDailyReport ReadDailyReportParameter() throws Exception {
+             return CreateRes(Do("ReadDailyReportParameter"), OptionDailyReport.class);
+     }
+
+    /**
+     *Start GPRS test on the device and print out the result
+     * @throws java.lang.Exception
+     */
+     public void StartTest_GPRS() throws Exception {
+             Do("StartTest_GPRS");
      }
 
     /**
@@ -1482,6 +1801,15 @@ public class FP extends FPcore {
      }
 
     /**
+     *Provide an information about modules supported by device's firmware
+     * @return DeviceModuleSupportByFirmwareRes
+     * @throws java.lang.Exception
+     */
+     public DeviceModuleSupportByFirmwareRes ReadDeviceModuleSupportByFirmware() throws Exception {
+             return CreateRes(Do("ReadDeviceModuleSupportByFirmware"), DeviceModuleSupportByFirmwareRes.class);
+     }
+
+    /**
      *Set invoice start and end number range. To execute the command is necessary to grand following condition: the number range to be spent, not used, or not set after the last RAM reset.
      * @param  startNum
      *         10 characters for start number in format: ##########
@@ -1491,6 +1819,15 @@ public class FP extends FPcore {
      */
      public void SetInvoiceRange(Double startNum, Double endNum) throws Exception {
              Do("SetInvoiceRange", "StartNum", startNum, "EndNum", endNum);
+     }
+
+    /**
+     *Read device's connected WiFi network password
+     * @return WiFi_PasswordRes
+     * @throws java.lang.Exception
+     */
+     public WiFi_PasswordRes ReadWiFi_Password() throws Exception {
+             return CreateRes(Do("ReadWiFi_Password"), WiFi_PasswordRes.class);
      }
 
     /**
@@ -1563,11 +1900,24 @@ public class FP extends FPcore {
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner; example: Dep01 = 81h, Dep02 
-     * = 82h … Dep19 = 93h
+     * = 82h … Dep19 = 93h 
+     * Department range from 1 to 127
      * @throws java.lang.Exception
      */
      public void SellFractQtyPLUwithSpecifiedVATfromDep(String namePLU, OptionVATClass optionVATClass, Double price, String quantity, Double discAddP, Double discAddV, int depNum) throws Exception {
              Do("SellFractQtyPLUwithSpecifiedVATfromDep", "NamePLU", namePLU, "OptionVATClass", optionVATClass, "Price", price, "Quantity", quantity, "DiscAddP", discAddP, "DiscAddV", discAddV, "DepNum", depNum);
+     }
+
+    /**
+     *Print a brief FM Departments report by initial and end Z report number.
+     * @param  startZNum
+     *         4 symbols for the initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for the final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void PrintBriefFMDepartmentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("PrintBriefFMDepartmentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
      }
 
     /**
@@ -1652,6 +2002,18 @@ public class FP extends FPcore {
      }
 
     /**
+     *Print a detailed FM Departments report by initial and end Z report number.
+     * @param  startZNum
+     *         4 symbols for initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void PrintDetailedFMDepartmentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("PrintDetailedFMDepartmentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
+     }
+
+    /**
      *Read Electronic Journal report with all documents.
      * @param  optionReportFormat
      *         1 character with value 
@@ -1697,11 +2059,19 @@ public class FP extends FPcore {
      }
 
     /**
-     *Provides consequently information about every single block stored in the FM starting with Acknowledgements and ending with end message.
+     *Program device's network IP address, subnet mask, gateway address, DNS address. To apply use -SaveNetworkSettings()
+     * @param  optionAddressType
+     *         1 symbol with value: 
+     *  - '2' - IP address 
+     *  - '3' - Subnet Mask 
+     *  - '4' - Gateway address 
+     *  - '5' - DNS address
+     * @param  deviceAddress
+     *         15 symbols for the selected address
      * @throws java.lang.Exception
      */
-     public void ReadFMcontent() throws Exception {
-             Do("ReadFMcontent");
+     public void SetDeviceTCP_Addresses(OptionAddressType optionAddressType, String deviceAddress) throws Exception {
+             Do("SetDeviceTCP_Addresses", "OptionAddressType", optionAddressType, "DeviceAddress", deviceAddress);
      }
 
     /**
@@ -1721,6 +2091,15 @@ public class FP extends FPcore {
      */
      public void PrintText(String text) throws Exception {
              Do("PrintText", "Text", text);
+     }
+
+    /**
+     *Provides information about arrangement of payment positions according to NRA list: 0-Cash, 1-Check, 2-Talon, 3-V.Talon, 4-Packaging, 5-Service, 6- Damage, 7-Card, 8-Bank, 9-Programming Name 1, 10-Programming Name 2, 11- Currency.
+     * @return PaymentsPositionsRes
+     * @throws java.lang.Exception
+     */
+     public PaymentsPositionsRes ReadPaymentsPositions() throws Exception {
+             return CreateRes(Do("ReadPaymentsPositions"), PaymentsPositionsRes.class);
      }
 
     /**
@@ -1761,6 +2140,18 @@ public class FP extends FPcore {
      */
      public void OpenCreditNoteWithFDCustomerDB(Double operNum, String operPass, OptionInvoiceCreditNotePrintType optionInvoiceCreditNotePrintType, String customerNum, OptionStornoReason optionStornoReason, String relatedToInvoiceNum, Date relatedToInvoiceDateTime, Double relatedToRcpNum, String fMNum, String relatedToURN) throws Exception {
              Do("OpenCreditNoteWithFDCustomerDB", "OperNum", operNum, "OperPass", operPass, "OptionInvoiceCreditNotePrintType", optionInvoiceCreditNotePrintType, "CustomerNum", customerNum, "OptionStornoReason", optionStornoReason, "RelatedToInvoiceNum", relatedToInvoiceNum, "RelatedToInvoiceDateTime", relatedToInvoiceDateTime, "RelatedToRcpNum", relatedToRcpNum, "FMNum", fMNum, "RelatedToURN", relatedToURN);
+     }
+
+    /**
+     *Program automatic daily report printing or not printing parameter.
+     * @param  optionDailyReport
+     *         1 symbol with value: 
+     *  - '1' - Print automatic Z report 
+     *  - '0' - Generate automatic Z report
+     * @throws java.lang.Exception
+     */
+     public void ProgramDailyReportParameter(OptionDailyReport optionDailyReport) throws Exception {
+             Do("ProgramDailyReportParameter", "OptionDailyReport", optionDailyReport);
      }
 
     /**
@@ -1822,9 +2213,7 @@ public class FP extends FPcore {
      *Read or Store Electronic Journal Report by number of Z report blocks, CSV format option and document content. If CSV format is set the content can includes only fiscal receipts. FlagsReceipts is a char with bits representing the receipt types. FlagsReports is a char with bits representing the report type.
      * @param  optionStorageReport
      *         1 character with value 
-     *  - 'j0' - To PC  
-     * 
-     * 
+     *  - 'j0' - To PC 
      *  - 'j2' - To USB Flash Drive 
      *  - 'j4' - To SD card
      * @param  optionCSVformat
@@ -1948,6 +2337,15 @@ public class FP extends FPcore {
      }
 
     /**
+     *Provides information about daily available amounts in cash and currency, Z daily report type and Z daily report number
+     * @return LastDailyReportAvailableAmountsRes
+     * @throws java.lang.Exception
+     */
+     public LastDailyReportAvailableAmountsRes ReadLastDailyReportAvailableAmounts() throws Exception {
+             return CreateRes(Do("ReadLastDailyReportAvailableAmounts"), LastDailyReportAvailableAmountsRes.class);
+     }
+
+    /**
      *Provides information about all programmed types of payment, currency name and currency exchange rate.
      * @return PaymentsRes
      * @throws java.lang.Exception
@@ -1985,7 +2383,8 @@ public class FP extends FPcore {
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner; example: Dep01 = 81h,  
-     * Dep02 = 82h … Dep19 = 93h
+     * Dep02 = 82h … Dep19 = 93h 
+     * Department range from 1 to 127
      * @throws java.lang.Exception
      */
      public void SellPLUwithSpecifiedVATfromDep(String namePLU, OptionVATClass optionVATClass, Double price, Double quantity, Double discAddP, Double discAddV, int depNum) throws Exception {
@@ -2085,6 +2484,15 @@ public class FP extends FPcore {
      }
 
     /**
+     *Provides information about device's TCP password.
+     * @return TCP_PasswordRes
+     * @throws java.lang.Exception
+     */
+     public TCP_PasswordRes ReadTCP_Password() throws Exception {
+             return CreateRes(Do("ReadTCP_Password"), TCP_PasswordRes.class);
+     }
+
+    /**
      *Stores a block containing the values of the VAT rates into the fiscal memory. Print the values on the printer.
      * @param  password
      *         6-symbols string
@@ -2113,7 +2521,7 @@ public class FP extends FPcore {
     /**
      *Read or Store Electronic Journal Report by initial to end date, CSV format option and document content. If CSV format is set the content can includes only fiscal receipts. FlagsReceipts is a char with bits representing the receipt types. FlagsReports is a char with bits representing the report type.
      * @param  optionStorageReport
-     *         1 character with value 
+     *         2 characters with value: 
      *  - 'j0' - To PC 
      *  - 'j2' - To USB Flash Drive 
      *  - 'j4' - To SD card
@@ -2149,6 +2557,52 @@ public class FP extends FPcore {
      */
      public void ReadEJByDateCustom(OptionStorageReport optionStorageReport, OptionCSVformat optionCSVformat, byte flagsReceipts, byte flagsReports, Date startRepFromDate, Date endRepFromDate) throws Exception {
              Do("ReadEJByDateCustom", "OptionStorageReport", optionStorageReport, "OptionCSVformat", optionCSVformat, "FlagsReceipts", flagsReceipts, "FlagsReports", flagsReports, "StartRepFromDate", startRepFromDate, "EndRepFromDate", endRepFromDate);
+     }
+
+    /**
+     *Program device's Bluetooth module to be enabled or disabled. To apply use -SaveNetworkSettings()
+     * @param  optionBTstatus
+     *         1 symbol with value: 
+     *  - '0' - Disabled 
+     *  - '1' - Enabled
+     * @throws java.lang.Exception
+     */
+     public void SetBluetooth_Status(OptionBTstatus optionBTstatus) throws Exception {
+             Do("SetBluetooth_Status", "OptionBTstatus", optionBTstatus);
+     }
+
+    /**
+     *Register the sell (for correction use minus sign in the price field) of article with specified VAT. If department is present the relevant accumulations are perfomed in its registers.
+     * @param  namePLU
+     *         36 symbols for article's name. 34 symbols are printed on paper. 
+     * Symbol 0x7C '|' is new line separator.
+     * @param  optionVATClass
+     *         1 character for VAT class: 
+     *  - 'А' - VAT Class 0 
+     *  - 'Б' - VAT Class 1 
+     *  - 'В' - VAT Class 2 
+     *  - 'Г' - VAT Class 3 
+     *  - 'Д' - VAT Class 4 
+     *  - 'Е' - VAT Class 5 
+     *  - 'Ж' - VAT Class 6 
+     *  - 'З' - VAT Class 7 
+     *  - '*' - Forbidden
+     * @param  price
+     *         Up to 10 symbols for article's price. Use minus sign '-' for correction
+     * @param  quantity
+     *         Up to 10 symbols for quantity
+     * @param  discAddP
+     *         Up to 7 symbols for percentage of discount/addition. 
+     * Use minus sign '-' for discount
+     * @param  discAddV
+     *         Up to 8 symbols for value of discount/addition. 
+     * Use minus sign '-' for discount
+     * @param  depNum
+     *         Up to 3 symbols for department number
+     * @throws java.lang.Exception
+     */
+     public void SellPLUwithSpecifiedVATfor200DepRangeDevice(String namePLU, OptionVATClass optionVATClass, Double price, Double quantity, Double discAddP, Double discAddV, Double depNum) throws Exception {
+             Do("SellPLUwithSpecifiedVATfor200DepRangeDevice", "NamePLU", namePLU, "OptionVATClass", optionVATClass, "Price", price, "Quantity", quantity, "DiscAddP", discAddP, "DiscAddV", discAddV, "DepNum", depNum);
      }
 
     /**
@@ -2221,7 +2675,7 @@ public class FP extends FPcore {
     /**
      *Set data for the state department number from the internal FD database. Parameters Price, OptionDepPrice and AdditionalName are not obligatory and require the previous not obligatory parameter.
      * @param  number
-     *         2 symbols department number in format ##
+     *         Up to 3 symbols department number
      * @param  name
      *         20 characters department name
      * @param  optionVATClass
@@ -2254,6 +2708,37 @@ public class FP extends FPcore {
      }
 
     /**
+     *Read a detailed FM payments report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void ReadDetailedFMPaymentsReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("ReadDetailedFMPaymentsReportByDate", "StartDate", startDate, "EndDate", endDate);
+     }
+
+    /**
+     *Sets device's idle timeout setting. Set timeout for closing the connection if there is an inactivity. Maximal value - 7200, minimal value 1. 0 is for never close the connection. This option can be used only if the device has LAN or WiFi. To apply use - SaveNetworkSettings()
+     * @param  idleTimeout
+     *         4 symbols for Idle timeout in format ####
+     * @throws java.lang.Exception
+     */
+     public void SetIdle_Timeout(Double idleTimeout) throws Exception {
+             Do("SetIdle_Timeout", "IdleTimeout", idleTimeout);
+     }
+
+    /**
+     *Read device TCP Auto Start status
+     * @return OptionTCPAutoStart
+     * @throws java.lang.Exception
+     */
+     public OptionTCPAutoStart ReadTCP_AutoStartStatus() throws Exception {
+             return CreateRes(Do("ReadTCP_AutoStartStatus"), OptionTCPAutoStart.class);
+     }
+
+    /**
      *Prints the programmed graphical logo with the stated number.
      * @param  number
      *         Number of logo to be printed. If missing, prints logo with number 0
@@ -2272,6 +2757,18 @@ public class FP extends FPcore {
      */
      public DailyGeneralRegistersByOperatorRes ReadDailyGeneralRegistersByOperator(Double operNum) throws Exception {
              return CreateRes(Do("ReadDailyGeneralRegistersByOperator", "OperNum", operNum), DailyGeneralRegistersByOperatorRes.class);
+     }
+
+    /**
+     *Read a brief FM report by initial and end FM report number.
+     * @param  startZNum
+     *         4 symbols for the initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for the final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void ReadBriefFMReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("ReadBriefFMReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
      }
 
     /**
@@ -2310,7 +2807,7 @@ public class FP extends FPcore {
      }
 
     /**
-     *Depending on the parameter prints:  − daily fiscal report with zeroing and fiscal memory record, preceded by Electronic Journal report print ('Z'); − daily fiscal report without zeroing ('X');
+     *Depending on the parameter prints:   daily fiscal report with zeroing and fiscal memory record, preceded by Electronic Journal report print ('Z');  daily fiscal report without zeroing ('X');
      * @param  optionZeroing
      *         1 character with following values: 
      *  - 'Z' - Zeroing 
@@ -2331,6 +2828,14 @@ public class FP extends FPcore {
      }
 
     /**
+     *Generate Z-daily report without printing
+     * @throws java.lang.Exception
+     */
+     public void ZDailyReportNoPrint() throws Exception {
+             Do("ZDailyReportNoPrint");
+     }
+
+    /**
      *Opens a non-fiscal receipt assigned to the specified operator number, operator password and print type.
      * @param  operNum
      *         Symbols from 1 to 20 corresponding to operator's 
@@ -2345,6 +2850,18 @@ public class FP extends FPcore {
      */
      public void OpenNonFiscalReceipt(Double operNum, String operPass, OptionNonFiscalPrintType optionNonFiscalPrintType) throws Exception {
              Do("OpenNonFiscalReceipt", "OperNum", operNum, "OperPass", operPass, "OptionNonFiscalPrintType", optionNonFiscalPrintType);
+     }
+
+    /**
+     *Read a brief FM payments report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void ReadBriefFMPaymentsReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("ReadBriefFMPaymentsReportByDate", "StartDate", startDate, "EndDate", endDate);
      }
 
     /**
@@ -2368,6 +2885,18 @@ public class FP extends FPcore {
      */
      public Double Subtotal(OptionPrinting optionPrinting, OptionDisplay optionDisplay, Double discAddV, Double discAddP) throws Exception {
              return CreateRes(Do("Subtotal", "OptionPrinting", optionPrinting, "OptionDisplay", optionDisplay, "DiscAddV", discAddV, "DiscAddP", discAddP), Double.class);
+     }
+
+    /**
+     *Program NBL parameter to be monitored by the fiscal device.
+     * @param  optionNBL
+     *         1 symbol with value: 
+     *  - '0' - No 
+     *  - '1' - Yes
+     * @throws java.lang.Exception
+     */
+     public void ProgramNBLParameter(OptionNBL optionNBL) throws Exception {
+             Do("ProgramNBLParameter", "OptionNBL", optionNBL);
      }
 
     /**
@@ -2410,6 +2939,18 @@ public class FP extends FPcore {
      }
 
     /**
+     *Read a detailed FM report by initial and end FM report number.
+     * @param  startZNum
+     *         4 symbols for the initial report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for the final report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void ReadDetailedFMReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("ReadDetailedFMReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
+     }
+
+    /**
      *Prints a brief payments from the FM.
      * @throws java.lang.Exception
      */
@@ -2427,12 +2968,45 @@ public class FP extends FPcore {
      }
 
     /**
+     *Read a brief FM payments report by initial and end FM report number.
+     * @param  startZNum
+     *         4 symbols for the initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for the final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void ReadBriefFMPaymentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("ReadBriefFMPaymentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
+     }
+
+    /**
+     *Read a brief FM Departments report by initial and end Z report number.
+     * @param  startZNum
+     *         4 symbols for the initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for the final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void ReadBriefFMDepartmentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("ReadBriefFMDepartmentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
+     }
+
+    /**
      *Read the Grand fiscal turnover sum and Grand fiscal VAT sum.
      * @return GrandFiscalSalesAndStornoAmountsRes
      * @throws java.lang.Exception
      */
      public GrandFiscalSalesAndStornoAmountsRes ReadGrandFiscalSalesAndStornoAmounts() throws Exception {
              return CreateRes(Do("ReadGrandFiscalSalesAndStornoAmounts"), GrandFiscalSalesAndStornoAmountsRes.class);
+     }
+
+    /**
+     *Providing information about if the device's Bluetooth module is enabled or disabled.
+     * @return OptionBTstatus
+     * @throws java.lang.Exception
+     */
+     public OptionBTstatus ReadBluetooth_Status() throws Exception {
+             return CreateRes(Do("ReadBluetooth_Status"), OptionBTstatus.class);
      }
 
     /**
@@ -2475,11 +3049,30 @@ public class FP extends FPcore {
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner; example: Dep01 = 81h, Dep02 
-     * = 82h … Dep19 = 93h
+     * = 82h … Dep19 = 93h 
+     * Department range from 1 to 127
      * @throws java.lang.Exception
      */
      public void SellFractQtyPLUfromDep(String namePLU, Double price, String quantity, Double discAddP, Double discAddV, int depNum) throws Exception {
              Do("SellFractQtyPLUfromDep", "NamePLU", namePLU, "Price", price, "Quantity", quantity, "DiscAddP", discAddP, "DiscAddV", discAddV, "DepNum", depNum);
+     }
+
+    /**
+     *Provide an information about modules supported by the device
+     * @return DeviceModuleSupportRes
+     * @throws java.lang.Exception
+     */
+     public DeviceModuleSupportRes ReadDeviceModuleSupport() throws Exception {
+             return CreateRes(Do("ReadDeviceModuleSupport"), DeviceModuleSupportRes.class);
+     }
+
+    /**
+     *Read device's connected WiFi network name
+     * @return WiFi_NetworkNameRes
+     * @throws java.lang.Exception
+     */
+     public WiFi_NetworkNameRes ReadWiFi_NetworkName() throws Exception {
+             return CreateRes(Do("ReadWiFi_NetworkName"), WiFi_NetworkNameRes.class);
      }
 
     /**
@@ -2489,6 +3082,18 @@ public class FP extends FPcore {
      */
      public ParametersRes ReadParameters() throws Exception {
              return CreateRes(Do("ReadParameters"), ParametersRes.class);
+     }
+
+    /**
+     *Read a detailed FM Departments report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void ReadDetailedFMDepartmentsReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("ReadDetailedFMDepartmentsReportByDate", "StartDate", startDate, "EndDate", endDate);
      }
 
     /**
@@ -2518,7 +3123,8 @@ public class FP extends FPcore {
      * @param  depNum
      *         1 symbol for article department 
      * attachment, formed in the following manner: DepNum[HEX] + 80h 
-     * example: Dep01 = 81h, Dep02 = 82h … Dep19 = 93h
+     * example: Dep01 = 81h, Dep02 = 82h … Dep19 = 93h 
+     * Department range from 1 to 127
      * @param  price
      *         Up to 10 symbols for article's price. Use minus sign '-' for correction
      * @param  quantity
@@ -2583,9 +3189,7 @@ public class FP extends FPcore {
      *  - 'j4' - To SD card
      * @param  optionCSVformat
      *         1 symbol with value: 
-     *  - 'C' - Yes  
-     * 
-     * 
+     *  - 'C' - Yes 
      *  - 'X' - No
      * @param  flagsReceipts
      *         1 symbol for Receipts included in EJ: 
@@ -2642,6 +3246,42 @@ public class FP extends FPcore {
      */
      public DailyPORes ReadDailyPO() throws Exception {
              return CreateRes(Do("ReadDailyPO"), DailyPORes.class);
+     }
+
+    /**
+     *Read a detailed FM payments report by initial and end Z report number.
+     * @param  startZNum
+     *         4 symbols for initial FM report number included in report, format ####
+     * @param  endZNum
+     *         4 symbols for final FM report number included in report, format ####
+     * @throws java.lang.Exception
+     */
+     public void ReadDetailedFMPaymentsReportByZBlocks(Double startZNum, Double endZNum) throws Exception {
+             Do("ReadDetailedFMPaymentsReportByZBlocks", "StartZNum", startZNum, "EndZNum", endZNum);
+     }
+
+    /**
+     *Read a brief FM report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void ReadBriefFMReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("ReadBriefFMReportByDate", "StartDate", startDate, "EndDate", endDate);
+     }
+
+    /**
+     *Read a detailed FM report by initial and end date.
+     * @param  startDate
+     *         6 symbols for initial date in the DDMMYY format
+     * @param  endDate
+     *         6 symbols for final date in the DDMMYY format
+     * @throws java.lang.Exception
+     */
+     public void ReadDetailedFMReportByDate(Date startDate, Date endDate) throws Exception {
+             Do("ReadDetailedFMReportByDate", "StartDate", startDate, "EndDate", endDate);
      }
 
     /**

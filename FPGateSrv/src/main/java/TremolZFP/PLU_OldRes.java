@@ -103,7 +103,8 @@ public class PLU_OldRes {
     *BelongToDepNumber + 80h, 1 symbol for article department 
     *attachment, formed in the following manner: 
     *BelongToDepNumber[HEX] + 80h example: Dep01 = 81h, Dep02 
-    *= 82h … Dep19 = 93h
+    *= 82h … Dep19 = 93h 
+    *Department range from 1 to 127
     */
     public int BelongToDepNumber;
     public int getBelongToDepNumber() {

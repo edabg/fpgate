@@ -880,7 +880,10 @@ public class PrintResource extends ServerResource {
         StrTable namedArgs = pRequest.getNamedArguments();
         if (namedArgs.containsKey("Amount"))
             amountStr = namedArgs.get("Amount");
-
+        if (namedArgs.containsKey("OpCode"))
+            FP.setParam("OperatorCode", namedArgs.get("OpCode"));
+        if (namedArgs.containsKey("OpPass"))
+            FP.setParam("OperatorPass", namedArgs.get("OpPass"));
         execLog.msg("Cash In/Out requested:"+amountStr);
         if (amountStr.length() == 0)
             amountStr = "0";

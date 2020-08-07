@@ -2,7 +2,7 @@ package TremolZFP;
 import java.util.Date;
 public class DepartmentAllRes {
    /**
-    *2 symbols for department number in format: ##
+    *Up to 3 symbols for department number
     */
     public Double DepNum;
     public Double getDepNum() {

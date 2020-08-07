@@ -31,6 +31,7 @@ import TremolZFP.OptionInvoiceCreditNotePrintType;
 import TremolZFP.OptionInvoicePrintType;
 import TremolZFP.OptionIsReceiptOpened;
 import TremolZFP.OptionNonFiscalPrintType;
+import TremolZFP.OptionPayType;
 import TremolZFP.OptionPaymentType;
 import TremolZFP.OptionPrintAvailability;
 import TremolZFP.OptionPrintVAT;
@@ -1480,7 +1481,9 @@ FWDT=23NOV18 1000
             f.set(inst, Double.valueOf(dval));
 */            
             if (abs(ioSum) >= 0.01)
-                fp.ReceivedOnAccount_PaidOut(getParamDouble("OperatorCode"), getParam("OperatorPass"), ioSum, OptionPrintAvailability.Yes, "");
+                fp.ReceivedOnAccount_PaidOut(getParamDouble("OperatorCode"), getParam("OperatorPass"), OptionPayType.Cash, ioSum, OptionPrintAvailability.Yes, "");
+//                fp.ReceivedOnAccount_PaidOut(getParamDouble("OperatorCode"), getParam("OperatorPass"), ioSum, OptionPrintAvailability.Yes, "");
+                
             Locale.setDefault(Locale.ROOT);
             Double CashSum = 0d;
             if (isOldDevice) {
