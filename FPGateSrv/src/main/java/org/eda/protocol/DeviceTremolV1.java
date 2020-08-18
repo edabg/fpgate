@@ -1449,7 +1449,7 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
 
             params = params + ";" + RevType;    // <;> <StornoReason[1]>
             params = params + ";" + RevInvNum;  // <;> <RelatedToInvoiceNum[10]>
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-mm-yy HH:mm:ss");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
             params = params + ";" + dateFormat.format(RevDateTime); // <;> <RelatedToInvoiceDateTime”DD-MM-YY HH:MM:SS”>
             params = params + ";" + RevDocNum;  // <;> <RelatedToRcpNum[1..6]>
             params = params + ";" + RevFMNum;// <;> <FMNum[8]>
@@ -1472,7 +1472,7 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
             params = params + ";" + printMode;                  // <;> <StornoRcpPrintType[1]>
             params = params + ";" + RevType;    // <;> <StornoReason[1]>
             params = params + ";" + RevDocNum;  // <;> <RelatedToRcpNum[1..6]>
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-mm-yy HH:mm:ss");
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm:ss");
             params = params + ";" + dateFormat.format(RevDateTime); // <;> <RelatedToRcpDateTime ”DD-MM-YY HH:MM:SS”>
             params = params + ";" + RevFMNum;// <;> <FMNum[8]>
             if (RevUNS.length() > 0)

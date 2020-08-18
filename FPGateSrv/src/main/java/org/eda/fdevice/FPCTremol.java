@@ -586,6 +586,18 @@ public class FPCTremol extends FPCBase {
             case CHECK : pc = OptionPaymentType.Payment_1; break;
             case CUSTOM1 : pc = OptionPaymentType.Payment_2; break;
             case CUSTOM2 : pc = OptionPaymentType.Payment_3; break;
+            
+            case NRASCASH : pc = paymentNumToOptionPaymentType(params.getInt("NRASCASH", 0), OptionPaymentType.Payment_0); break;
+            case NRASCHECKS :  pc = paymentNumToOptionPaymentType(params.getInt("NRASCHECKS", 1), OptionPaymentType.Payment_1); break;
+            case NRAST :  pc = paymentNumToOptionPaymentType(params.getInt("NRAST", 2), OptionPaymentType.Payment_2); break;
+            case NRASOT :  pc = paymentNumToOptionPaymentType(params.getInt("NRASOT", 3), OptionPaymentType.Payment_3); break;
+            case NRASP :  pc = paymentNumToOptionPaymentType(params.getInt("NRASP", 4), OptionPaymentType.Payment_4); break;
+            case NRASSELF :  pc = paymentNumToOptionPaymentType(params.getInt("NRASSELF", 5), OptionPaymentType.Payment_5); break;
+            case NRASDMG :  pc = paymentNumToOptionPaymentType(params.getInt("NRASDMG", 6), OptionPaymentType.Payment_6); break;
+            case NRASCARDS :  pc = paymentNumToOptionPaymentType(params.getInt("NRASCARDS", 7), OptionPaymentType.Payment_7); break;
+            case NRASW :  pc = paymentNumToOptionPaymentType(params.getInt("NRASW", 8), OptionPaymentType.Payment_8); break;
+            case NRASR1 :  pc = paymentNumToOptionPaymentType(params.getInt("NRASR1", 9), OptionPaymentType.Payment_9); break;
+            case NRASR2 :  pc = paymentNumToOptionPaymentType(params.getInt("NRASR2", 10), OptionPaymentType.Payment_10); break;
         }
         return pc;
     }

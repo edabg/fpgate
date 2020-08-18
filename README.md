@@ -31,8 +31,6 @@ Current version of FPGate supports following cash registers:
 Requirements
 ============
 - Java Runtime Environment 8.0+
-- Drivers for implemented fiscal printers. 
-For Tremol fiscal devices ZFPLabServer 1902191535 or newer is required.
 
 Installation
 ============
@@ -203,7 +201,7 @@ PLF        |RowCount                            | Paper Line Feed
 STG        |Text,TaxCode,Price,Percent,Quantity | Register Sell by Tax Group. Percent and Quantity are optional. Tax Code is Tax Group Abbreviation A,B,C...
 SDP        |Text,DepCode,Price,Percent,Quantity | Register Sell by Department. Percent and Quantity are optional. Department Code is programmed code of department.
 STL        |ToPrint,ToDisplay,Percent           | Calculate subtotal. Parameters are optional.
-TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4. Amount is Sum paid by customer.
+TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4,NRASCASH,NRASCHECKS,NRAST,NRASOT,NRASP,NRASSELF,NRASDMG,NRASCARDS,NRASW,NRASR1,NRASR2. Amount is Sum paid by customer.
 CMD        |Command,Params...                   | Call custom printer command. Depending on printer model behavior will be different.
 FTR        |Footer text                         | Print footer text before close check. 
 
