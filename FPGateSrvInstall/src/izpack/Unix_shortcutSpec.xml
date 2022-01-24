@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2020 EDA Ltd.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<izpack:shortcuts version="5.0"
+                  xmlns:izpack="http://izpack.org/schema/shortcuts"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://izpack.org/schema/shortcuts http://izpack.org/schema/5.0/izpack-shortcuts-5.0.xsd">
+
+    <skipIfNotSupported/>    
+
+    <programGroup defaultName="EDA FPGate Server"
+                location="applications"/>
+    <shortcut
+        name="Start FPGate Server"
+        type="Application"
+        encoding="UTF-8"
+        terminal="false"
+        target="$INSTALL_PATH\bin\FPGateSrv.sh"
+        commandLine=""
+        workingDirectory="$INSTALL_PATH\bin"
+        description="Starts EDA FPGate Server"
+        iconFile="$INSTALL_PATH\public_html\favicon.ico"
+        iconIndex="0"
+        initialState="normal"
+        programGroup="yes"
+        desktop="yes"
+        applications="yes"
+        startMenu="no"
+        startup="yes">
+        <createForPack name="fpgatesrv"/>
+    </shortcut>
+    <shortcut
+        name="Uninstaller"
+        programGroup="yes"
+        desktop="no"
+        applications="no"
+        startMenu="no"
+        startup="no"
+        terminal="true"
+        target="$INSTALL_PATH\Uninstaller\uninstaller.jar"
+        commandLine=""
+        iconFile="$INSTALL_PATH\public_html\favicon.ico"
+        description="This uninstalls the test">
+        <createForPack name="fpgatesrv"/>
+    </shortcut>  
+ 
+</izpack:shortcuts>
