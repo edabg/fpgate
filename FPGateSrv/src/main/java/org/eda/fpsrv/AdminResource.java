@@ -47,11 +47,10 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import org.eclipse.jetty.server.jmx.ServerMBean;
 import org.eda.fdevice.FPPrinterPool;
 import org.restlet.data.Status;
 
@@ -399,8 +398,13 @@ public class AdminResource extends ServerResource {
         String act = "";
         String id = "";
         try {
-            ares = getRequestAttributes().get("ares").toString();
-            act = getRequestAttributes().get("idr").toString();
+			Map<String, Object> attrs = getRequestAttributes();
+			if (attrs.containsKey("ares")) {
+				ares = getRequestAttributes().get("ares").toString();
+			}	
+			if (attrs.containsKey("idr")) {
+	            act = getRequestAttributes().get("idr").toString();
+			}	
             id = getQueryValue("id");
         } catch (Exception e) {
             responseError(e.getMessage());

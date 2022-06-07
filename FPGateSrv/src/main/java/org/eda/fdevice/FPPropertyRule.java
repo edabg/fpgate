@@ -17,7 +17,6 @@
 package org.eda.fdevice;
 
 import java.util.LinkedHashMap;
-import jdk.nashorn.internal.objects.NativeArray;
 
 /**
  *

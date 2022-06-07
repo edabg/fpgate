@@ -17,6 +17,8 @@
 package org.eda.fpsrv;
 
 import TremolZFP.FPcore;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.JdkLoggerFactory;
 import java.awt.GraphicsEnvironment;
 import org.eda.fdevice.FUser;
 import org.eda.fdevice.FPDatabase;
@@ -55,7 +57,6 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import javax.swing.JOptionPane;
-import org.eclipse.jetty.util.Uptime;
 import org.eda.cb.CBIOService;
 import org.eda.fdevice.FPPrinterPool;
 import org.eda.protocol.AbstractFiscalDevice;
@@ -191,29 +192,33 @@ public class FPServer extends Application {
 
     /**
     * Adds the specified path to the java library path
-     * http://fahdshariff.blogspot.bg/2011/08/changing-java-library-path-at-runtime.html
+    * http://fahdshariff.blogspot.bg/2011/08/changing-java-library-path-at-runtime.html
     *
     * @param pathToAdd the path to add
     * @throws Exception
     */
-    protected static void addLibraryPath(String pathToAdd) throws Exception{
-        final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
-        usrPathsField.setAccessible(true);
-
-        //get array of paths
-        final String[] paths = (String[])usrPathsField.get(null);
-
-        //check if the path to add is already present
-        for(String path : paths) {
-            if(path.equals(pathToAdd)) {
-                return;
-            }
-        }
-
-        //add the new path
-        final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
-        newPaths[newPaths.length-1] = pathToAdd;
-        usrPathsField.set(null, newPaths);
+    protected static void addLibraryPath(String pathToAdd) {
+		try {
+			final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+			usrPathsField.setAccessible(true);
+			
+			//get array of paths
+			final String[] paths = (String[])usrPathsField.get(null);
+			
+			//check if the path to add is already present
+			for(String path : paths) {
+				if(path.equals(pathToAdd)) {
+					return;
+				}
+			}
+			
+			//add the new path
+			final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
+			newPaths[newPaths.length-1] = pathToAdd;
+			usrPathsField.set(null, newPaths);
+		} catch (Exception ex) {
+			Logger.getLogger(FPServer.class.getName()).log(Level.SEVERE, null, ex);
+		}
     }    
 
     /**
@@ -333,18 +338,20 @@ public class FPServer extends Application {
             if (new File(pfile).exists())
                 this.appProperties.load(new FileInputStream(pfile));
             // Set library paths
+/*			
             addLibraryPath(appBasePath+"/lib");
             if (shouldLoad32Bit()) 
                 addLibraryPath(appBasePath+"/lib/x86");
             else
                 addLibraryPath(appBasePath+"/lib/x64");
+*/			
         } catch (Exception ex) {
             ex.printStackTrace();
         }
         
         adjustPrinterPool();
 //        String libPathProperty = System.getProperty("java.library.path");
-//        System.out.println(libPathProperty);  
+//        System.out.println("java.library.path:"+libPathProperty);  
 //        System.out.println(File.pathSeparator);
 //        System.out.println("Server Port:"+this.appProperties.getProperty("ServerPort"));
     }
@@ -477,7 +484,16 @@ public class FPServer extends Application {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        System.setProperty("file.encoding", "UTF-8");
+		System.setProperty(
+				com.j256.ormlite.logger.LoggerFactory.LOG_TYPE_SYSTEM_PROPERTY
+				, com.j256.ormlite.logger.LoggerFactory.LogType.JAVA_UTIL.name()
+		);
+		System.setProperty("org.eclipse.jetty.util.log.class", "org.eclipse.jetty.util.log.JavaUtilLog");
+		InternalLoggerFactory.setDefaultFactory(
+				JdkLoggerFactory.INSTANCE
+		);
+		
+		System.setProperty("file.encoding", "UTF-8");
         out.println("Ала бала портокала");
 //TODO: Enable global restlet DEBUG Logging        
 //Engine.setLogLevel(Level.FINEST);
@@ -710,8 +726,8 @@ public class FPServer extends Application {
             // CBIO Service
             loggerCBIOService =  Logger.getLogger(CBIOService.class.getName());
             loggerCBIOService.addHandler(logFileHandler);
-            
-            adjustLogLevels();
+			
+			adjustLogLevels();
             
         } catch (IOException ex) {
             ex.printStackTrace();

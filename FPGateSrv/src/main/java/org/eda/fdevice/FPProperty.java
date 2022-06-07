@@ -16,8 +16,6 @@
  */
 package org.eda.fdevice;
 
-import java.util.HashMap;
-
 /**
  *
  * @author Dimitar Angelov

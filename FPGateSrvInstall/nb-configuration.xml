@@ -14,5 +14,6 @@ That way multiple projects can share the same settings (useful for formatting ru
 Any value defined here will override the pom.xml file value but is only applicable to the current project.
 -->
         <netbeans.hint.license>gpl30</netbeans.hint.license>
+        <netbeans.hint.jdkPlatform>Zulu_8.0.332_9</netbeans.hint.jdkPlatform>
     </properties>
 </project-shared-configuration>

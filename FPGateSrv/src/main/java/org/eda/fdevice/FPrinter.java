@@ -19,8 +19,6 @@ package org.eda.fdevice;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *

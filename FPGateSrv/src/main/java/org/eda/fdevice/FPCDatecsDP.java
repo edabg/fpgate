@@ -16,7 +16,6 @@
  */
 package org.eda.fdevice;
 
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import org.eda.protocol.DeviceDatecsDPV1;
 

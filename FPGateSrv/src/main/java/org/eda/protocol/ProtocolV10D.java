@@ -19,7 +19,6 @@ package org.eda.protocol;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import static org.eda.protocol.ProtocolV10.MAX_SEND_PACKET_SIZE;
 
 /**

@@ -153,6 +153,8 @@
                         <groupId>org.eda</groupId>
                         <artifactId>izpackbgr</artifactId>
                         <version>1.0-SNAPSHOT</version>
+						<scope>system</scope>
+						<systemPath>${basedir}/../izpackbgr/target/izpackbgr-1.0-SNAPSHOT.jar</systemPath>
                     </dependency>
                 </dependencies>
              </plugin>

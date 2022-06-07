@@ -43,7 +43,7 @@ public class FPDatabase {
     
     public FPDatabase() throws SQLException {
 
-        System.setProperty(com.j256.ormlite.logger.LocalLog.LOCAL_LOG_LEVEL_PROPERTY, "WARNING");
+//        System.setProperty(com.j256.ormlite.logger.LocalLog.LOCAL_LOG_LEVEL_PROPERTY, "WARNING");
 //        DATABASE_URL = "jdbc:hsqldb:"+FPServer.application.getAppBasePath()+"/fpgate.db";
         DATABASE_URL = "jdbc:h2:"+FPServer.application.getAppBasePath()+"/fpgate.db";
         connectionSource = new JdbcConnectionSource(DATABASE_URL);
@@ -52,9 +52,10 @@ public class FPDatabase {
         //Create a DataAccessObject for a given class;
         fPrinterDao = DaoManager.createDao(connectionSource, FPrinter.class);
         fUserDao = DaoManager.createDao(connectionSource, FUser.class);
-        checkDBAndConvert();
+//        checkDBAndConvert();
     }
-    
+
+/*
     protected void checkDBAndConvert() {
         String OLD_DB_FILE_PATH = FPServer.application.getAppBasePath()+"/fprinters.db";
         File OLD_DB_FILE = new File(OLD_DB_FILE_PATH);
@@ -103,7 +104,8 @@ public class FPDatabase {
         File OLD_DB_FILE_REN = new File(OLD_DB_FILE_PATH+".old");
         OLD_DB_FILE.renameTo(OLD_DB_FILE_REN);
     }
-
+*/
+	
     public FPrinter getPrinterByRefId(String refId) throws SQLException {
         List<FPrinter> printers = fPrinterDao.queryForEq("RefId", refId);
         

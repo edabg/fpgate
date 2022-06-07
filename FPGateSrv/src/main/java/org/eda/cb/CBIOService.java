@@ -31,6 +31,8 @@ import io.crossbar.autobahn.wamp.types.RegisterOptions;
 import io.crossbar.autobahn.wamp.types.Registration;
 import io.crossbar.autobahn.wamp.types.SessionDetails;
 import io.crossbar.autobahn.wamp.utils.Platform;
+import jakarta.xml.bind.DatatypeConverter;
+import jakarta.xml.ws.BindingProvider;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -58,8 +60,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.ws.BindingProvider;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.eda.coerp.soap.ErpFPGateAuthInfo;
@@ -683,6 +683,10 @@ public class CBIOService {
             LOGGER.warning("Session disconnected is not current!");
         }    
     }
+	
+	protected  void sessionOnUserError(Session session, String message) {
+        LOGGER.info("sessionOnUserError:"+message);
+	}
     
     synchronized public void connect() {
         try {
@@ -703,10 +707,11 @@ public class CBIOService {
             LOGGER.info("Session ready");
 //            setConnectionState(ConnectionState.CONNECTED);
         });
-        mSession.addOnConnectListener(this::sessionOnConnect);
+		mSession.addOnConnectListener(this::sessionOnConnect);
         mSession.addOnJoinListener(this::sessionOnJoin);
         mSession.addOnLeaveListener(this::sessionOnLeave);
         mSession.addOnDisconnectListener(this::sessionOnDisconnect);
+        mSession.addOnUserErrorListener(this::sessionOnUserError);
 
         // finally, provide everything to a Client instance
 //        Client client = new Client(mSession, url, realm, mExecutor);
@@ -722,10 +727,12 @@ public class CBIOService {
 
         mTransport = Platform.autoSelectTransport(mURL);
         mClient = new Client(mTransport, mExecutor);
+		//client.getExtensionFactory().register("permessage-deflate",PerMessageDeflateExtension.class);
         IAuthenticator authenticator = new TicketAuth(mUser, mTicket);
         List<IAuthenticator> mAuthenticators = new ArrayList<>();
         mAuthenticators.add(authenticator);
         mClient.add(mSession, mRealm, mAuthenticators);
+		
         CompletableFuture<ExitInfo> exitFuture = mClient.connect();
         exitFuture.thenAccept(exitInfo -> {
             mConnectionExitCode = exitInfo.code;
