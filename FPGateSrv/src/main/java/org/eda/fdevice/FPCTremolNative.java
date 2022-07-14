@@ -286,6 +286,7 @@ public class FPCTremolNative extends FPCBase {
         else
             receiptFormat = DeviceTremolV1.ReceiptPrintFormatType.DETAILED;
         this.FP.setReceiptPrintFormat(receiptFormat);
+		this.FP.setPaymenNumForCASH(paymenTypeToPaymentNum(paymentTypes.CASH));
         // Print VAT
         FP.setReceiptPrintVAT(getParam("ReceiptVAT").equals("YES"));
         
@@ -401,6 +402,46 @@ public class FPCTremolNative extends FPCBase {
         return pc;
     }
 
+    protected int paymenTypeToPaymentNum(paymentTypes payType) {
+        /*		
+        <Res Name="NamePayment0" Value="Лева      " Type="Text" />
+        <Res Name="NamePayment1" Value="Чек       " Type="Text" />
+        <Res Name="NamePayment2" Value="Талон     " Type="Text" />
+        <Res Name="NamePayment3" Value="В.Талон   " Type="Text" />
+        <Res Name="NamePayment4" Value="Амбалаж   " Type="Text" />
+        <Res Name="NamePayment5" Value="Обслужване" Type="Text" />
+        <Res Name="NamePayment6" Value="Повреди   " Type="Text" />
+        <Res Name="NamePayment7" Value="Карта     " Type="Text" />
+        <Res Name="NamePayment8" Value="Банка     " Type="Text" />
+        <Res Name="NamePayment9" Value="Резерв 1  " Type="Text" />
+        <Res Name="NamePayment10" Value="Резерв 2  " Type="Text" />
+        <Res Name="NamePayment11" Value="Евро      " Type="Text" />
+        <Res Name="ExchangeRate" Value="1.95583" Type="Decimal_with_format" Format="0000.00000" />
+        */        
+        int pc = 0;
+        switch (payType) {
+            case CASH : pc = params.getInt("PMCache", 0); break;
+            case CREDIT : pc = 3; break;
+            case CARD : pc = params.getInt("PMCard", 7); break;
+            case CHECK : pc = 1; break;
+            case CUSTOM1 : pc = 2; break;
+            case CUSTOM2 : pc = 3; break;
+
+            case NRASCASH :  pc = params.getInt("NRASCASH", 0); break;
+            case NRASCHECKS :  pc = params.getInt("NRASCHECKS", 1); break;
+            case NRAST :  pc = params.getInt("NRAST", 2); break;
+            case NRASOT :  pc = params.getInt("NRASOT", 3); break;
+            case NRASP :  pc = params.getInt("NRASP", 4); break;
+            case NRASSELF :  pc = params.getInt("NRASSELF", 5); break;
+            case NRASDMG :  pc = params.getInt("NRASDMG", 6); break;
+            case NRASCARDS :  pc = params.getInt("NRASCARDS", 7); break;
+            case NRASW :  pc = params.getInt("NRASW", 8); break;
+            case NRASR1 :  pc = params.getInt("NRASR1", 9); break;
+            case NRASR2 :  pc = params.getInt("NRASR2", 10); break;
+        }
+        return pc;
+    }
+	
     protected String revTypeChar(fiscalCheckRevType revType) {
         /*
         StornoReason

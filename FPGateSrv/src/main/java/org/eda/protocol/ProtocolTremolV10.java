@@ -371,6 +371,8 @@ public class ProtocolTremolV10 extends AbstractProtocol {
 
     public String rawRead(int byteCount, byte stopByte) throws IOException {
         byte[] readBuf = new byte[MAX_RAW_READ_BUFSIZE];
+        int OLD_READ_TIMEOUT = READ_TIMEOUT;
+        READ_TIMEOUT = 30000; // ms
         LOGGER.finest("RAW READ Byte_Count="+Integer.toString(byteCount)+" Stop_Byte="+byteArrayToHex(new byte[] {stopByte}));
         int offset = 0;
         try {
@@ -385,9 +387,14 @@ public class ProtocolTremolV10 extends AbstractProtocol {
                 offset++;
             } while (offset < maxBytes);
         } catch (Exception e) {
-            
+			LOGGER.severe(e.getMessage());
         }
-        LOGGER.finest("Bytes read="+Integer.toString(offset));
+		READ_TIMEOUT = OLD_READ_TIMEOUT;
+        LOGGER.finest("Count of bytes read="+Integer.toString(offset));
+		if (offset > 0) {
+			// Log first 100 bytes
+	        LOGGER.finest("First 100 bytes read: "+byteArrayToHex(Arrays.copyOfRange(readBuf, 0, Integer.min(100, offset))));
+		}
         return toUnicode(readBuf, 0, offset, mEncoding);
     }
 

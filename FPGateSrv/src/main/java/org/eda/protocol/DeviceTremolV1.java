@@ -29,6 +29,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.eda.fdevice.FPCBase;
 import static org.eda.protocol.AbstractFiscalDevice.LOGGER;
 
 /**
@@ -74,6 +75,10 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
      */
     protected boolean receiptPrintVAT;
 
+	/**
+	 * Номер на плащане В БРОЙ
+	 */
+	protected int paymenNumForCASH = 0;
     
     public static enum UICTypeType {
         BULSTAT, EGN, FOREIGN, NRA
@@ -115,6 +120,14 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
         }
         // TODO: if protocol is null throw exception
     }
+
+	public int getPaymenNumForCASH() {
+		return paymenNumForCASH;
+	}
+
+	public void setPaymenNumForCASH(int pn) {
+		this.paymenNumForCASH = pn;
+	}
 
     public ReceiptPrintFormatType getReceiptPrintFormat() {
         return receiptPrintFormat;
@@ -1587,16 +1600,20 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
         String res = cmdCustom(0x6E, params);
         // <'0'> <;> <AmountPayment0[1..13]> <;> <AmountPayment1[1..13]> ...
         if (res.startsWith("0;")) {
-            // Сумиране на наличностите по видове плащания
+            // Определяне на номер на тип плащане В БРОЙ
+            // number of payment for cache
             String[] rData = res.split(";");
             double CashSum = 0;
-            for(int i = 1; i < rData.length; i++) {
+			int pn = paymenNumForCASH+1; // Заради първата 0; преди плащане 1
+			if (pn < rData.length) {
                 try {
-                    CashSum += Double.parseDouble(rData[i]);
+                    CashSum += Double.parseDouble(rData[pn]);
                 } catch (Exception e) {
-                    warn("Невалидна сума ("+rData[i]+")."+e.getMessage());
+                    warn("Невалидна сума ("+rData[pn]+")."+e.getMessage());
                 }
-            }
+			} else {
+	            err("Не може да се определи сумата В БРОЙ (#"+Integer.toString(pn)+")!");
+			}
             // Заявката е изпълнена
             response.put("CashSum", Double.toString(CashSum));
             response.put("CashIn", "0");
@@ -2369,6 +2386,7 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
         String resStr = cmdCustomRawRead(0x7C, params, 0, (byte)'@');
 //            Charset charset = Charset.forName("Windows-1251");
 //            String resStr = new String(resBytes, charset);
+		debug("EJ_RAW:"+resStr);
         Pattern p = Pattern.compile("^\u0002.+?[|]", Pattern.MULTILINE);
         Matcher m = p.matcher(resStr);
         resStr = m.replaceAll("");
@@ -2413,6 +2431,7 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
         String resStr = cmdCustomRawRead(0x7C, params, 0, (byte)'@');
 //            Charset charset = Charset.forName("Windows-1251");
 //            String resStr = new String(resBytes, charset);
+		debug("EJ_RAW:"+resStr);
         Pattern p = Pattern.compile("^\u0002.+?[|]", Pattern.MULTILINE);
         Matcher m = p.matcher(resStr);
         resStr = m.replaceAll("");
