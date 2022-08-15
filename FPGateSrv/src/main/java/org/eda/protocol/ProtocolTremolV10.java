@@ -372,7 +372,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
     public String rawRead(int byteCount, byte stopByte) throws IOException {
         byte[] readBuf = new byte[MAX_RAW_READ_BUFSIZE];
         int OLD_READ_TIMEOUT = READ_TIMEOUT;
-        READ_TIMEOUT = 30000; // ms
+        READ_TIMEOUT = 120000; // ms
         LOGGER.finest("RAW READ Byte_Count="+Integer.toString(byteCount)+" Stop_Byte="+byteArrayToHex(new byte[] {stopByte}));
         int offset = 0;
         try {
