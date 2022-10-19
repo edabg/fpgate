@@ -39,6 +39,8 @@ import java.util.Date;
 import java.util.List;
 import org.restlet.resource.ServerResource;
 import java.util.Locale;
+import java.util.Properties;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -419,6 +421,7 @@ public class PrintResource extends ServerResource {
         }    
         try {dtAfterOpen = FP.getDateTime();} finally{};
         Integer lineNum = 0;
+		String commandError = "";
         for(String[] cmd : cmdList) {
             lineNum++;
             String cmdStr = "";
@@ -505,6 +508,8 @@ public class PrintResource extends ServerResource {
             } catch (FPException e) {
                 response.setErrorCode(e.getErrorCode());
                 execLog.error("line:"+lineNum+" cmd:"+cmd[0]+": FPError Code:"+e.getErrorCode()+" Message:"+e.getMessage());
+				commandError = cmdStr;
+				break;
             } catch (Exception e) {
                 execLog.error("line:"+lineNum+" cmd:"+cmd[0]+" Error:"+e.getMessage());
             }    
@@ -514,17 +519,29 @@ public class PrintResource extends ServerResource {
         if (footer.isEmpty())
             footer.add(new String[]{"@padc", "www.colibrierp.com"});
         if (fiscal) {
-            execLog.msg("Closing fiscal check");
-            for(String[] footline : footer) {
-                if (footline.length > 0) {
-                    String text = "";
-                    for (int i = 0; i < footline.length; i++)
-                        text = text + ((i > 0)?"\t":"") + footline[i];
-                    FP.printFiscalText(text);
-                }    
-            }    
-            FP.closeFiscalCheck();
-            try {response.getResultTable().putAll(FP.getLastFiscalCheckQRCode().toStrTable());} finally{};
+			if (commandError.isEmpty()) {
+				execLog.msg("Closing fiscal check");
+				for(String[] footline : footer) {
+					if (footline.length > 0) {
+						String text = "";
+						for (int i = 0; i < footline.length; i++)
+							text = text + ((i > 0)?"\t":"") + footline[i];
+						FP.printFiscalText(text);
+					}    
+				}    
+				FP.closeFiscalCheck();
+				try {response.getResultTable().putAll(FP.getLastFiscalCheckQRCode().toStrTable());} finally{};
+			} else {
+				execLog.error("There is error while printing fiscal check! Error in command: "+commandError+".");
+				try {
+					execLog.msg("Trying to cance fiscal check.");
+					FP.cancelFiscalCheck();
+					execLog.msg("Fiscal check canceled.");
+				} catch (Exception ex)	{
+					execLog.error("Can't cancel fiscal check. "+ex.getMessage());
+					execLog.error("Please try manually to cancel fiscal check.");
+				}
+			}
         } else {
             execLog.msg("Closing non fiscal check");
             for(String[] footline : footer) {
@@ -551,6 +568,13 @@ public class PrintResource extends ServerResource {
     public void getVersion() {
         response.getResultTable().put("version", FPServer.application.getVersion());
         response.getResultTable().put("build", FPServer.application.getBuildNumber());
+	    Properties prop = FPServer.application.getAppProperties();
+		Set<Object> PKeys = prop.keySet();
+		for (Object key: PKeys) {
+			if (!key.toString().contains("Pass")) {
+				response.getResultTable().put("Property "+key.toString(), prop.getProperty(key.toString()));
+			}
+		}
     }
     
     public void printDuplicateCheck() throws FPException {
@@ -1021,13 +1045,54 @@ public class PrintResource extends ServerResource {
         response.getResultTable().putAll(res);
     }
     
-    protected void flushPrinterPool() {
+	protected void flushPrinterPool() {
         execLog.msg("Request flushPrinterPool");
         FPPrinterPool.clear();
         execLog.msg("Printer pool was flushed.");
         response.getResultTable().put("Result", "OK");
     }
-    
+
+	protected void updateSettings() {
+        execLog.msg("Request updateSettings");
+        Properties prop = FPServer.application.getAppProperties();
+		boolean SaveSettings = false;
+        StrTable namedArgs = pRequest.getNamedArguments();
+        if (namedArgs.containsKey("SaveSettings")) {
+            SaveSettings = namedArgs.get("SaveSettings").equals("1");
+        }
+		String[] LoggerNameList = {"LLDevice", "LLProtocol", "LLFPCBase", "LLCBIOService"};
+		for(String LoggerName : LoggerNameList) {
+			if (namedArgs.containsKey(LoggerName)) {
+				try {
+			        execLog.msg(LoggerName+"="+namedArgs.get(LoggerName));
+					prop.setProperty(LoggerName, Level.parse(namedArgs.get(LoggerName)).getName());
+				} catch(Exception ex) {
+					execLog.error(ex.getMessage());
+				}
+			}
+		}
+		String[] BoolParamsList = {"PoolEnabled", "ZFPLabServerAutoStart"};
+		for(String ParamName : BoolParamsList) {
+			if (namedArgs.containsKey(ParamName)) {
+				String value = namedArgs.get(ParamName);
+				execLog.msg(ParamName+"="+value);
+				if (value.equals("1") || value.equals("0")) {
+					prop.setProperty(ParamName,value);
+				} else {
+					execLog.error(ParamName+" Ivalid value "+value+"!");
+				}
+			}
+		}
+		if (namedArgs.containsKey("PoolDeadtime")) {
+			Integer value = namedArgs.getInt("PoolDeadtime");
+	        execLog.msg("PoolDeadtime="+value);
+			prop.setProperty("PoolDeadtime",value.toString());
+		}
+        execLog.msg("SaveSettings="+(SaveSettings?"1":"0"));
+		FPServer.application.updateProperties(SaveSettings);
+        response.getResultTable().put("Result", "OK");
+	}
+	
     @Post("json:json")
     public PrintResponse processCommand(PrintRequest request) throws IOException {
 //        ObjectMapper mapper = new ObjectMapper();
@@ -1124,6 +1189,9 @@ public class PrintResource extends ServerResource {
                         break;
                     case "flushprinterpool" :
                         flushPrinterPool();
+                        break;
+                    case "updatesettings" :
+                        updateSettings();
                         break;
                     case "test" :
                         test();

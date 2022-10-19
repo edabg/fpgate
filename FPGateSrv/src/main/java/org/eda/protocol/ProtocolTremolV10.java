@@ -517,8 +517,9 @@ public class ProtocolTremolV10 extends AbstractProtocol {
         read(readBuf, 1, ZFP_RECEIPTLEN-1);
         LOGGER.finest("RCP < "+byteArrayToHex(readBuf, 0, ZFP_RECEIPTLEN));
         mCMDSB[0] = 0; mCMDSB[1] = 0;
-	if (ZFP_ETX != readBuf[ZFP_RECEIPTLEN - 1]) // missing ETX
+		if (ZFP_ETX != readBuf[ZFP_RECEIPTLEN - 1]) {// missing ETX
             throw new IOException("Bad Receive data!");
+		}	
         byte[] crc = calcCRC(readBuf, 1, 4);
         if ((crc[0] != readBuf[4]) || (crc[1] != readBuf[5]))
             throw new IOException("CRC Error!");
@@ -673,7 +674,7 @@ public class ProtocolTremolV10 extends AbstractProtocol {
             LOGGER.finest(" RESPONSE BYTE: "+byteArrayToHex(readBuf, 0, 1));
             throw new IOException("Ivalid response!");
         } while (false);    
-	return returnResult;
+		return returnResult;
     }
     
     protected String receivePacket() throws IOException {

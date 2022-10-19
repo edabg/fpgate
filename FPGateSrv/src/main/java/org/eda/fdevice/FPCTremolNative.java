@@ -116,8 +116,8 @@ public class FPCTremolNative extends FPCBase {
                                 }}
                         )
                      ));
-                     addProperty(new FPProperty(Integer.class, "PortReadTimeout", "Port Read timeout (ms)", "Port Read timeout (ms)", 500));
-                     addProperty(new FPProperty(Integer.class, "PortWriteTimeout", "Port Write timeout (ms)", "Port Write timeout (ms)", 500));
+                     addProperty(new FPProperty(Integer.class, "PortReadTimeout", "Port Read timeout (ms)", "Port Read timeout (ms)", 3000));
+                     addProperty(new FPProperty(Integer.class, "PortWriteTimeout", "Port Write timeout (ms)", "Port Write timeout (ms)", 3000));
                      
                      addProperty(new FPProperty(String.class, "OperatorCode", "Operator Code", "Operator Code", "1"));
                      addProperty(new FPProperty(String.class, "OperatorPass", "Operator Password", "Operator Password", "1"));
