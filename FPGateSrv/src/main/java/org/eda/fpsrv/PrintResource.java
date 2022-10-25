@@ -31,6 +31,8 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -554,6 +556,7 @@ public class PrintResource extends ServerResource {
             }    
             FP.closeNonFiscalCheck();
         }
+		execLog.msg("Print process finished.");
         try {dtAfterClose = FP.getDateTime();} finally{};
         response.getResultTable().put("CloseStatus", "1");
         DateFormat dtFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -1097,6 +1100,7 @@ public class PrintResource extends ServerResource {
     public PrintResponse processCommand(PrintRequest request) throws IOException {
 //        ObjectMapper mapper = new ObjectMapper();
 //        PrintRequest pReq = mapper.readValue(pRequest, PrintRequest.class);
+		Instant processCommandStart = Instant.now();
         pRequest = request;
         response = new PrintResponse();
         response.setId(request.getId());
@@ -1217,6 +1221,9 @@ public class PrintResource extends ServerResource {
         } catch (Exception  e) {
             execLog.error("Error:"+e.getMessage());
         }
+		Instant processCommandEnd = Instant.now();
+		double timeElapsed = Duration.between(processCommandStart, processCommandEnd).toMillis()/(double)1000;
+		execLog.msg("Command processed in "+Double.toString(timeElapsed)+" s");
         detachExecLogHandler();
         return response;
     }

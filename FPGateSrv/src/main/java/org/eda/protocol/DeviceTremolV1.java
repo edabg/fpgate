@@ -107,6 +107,7 @@ public class DeviceTremolV1 extends AbstractFiscalDevice {
 
     public DeviceTremolV1(String portName, int baudRate, int readTimeout, int writeTimeout) {
         super(portName, baudRate, readTimeout, writeTimeout);
+		debug("Opening "+portName+" "+Integer.toString(baudRate)+" 8N1 RWTO:"+Integer.toString(readTimeout)+"/"+Integer.toString(writeTimeout));
         this.receiptPrintVAT = false;
         this.receiptPrintMode = ReceiptPrintModeType.STEP_BY_STEP;
         this.receiptPrintFormat = ReceiptPrintFormatType.BRIEF;

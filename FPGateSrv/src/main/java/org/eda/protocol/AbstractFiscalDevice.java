@@ -69,12 +69,12 @@ public abstract class AbstractFiscalDevice {
     protected List<String> mErrors = new ArrayList<>();
     protected List<String> mWarnings = new ArrayList<>();
 
-    protected static final Handler ProtocolLogHandler;
+//    protected static final Handler ProtocolLogHandler;
 
-    static {
-        ProtocolLogHandler = new LogHandlerAbstractProtocol();
-        AbstractProtocol.getLogger().addHandler(ProtocolLogHandler);
-    }
+//    static {
+//        ProtocolLogHandler = new LogHandlerAbstractProtocol();
+//        AbstractProtocol.getLogger().addHandler(ProtocolLogHandler);
+//    }
     
     // Catch logs from AbstractProtocol
     private static class LogHandlerAbstractProtocol extends Handler {
