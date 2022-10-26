@@ -158,10 +158,10 @@ public class FPPrinterPool {
     } 
     
     public static synchronized void clear() {
-        LOGGER.info("Begin clearing printer pool. Size="+Integer.toString(FPPool.keySet().size()));
-        Iterator<String> it = FPPool.keySet().iterator();
-        while (it.hasNext()) {
-          String key = it.next();
+        LOGGER.info("Begin clearing printer pool. Size="+Integer.toString(FPPool.size()));
+        String[] keys = FPPool.keySet().toArray(new String[FPPool.size()]);
+		for(int i = 0; i < keys.length; i++) {
+          String key = keys[i];
           FPCBase fp_ = FPPool.get(key);
           try {
               if (!fp_.isLocked()) {
@@ -175,7 +175,7 @@ public class FPPrinterPool {
           }
 //          fp_ = null;
         }   
-        LOGGER.info("End clearing printer pool. Size="+Integer.toString(FPPool.keySet().size()));
+        LOGGER.info("End clearing printer pool. Size="+Integer.toString(FPPool.size()));
     }
     
     public static void startPoolCleanScheduler() {

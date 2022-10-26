@@ -359,7 +359,7 @@ public class CBIOService {
         if (coPort == null) {
             // Sets debugging of soap request/responses
             // Addition you can run prameters to JVM -Djaxb.debug=true
-            
+/*            
             if (false) {
                 System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump", "true");
                 System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump", "true");
@@ -367,6 +367,7 @@ public class CBIOService {
                 System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dump", "true");
                 System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dumpTreshold", "999999");   
             }    
+*/			
             // Adjust to accept all certtificates
             try {
                 SSLContext sc = SSLContext.getInstance("SSL");

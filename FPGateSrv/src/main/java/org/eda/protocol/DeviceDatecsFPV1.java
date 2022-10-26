@@ -42,6 +42,7 @@ public class DeviceDatecsFPV1 extends AbstractFiscalDevice {
 
     public DeviceDatecsFPV1(String portName, int baudRate, int readTimeout, int writeTimeout) {
         super(portName, baudRate, readTimeout, writeTimeout);
+		debug("Opening "+portName+" "+Integer.toString(baudRate)+" 8N1 RWTO:"+Integer.toString(readTimeout)+"/"+Integer.toString(writeTimeout));
         serialPort = SerialPort.getCommPort(portName);
         if (serialPort.openPort()) {
             serialPort.setComPortParameters(baudRate, 8, SerialPort.ONE_STOP_BIT, SerialPort.NO_PARITY);

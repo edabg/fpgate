@@ -767,6 +767,8 @@ public class FPServer extends Application {
 //        loggerTremolFPCore.addHandler(h);
         loggerCBIOService.addHandler(h);
         loggerFPCBase.addHandler(h);
+		loggerProtocol.addHandler(h);
+		loggerProtocolDevice.addHandler(h);
     }
   
     public void addHTTPS() {
