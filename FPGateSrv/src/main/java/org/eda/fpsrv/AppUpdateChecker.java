@@ -18,20 +18,34 @@ package org.eda.fpsrv;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.security.cert.X509Certificate;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.net.ssl.X509TrustManager;
+import java.security.cert.CertificateException;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 import org.eda.fdevice.FPCBase;
+import org.restlet.Client;
+import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
+import org.restlet.data.Protocol;
 import org.restlet.data.Reference;
+import org.restlet.engine.Engine;
+import org.restlet.engine.connector.ConnectorHelper;
 import org.restlet.engine.header.HeaderConstants;
+import org.restlet.engine.ssl.DefaultSslContextFactory;
+import org.restlet.engine.ssl.SslContextFactory;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ClientResource;
 import org.restlet.util.Series;
+//import org.restlet.ext.net.HttpClientHelper;
 
 /**
  *
@@ -141,7 +155,7 @@ public class AppUpdateChecker {
             return 0;
         }
     }    
-    
+
     public static enum VersionState {
         NEW_VERSION, NEW_BUILD, MATCH, OLD_VERSION, OLD_BUILD, NA
     }
@@ -156,18 +170,60 @@ public class AppUpdateChecker {
         String remoteVersionInfo = "";
         VersionState state = VersionState.NA;
     }
-    
-    public static VersionInformation CheckForNewVersion(String localVersion, String localBuild) {
+
+	public static class TrustEveryOneManager implements X509TrustManager {
+		static final TrustEveryOneManager INSTANCE = new TrustEveryOneManager();
+
+		private final static X509Certificate[] noCerts = new X509Certificate[0];
+
+		@Override
+		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+			// we trust it - return
+		}
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+			// we trust it - return
+		}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers() {
+			return noCerts;
+		}
+
+	}
+
+	protected static class TrustingSslContextFactory extends DefaultSslContextFactory {
+		@Override
+		public SSLContext createSslContext() throws Exception {
+			// Due to problem with TLSv1.3 handshaking on some sites and espacially github
+			final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");//v1.3
+			sslContext.init(null, new TrustManager[] { TrustEveryOneManager.INSTANCE }, null);
+//			sslContext.getDefaultSSLParameters().setProtocols(new String[] {"TLSv1.2"}); //, "TLSv1.3"
+			return createWrapper(sslContext);
+		}
+	}
+
+	protected static SslContextFactory sslCtxFactory = new TrustingSslContextFactory();
+	
+	public static VersionInformation CheckForNewVersion(String localVersion, String localBuild) {
         VersionInformation vi = new VersionInformation();
         vi.localVersion = localVersion;
         vi.localBuild = localBuild;
-
         int compare = 0;
         try {
+			//-Djavax.net.debug=all
+			// java -Djavax.net.debug=all -jar target\FPGateSrv-2.2.4-b-WL.jar
             logger.info("Проверка за нова версия (текуща:"+localVersion+")");
-    //        Client client = new Client(Protocol.HTTPS);
             Reference apiUri = new Reference(APIURL+"releases/latest");
-            ClientResource cr = new ClientResource(apiUri);
+			Context clientContext = new Context();
+			// Force TLS1.2!!! There is problem with TLSv1.3 handshaking
+			clientContext.getAttributes().put("sslContextFactory", sslCtxFactory);
+            ClientResource cr = new ClientResource(clientContext, apiUri);
+//            Client client = new Client(new Context(), Protocol.HTTPS);
+//			cr.setNext(client);
+//			cr.setFollowingRedirects(false);
+//			cr.setProtocol(Protocol.HTTPS);
             Request req = cr.getRequest();
             // now header
             Series<Header> headerValue = new Series<Header>(Header.class);
@@ -187,6 +243,7 @@ public class AppUpdateChecker {
                 JsonNode asset = assets.next();
                 //TODO: Check Asset name to match name convention!
                 String name = asset.get("name").asText();
+				logger.fine("Asset "+name);
                 if (name.matches(".+[.]jar$")) {
                     vi.remoteVersionDownloadURL = (asset).get("browser_download_url").asText();
                     fileName = name;
