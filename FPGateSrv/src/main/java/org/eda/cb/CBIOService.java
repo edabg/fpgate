@@ -74,9 +74,15 @@ import org.eda.coerp.soap.ErpSOAPServerLogoutRequestType;
 import org.eda.coerp.soap.Erpserver;
 import org.eda.coerp.soap.ErpserverPortType;
 import org.eda.fpsrv.PrintRequest;
+import org.json.JSONObject;
+import org.restlet.Response;
+import org.restlet.data.ChallengeResponse;
+import org.restlet.data.ChallengeScheme;
 import org.restlet.data.CharacterSet;
+import org.restlet.data.Form;
 import org.restlet.data.LocalReference;
 import org.restlet.data.MediaType;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ClientResource;
 
@@ -131,12 +137,26 @@ public class CBIOService {
         this.mServiceNum = mServiceNum;
     }
     
-    // Colibri ERP SOAPService
+    // Colibri ERP SOAPService/REST
     private String coWSDL;
+    private String coREST_URI;
     private String coPAPID;
     private String coUser;
     private String coPassword;
+	/**
+	 * Colibri ERP SOAP API Port
+	 */
     private ErpserverPortType coPort = null;
+	/**
+	 * Colibri ERP REST API Client Resource
+	 */
+	private ClientResource coREST = null;
+	
+	private enum CO_API_TYPE {
+		SOAP, REST
+	}
+	private CO_API_TYPE coAPI = CO_API_TYPE.SOAP;
+	
     protected CoErpCipher coCipher;
     protected boolean coConnected;
     
@@ -278,8 +298,23 @@ public class CBIOService {
     }
     
 
-    public void setCoERPInfo(String WSDL, String PAPID, String user, String password) {
-        coWSDL = WSDL;
+	/**
+	 * 
+	 * @param WSURI Colibri ERP Web Service URL WSDL for SOAP, or REST API base URL
+	 * @param PAPID
+	 * @param user
+	 * @param password 
+	 */
+    public void setCoERPInfo(String WSURI, String PAPID, String user, String password) {
+		if (WSURI.contains("?wsdl")) {
+	        coWSDL = WSURI;
+			coREST_URI = "";
+			coAPI = CO_API_TYPE.SOAP;
+		} else {
+			coREST_URI = WSURI;
+	        coWSDL = "";
+			coAPI = CO_API_TYPE.REST;
+		}
         coPAPID = PAPID;
         coUser = user;
         coPassword = password;
@@ -300,8 +335,19 @@ public class CBIOService {
                 coPAPID = ue.getValues("pid").get(0);
                 ue.remove("pid");
             }
-            huri.setQuery(ue.encode());
-            coWSDL = huri.toString();
+			if (coERPURL.contains("?wsdl")) {
+				huri.setQuery(ue.encode());
+				String WSURI = huri.toString();
+				coWSDL = WSURI;
+				coREST_URI = "";
+				coAPI = CO_API_TYPE.SOAP;
+			} else {
+				huri.setQuery(null);
+				String WSURI = huri.toString()+"/";
+				coREST_URI = WSURI;
+				coWSDL = "";
+				coAPI = CO_API_TYPE.REST;
+			}
             coUser = user;
             coPassword = password;
             coPort = null;
@@ -391,8 +437,47 @@ public class CBIOService {
         }
         return coPort;
     }
-    
+
+    protected ClientResource getCoRest(String method) throws Exception {
+		String methodURI = coREST_URI+method;
+        if (coREST == null) {
+            // Sets debugging of soap request/responses
+            // Addition you can run prameters to JVM -Djaxb.debug=true
+/*            
+            if (false) {
+                System.setProperty("com.sun.xml.ws.transport.http.client.HttpTransportPipe.dump", "true");
+                System.setProperty("com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe.dump", "true");
+                System.setProperty("com.sun.xml.ws.transport.http.HttpAdapter.dump", "true");
+                System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dump", "true");
+                System.setProperty("com.sun.xml.internal.ws.transport.http.HttpAdapter.dumpTreshold", "999999");   
+            }    
+*/			
+            // Adjust to accept all certtificates
+            try {
+                SSLContext sc = SSLContext.getInstance("SSL");
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
+                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+                HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier(){
+                    @Override
+                    public boolean verify(String string, SSLSession ssls) {
+                        return true;
+                    }
+                });                
+            } catch (Exception e) {
+                System.out.println(e);
+            }        
+			coREST = new ClientResource(methodURI);
+        } else {
+			coREST.setReference(methodURI);
+		}
+		return coREST;
+	}
+	
     public void initCoERPSession() throws Exception {
+		if (coAPI.equals(CO_API_TYPE.REST)) {
+			initCoERPSessionByREST();
+			return;
+		}
         coConnected = false;
         LOGGER.info("Logging to Colibri ERP Server");
         ErpserverPortType port = getCoPort();
@@ -460,6 +545,10 @@ public class CBIOService {
     }
     
     public void leaveCoERPSession() throws Exception {
+		if (coAPI.equals(CO_API_TYPE.REST)) {
+			leaveCoERPSessionByREST();
+			return;
+		}
         // TODO: set dtSessionDisconnected, SessionState = DISCONNECTED, idSession = NULL
         ErpserverPortType port = getCoPort();
         ErpSOAPFPGateDoneSessionRequestType doneRequest = new ErpSOAPFPGateDoneSessionRequestType();
@@ -477,6 +566,183 @@ public class CBIOService {
         }
     }
 
+	private static class AccessToken {
+
+		private String token;
+
+		private String type;
+
+		private int expires;
+
+		private long expiresAt;
+		
+		public AccessToken(JSONObject jsonTokenObject) {
+			token = jsonTokenObject.getString("access_token");
+			type = jsonTokenObject.getString("token_type");
+			expires = jsonTokenObject.getInt("expires_in");
+			expiresAt = System.currentTimeMillis()/1000+expires;
+		}
+
+		
+		/**
+		 * Get the value of token
+		 *
+		 * @return the value of token
+		 */
+		public String getToken() {
+			return token;
+		}
+
+
+		/**
+		 * Get the value of type
+		 *
+		 * @return the value of type
+		 */
+		public String getType() {
+			return type;
+		}
+
+		/**
+		 * Get the value of expires
+		 *
+		 * @return the value of expires
+		 */
+		public int getExpires() {
+			return expires;
+		}
+		
+		/**
+		 * Is the token expired
+		 * @return 
+		 */
+		public boolean isExpired() {
+			return expiresAt < (System.currentTimeMillis()/1000);
+		}
+
+	}
+	
+    public void initCoERPSessionByREST() throws Exception {
+        coConnected = false;
+        LOGGER.info("Logging to Colibri ERP Server "+getSessionInfo());
+		ClientResource coClient = getCoRest("access/token");
+		Form form = new Form();
+		form.add("grant_type", "client_credentials");
+		form.add("scope", "read:data");
+		form.add("client_id", coPAPID+"/"+coUser);
+		form.add("client_secret", coPassword);
+		coClient.post(form.getWebRepresentation(CharacterSet.UTF_8));
+		Response response = coClient.getResponse();
+		if (!response.getStatus().isSuccess()) {
+			throw new Exception("Login faled."+response.getStatus()+response.getEntity().getText());
+		}
+		Representation responseEntity = response.getEntity();
+		JsonRepresentation jsonRepresentation = new JsonRepresentation(responseEntity);
+		JSONObject jsonObject = jsonRepresentation.getJsonObject();
+		AccessToken token = new AccessToken(jsonObject);
+		// Add authorization header
+		ChallengeResponse AuthHeader = new ChallengeResponse(ChallengeScheme.HTTP_OAUTH_BEARER); 
+		AuthHeader.setRawValue(token.getToken());
+		AuthHeader.setIdentifier("Bearer");
+		coClient.getRequest().setChallengeResponse(AuthHeader);
+		try {
+			coClient = getCoRest("info");
+			coClient.get();
+			response = coClient.getResponse();
+			if (response.getStatus().isSuccess()) {
+				jsonRepresentation = new JsonRepresentation(response.getEntity());
+				jsonObject = jsonRepresentation.getJsonObject();
+				LOGGER.info("Logged to "+jsonObject.getString("application")+" "+jsonObject.getString("version")+"/"+jsonObject.getString("build"));
+			} else {
+				LOGGER.warning("Unable to get system information."+response.getStatus());
+			}
+        } catch (Exception E) {
+            LOGGER.warning(E.getMessage());
+        }
+        // trying to initialize crossbario secure channel
+        Exception localException = null;
+        try {
+			// Rquest crossbar info - Initialize session
+			coClient = getCoRest("fpgate/cbioauthinfo");
+			coClient.addQueryParameter("FPGateID", mFPGateID);
+			coClient.get();
+			response = coClient.getResponse();
+			if (!response.getStatus().isSuccess()) {
+				throw new Exception("Unable to get crossbar connection information."+response.getStatus());
+			}
+			responseEntity = response.getEntity();
+			jsonRepresentation = new JsonRepresentation(responseEntity);
+			jsonObject = jsonRepresentation.getJsonObject();
+//			System.out.println(jsonObject.toString());
+			mURL = jsonObject.getString("WSURI");
+            mRealm = jsonObject.getString("Realm");
+            mMethodPrefix = jsonObject.getString("ProcPrefix");
+            if (mMethodPrefix.endsWith(".")) 
+                mMethodPrefix = mMethodPrefix.substring(0,mMethodPrefix.length()-1);
+            String TestPattern = jsonObject.getString("TestPattern");
+            String TestPatternEncrypted = jsonObject.getString("TestPatternEncrypted");
+            String IV = ""; // Initialization vector
+            String[] EParts = TestPatternEncrypted.split("\\|");
+            if (EParts.length > 1) {
+                TestPatternEncrypted = EParts[0];
+                IV = EParts[1];
+            } else {
+                // There is no initialization vector
+            }    
+            coCipher = new CoErpCipher(
+					jsonObject.getString("EncryptionMethod")
+                    , jsonObject.getString("EncryptionKey")
+                    , IV
+            );
+            // Test and verify decryption on test pattern
+            TestPatternEncrypted = coCipher.decrypt(TestPatternEncrypted);
+            if (TestPatternEncrypted.equals(TestPattern)) {
+                LOGGER.info("Encryption handshake OK");
+            } else {
+                LOGGER.severe("Encryption hanshake FAILED!");
+                throw new Exception("Encryption hanshake FAILED!");
+            } 
+            mUser = coPAPID+"/"+mFPGateID;
+            mTicket = coCipher.encrypt(jsonObject.getString("SessionID"));
+            coConnected = true;
+        } catch (Exception E) {
+            LOGGER.severe(E.getMessage());
+//            disconnect();
+            localException = E;
+        }        
+		coClient = getCoRest("disconnect");
+		coClient.get();
+		response = coClient.getResponse();
+		if (response.getStatus().isSuccess()) {
+	        LOGGER.info("Logout from Colibri ERP Server success");
+		} else {
+	        LOGGER.warning("Logout from Colibri ERP Server error." + response.getStatus());
+		}		
+        if (localException != null) {
+            throw localException;
+		}	
+    }
+
+    public void leaveCoERPSessionByREST() throws Exception {
+        // TODO: set dtSessionDisconnected, SessionState = DISCONNECTED, idSession = NULL
+        LOGGER.info("Leave session with Colibri ERP Server "+getSessionInfo());
+		ClientResource coClient = getCoRest("fpgate/session/done");
+		coClient.addQueryParameter("PAPID", coPAPID);
+		coClient.addQueryParameter("FPGateID", mFPGateID);
+		coClient.addQueryParameter("Ticket", mTicket);
+        try {
+			coClient.get();
+			Response response = coClient.getResponse();
+			if (response.getStatus().isSuccess()) {
+				System.out.println("Session to Colibri ERP closed with Success.");
+			} else {
+				LOGGER.warning("Session to Colibri ERP closed with error." + response.getStatus());
+			}		
+        } catch (Exception E) {
+            LOGGER.severe(E.getMessage());
+        }
+    }
+	
     protected String getMethodFullName(String methodName) {
         return mMethodPrefix+"."+methodName;
     }
@@ -528,9 +794,12 @@ public class CBIOService {
         mExecutor = null;
     }
     
-    
+    protected String getSessionInfo() {
+		return coPAPID+"/"+mFPGateID;
+	}
+	
     public void checkConnection() {
-        LOGGER.fine("Checking connection");
+        LOGGER.fine("Checking connection "+getSessionInfo());
         if (mSession != null) {
             if (mSession.isConnected()) {
                 LOGGER.fine("Session is connected.");
@@ -546,7 +815,7 @@ public class CBIOService {
                             LOGGER.fine("Verify session OK.");
                             return;
                         }
-                        LOGGER.warning("Verify of session failed! "+verifyResult.results.toString());
+                        LOGGER.warning("Verify of session "+getSessionInfo()+" failed! "+verifyResult.results.toString());
                         if (mConnectionState != ConnectionState.CONNECTING) {
                             disconnect();
                             connect();
@@ -558,10 +827,10 @@ public class CBIOService {
                 }
                 return;
             } else {
-                LOGGER.warning("Session is not connected.");
+                LOGGER.warning("Session is not connected."+getSessionInfo());
             }
         } else
-            LOGGER.warning("Session is not instantiated!");
+            LOGGER.warning("Session is not instantiated!"+getSessionInfo());
         //TODO: Trying to reconnect!
         if (mConnectionState != ConnectionState.CONNECTING) {
             disconnect();
@@ -570,7 +839,7 @@ public class CBIOService {
     }
     
     protected void setConnectionState(ConnectionState state) {
-        LOGGER.finest("Setting connection state to: "+state.stateNameL);
+        LOGGER.finest("Setting connection state to: "+state.stateNameL+" "+getSessionInfo());
         mConnectionState = state;
         onStateChange();
     }
@@ -618,26 +887,26 @@ public class CBIOService {
         try {
             leaveCoERPSession();
         } catch (Exception ex) {
-            LOGGER.severe("Colibri ERP Session leave failed! "+ex.getMessage());
+            LOGGER.severe("Colibri ERP Session "+getSessionInfo()+" leave failed! "+ex.getMessage());
             return;
         }
     }
     
     protected void sessionOnConnect(Session session) {
         if (session.equals(mSession)) {
-            LOGGER.info("Session connected");
+            LOGGER.info("Session "+getSessionInfo()+" connected");
             setConnectionState(ConnectionState.CONNECTED);
         } else {
-            LOGGER.warning("Session connected is not current!");
+            LOGGER.warning("Session "+getSessionInfo()+" connected is not current!");
         }    
     }
     
     protected void sessionOnLeave(Session session, CloseDetails details) {
         if ((mSession == null) || session.equals(mSession)) {
-            LOGGER.info("Session leaved");
+            LOGGER.info("Session "+getSessionInfo()+" leaved");
             setConnectionState(ConnectionState.LEAVED);
         } else {
-            LOGGER.warning("Session leaved is not current!");
+            LOGGER.warning("Session "+getSessionInfo()+" leaved is not current!");
         }    
     }
     
@@ -671,7 +940,7 @@ public class CBIOService {
     
     protected void sessionOnDisconnect(Session session, boolean wasClean) {
         if ((mSession == null) || session.equals(mSession)) {
-            LOGGER.info("Session disconnected");
+            LOGGER.info("Session "+getSessionInfo()+" disconnected");
             setConnectionState(ConnectionState.DISCONNECTED);
 //            try {
 //                if (mTransport != null)
@@ -691,7 +960,7 @@ public class CBIOService {
             initCoERPSession();
         } catch (Exception ex) {
             setConnectionState(ConnectionState.AUTHFAILED);
-            LOGGER.severe("Colibri ERP Session failed! "+ex.getMessage());
+            LOGGER.severe("Colibri ERP Session "+getSessionInfo()+" failed! "+ex.getMessage());
             return;
         }
         setConnectionState(ConnectionState.CONNECTING);

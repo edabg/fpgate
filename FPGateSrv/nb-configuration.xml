@@ -18,5 +18,6 @@ Any value defined here will override the pom.xml file value but is only applicab
 -->
         <netbeans.hint.license>gpl30</netbeans.hint.license>
         <org-netbeans-modules-javascript2-requirejs.enabled>true</org-netbeans-modules-javascript2-requirejs.enabled>
+        <netbeans.hint.jdkPlatform>Open_JDK_1.8_Zulu</netbeans.hint.jdkPlatform>
     </properties>
 </project-shared-configuration>

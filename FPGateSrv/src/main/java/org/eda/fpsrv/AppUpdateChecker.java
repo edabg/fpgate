@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.security.cert.X509Certificate;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,15 +29,11 @@ import java.security.cert.CertificateException;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import org.eda.fdevice.FPCBase;
-import org.restlet.Client;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.data.Header;
 import org.restlet.data.MediaType;
-import org.restlet.data.Protocol;
 import org.restlet.data.Reference;
-import org.restlet.engine.Engine;
-import org.restlet.engine.connector.ConnectorHelper;
 import org.restlet.engine.header.HeaderConstants;
 import org.restlet.engine.ssl.DefaultSslContextFactory;
 import org.restlet.engine.ssl.SslContextFactory;
@@ -212,8 +207,10 @@ public class AppUpdateChecker {
         vi.localBuild = localBuild;
         int compare = 0;
         try {
+			// https://www.ibm.com/support/pages/how-do-i-change-default-ssltls-protocol-my-java%E2%84%A2-application-will-use
 			//-Djavax.net.debug=all
 			// java -Djavax.net.debug=all -jar target\FPGateSrv-2.2.4-b-WL.jar
+			// -Djdk.tls.client.protocols=TLSv1.2
             logger.info("Проверка за нова версия (текуща:"+localVersion+")");
             Reference apiUri = new Reference(APIURL+"releases/latest");
 			Context clientContext = new Context();

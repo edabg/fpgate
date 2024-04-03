@@ -198,14 +198,15 @@ CSEL       |Seller                              | Seller name (Not supported on 
 PFT        |Text                                | Print Fiscal Text 
 PNT        |Text                                | Print Nonfiscal Text 
 PLF        |RowCount                            | Paper Line Feed
-STG        |Text,TaxCode,Price,Percent,Quantity | Register Sell by Tax Group. Percent and Quantity are optional. Tax Code is Tax Group Abbreviation A,B,C...
-SDP        |Text,DepCode,Price,Percent,Quantity | Register Sell by Department. Percent and Quantity are optional. Department Code is programmed code of department.
+STG        |Text,TaxCode,Price,DiscountPercentOrAmount,Quantity | Register Sell by Tax Group. DiscountPercentOrAmount and Quantity are optional. Tax Code is Tax Group Abbreviation A,B,C... 
+SDP        |Text,DepCode,Price,DiscountPercentOrAmount,Quantity | Register Sell by Department. DiscountPercentOrAmount and Quantity are optional. Department Code is programmed code of department.
 STL        |ToPrint,ToDisplay,Percent           | Calculate subtotal. Parameters are optional.
 TTL        |Text,PaymentTypeAbbr,Amount         | Calc Total and prints the Text. PaymentTypeAbbr can be CASH,CREDIT,CHECK,DEBIT_CARD,CUSTOM1,CUSTOM2,CUSTOM3,CUSTOM4,NRASCASH,NRASCHECKS,NRAST,NRASOT,NRASP,NRASSELF,NRASDMG,NRASCARDS,NRASW,NRASR1,NRASR2. Amount is Sum paid by customer.
 CMD        |Command,Params...                   | Call custom printer command. Depending on printer model behavior will be different.
 FTR        |Footer text                         | Print footer text before close check. 
 
 `Text` in `STG` and `SDP` can contain '\~\~' (double tild) to send Line1 and Line2 to register sell.
+`DiscountPercentOrAmount` follow rules: `[+|-]99.99[%]` for percent discount, `v[+|-]99.99` for amount discount
 
 PFT and PNT supports some simple formatting syntax in the following from.
 @padl\tText[\tPaddingSymbol] - Align text to the left and pad to the whole width with padding symbol (by default is space)

@@ -13,7 +13,7 @@
                 <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.appArgs></exec.appArgs>
-                <exec.vmArgs></exec.vmArgs>
+                <exec.vmArgs>-Djavax.net.debug=none</exec.vmArgs>
                 <exec.mainClass>org.eda.fpsrv.FPServer</exec.mainClass>
             </properties>
         </action>
@@ -31,7 +31,7 @@
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
                 <exec.appArgs></exec.appArgs>
-                <exec.vmArgs>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
+                <exec.vmArgs>-Djavax.net.debug=none -agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
                 <exec.mainClass>org.eda.fpsrv.FPServer</exec.mainClass>
             </properties>
         </action>
@@ -48,7 +48,7 @@
                 <exec.args>${exec.vmArgs} -classpath %classpath ${exec.mainClass} ${exec.appArgs}</exec.args>
                 <exec.executable>java</exec.executable>
                 <exec.appArgs></exec.appArgs>
-                <exec.vmArgs></exec.vmArgs>
+                <exec.vmArgs>-Djavax.net.debug=none</exec.vmArgs>
                 <exec.mainClass>org.eda.fpsrv.FPServer</exec.mainClass>
             </properties>
         </action>
